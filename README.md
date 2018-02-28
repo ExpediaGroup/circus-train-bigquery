@@ -41,3 +41,8 @@ You can obtain Circus Train from Maven Central:
 The BigQuery plugin works by extracting the BigQuery table data into Google Storage using Google APIs, and then using Circus Train
 listeners to convert the BigQuery metadata into a Hive table object. The data is then replicated from source to replica using 
 the metadata from this mocked Hive table.
+
+# Legal
+This project is available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
+
+Copyright 2016-2018 Expedia Inc.
