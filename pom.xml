@@ -12,6 +12,13 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>Bigquery Client</name>
 
+  <scm>
+    <connection>scm:git:git@github.com:HotelsDotCom/circus-train-bigquery.git</connection>
+    <developerConnection>scm:git:git@github.com:HotelsDotCom/circus-train-bigquery.git</developerConnection>
+    <url>https://github.com/HotelsDotCom/circus-train-bigquery</url>
+    <tag>HEAD</tag>
+  </scm>
+
   <properties>
     <circus-train-version>11.2.1-SNAPSHOT</circus-train-version>
     <google-cloud.version>0.34.0-alpha</google-cloud.version>
