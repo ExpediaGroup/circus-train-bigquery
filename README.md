@@ -1,4 +1,4 @@
-# Circus TrainBig Query To Hive Replication
+# Circus Train BigQuery To Hive Replication
 
 ##  Overview
 This [Circus Train](https://github.com/HotelsDotCom/circus-train) plugin enables the conversion of BigQuery tables to Hive.
