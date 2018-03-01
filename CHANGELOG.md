@@ -1,3 +1,3 @@
-# 1.0.0 - 2018-02-28
+# 1.0.1 - 2018-02-28
 ### Changed
 * Project moved into Github

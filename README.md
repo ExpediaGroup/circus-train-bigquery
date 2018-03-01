@@ -1,10 +1,10 @@
-# Circus TrainBig Query To Hive Replication
+# Circus Train BigQuery To Hive Replication
 
 ##  Overview
 This [Circus Train](https://github.com/HotelsDotCom/circus-train) plugin enables the conversion of BigQuery tables to Hive.
 
 # Start using
-You can obtain Circus Train from Maven Central:
+You can obtain Circus Train BigQuery from Maven Central:
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.hotels/circus-train-bigquery/badge.svg?subject=com.hotels:circus-train-bigquery)](https://maven-badges.herokuapp.com/maven-central/com.hotels/circus-train-bigquery) [![Build Status](https://travis-ci.org/HotelsDotCom/circus-train-bigquery.svg?branch=master)](https://travis-ci.org/HotelsDotCom/circus-train-bigquery) [![Coverage Status](https://coveralls.io/repos/github/HotelsDotCom/circus-train-bigquery/badge.svg?branch=master)](https://coveralls.io/github/HotelsDotCom/circus-train-bigquery?branch=master) ![GitHub license](https://img.shields.io/github/license/HotelsDotCom/circus-train.svg)
 
@@ -45,4 +45,4 @@ the metadata from this mocked Hive table.
 # Legal
 This project is available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-Copyright 2016-2018 Expedia Inc.
+Copyright 2018 Expedia Inc.
