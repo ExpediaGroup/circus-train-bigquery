@@ -13,7 +13,6 @@
   <name>Bigquery Client</name>
   <inceptionYear>2018</inceptionYear>
 
-
   <scm>
     <connection>scm:git:git@github.com:HotelsDotCom/circus-train-bigquery.git</connection>
     <developerConnection>scm:git:git@github.com:HotelsDotCom/circus-train-bigquery.git</developerConnection>
