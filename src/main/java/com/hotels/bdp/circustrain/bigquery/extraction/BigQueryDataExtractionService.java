@@ -18,6 +18,7 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Bucket;
@@ -76,10 +77,18 @@ public class BigQueryDataExtractionService {
     try {
       Job job = extractionData.getTable().extract(format, dataUri);
       Job completedJob = job.waitFor();
-      if (completedJob != null && completedJob.getStatus().getError() == null) {
-        // Job completed successfully
+      if (completedJob == null) {
+        throw new CircusTrainException("Error extracting BigQuery table data to Google storage, job no longer exists");
+      } else if (completedJob.getStatus().getError() != null) {
+        BigQueryError error = completedJob.getStatus().getError();
+        throw new CircusTrainException("Error extracting BigQuery table data to Google storage: "
+            + error.getMessage()
+            + ", reason="
+            + error.getReason()
+            + ", location="
+            + error.getLocation());
       } else {
-        throw new CircusTrainException("Could not extract BigQuery table data to Google storage");
+        log.info("Job completed successfully");
       }
     } catch (InterruptedException e) {
       throw new CircusTrainException(e);

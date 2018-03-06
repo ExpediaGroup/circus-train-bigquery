@@ -30,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.cloud.RetryOption;
+import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobStatus;
 import com.google.cloud.bigquery.Table;
@@ -38,6 +39,8 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
+
+import com.hotels.bdp.circustrain.api.CircusTrainException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryDataExtractionServiceTest {
@@ -94,5 +97,27 @@ public class BigQueryDataExtractionServiceTest {
     service.cleanup(data);
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
+  }
+
+  @Test(expected = CircusTrainException.class)
+  public void jobNoLongerExists() throws InterruptedException {
+    BigQueryExtractionData data = new BigQueryExtractionData(table);
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    when(table.extract(anyString(), anyString())).thenReturn(job);
+    when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(null);
+    service.extract(data);
+  }
+
+  @Test(expected = CircusTrainException.class)
+  public void jobError() throws InterruptedException {
+    BigQueryExtractionData data = new BigQueryExtractionData(table);
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    when(table.extract(anyString(), anyString())).thenReturn(job);
+    when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(job);
+    when(job.getStatus()).thenReturn(jobStatus);
+    when(jobStatus.getError()).thenReturn(new BigQueryError("reason", "location", "message"));
+    service.extract(data);
   }
 }
