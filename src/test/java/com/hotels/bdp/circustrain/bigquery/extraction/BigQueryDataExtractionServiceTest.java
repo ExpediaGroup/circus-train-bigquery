@@ -23,13 +23,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.cloud.RetryOption;
+import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobStatus;
 import com.google.cloud.bigquery.Table;
@@ -39,8 +42,12 @@ import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
 
+import com.hotels.bdp.circustrain.api.CircusTrainException;
+
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryDataExtractionServiceTest {
+
+  public @Rule ExpectedException expectedException = ExpectedException.none();
 
   private @Mock Storage storage;
   private @Mock Table table;
@@ -94,5 +101,36 @@ public class BigQueryDataExtractionServiceTest {
     service.cleanup(data);
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
+  }
+
+  @Test
+  public void jobNoLongerExists() throws InterruptedException {
+    expectedException.expect(CircusTrainException.class);
+    expectedException.expectMessage("job no longer exists");
+
+    BigQueryExtractionData data = new BigQueryExtractionData(table);
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    when(table.extract(anyString(), anyString())).thenReturn(job);
+    when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(null);
+    service.extract(data);
+  }
+
+  @Test
+  public void jobError() throws InterruptedException {
+    BigQueryError bigQueryError = new BigQueryError("reason", "location", "message");
+    expectedException.expect(CircusTrainException.class);
+    expectedException.expectMessage(bigQueryError.getReason());
+    expectedException.expectMessage(bigQueryError.getLocation());
+    expectedException.expectMessage(bigQueryError.getMessage());
+
+    BigQueryExtractionData data = new BigQueryExtractionData(table);
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    when(table.extract(anyString(), anyString())).thenReturn(job);
+    when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(job);
+    when(job.getStatus()).thenReturn(jobStatus);
+    when(jobStatus.getError()).thenReturn(new BigQueryError("reason", "location", "message"));
+    service.extract(data);
   }
 }
