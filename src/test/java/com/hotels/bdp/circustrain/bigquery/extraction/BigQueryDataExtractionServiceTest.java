@@ -23,7 +23,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Matchers;
 import org.mockito.Mock;
@@ -44,6 +46,8 @@ import com.hotels.bdp.circustrain.api.CircusTrainException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryDataExtractionServiceTest {
+
+  public @Rule ExpectedException expectedException = ExpectedException.none();
 
   private @Mock Storage storage;
   private @Mock Table table;
@@ -99,8 +103,11 @@ public class BigQueryDataExtractionServiceTest {
     verify(bucket).delete();
   }
 
-  @Test(expected = CircusTrainException.class)
+  @Test
   public void jobNoLongerExists() throws InterruptedException {
+    expectedException.expect(CircusTrainException.class);
+    expectedException.expectMessage("job no longer exists");
+
     BigQueryExtractionData data = new BigQueryExtractionData(table);
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
@@ -109,8 +116,14 @@ public class BigQueryDataExtractionServiceTest {
     service.extract(data);
   }
 
-  @Test(expected = CircusTrainException.class)
+  @Test
   public void jobError() throws InterruptedException {
+    BigQueryError bigQueryError = new BigQueryError("reason", "location", "message");
+    expectedException.expect(CircusTrainException.class);
+    expectedException.expectMessage(bigQueryError.getReason());
+    expectedException.expectMessage(bigQueryError.getLocation());
+    expectedException.expectMessage(bigQueryError.getMessage());
+
     BigQueryExtractionData data = new BigQueryExtractionData(table);
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
