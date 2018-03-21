@@ -29,6 +29,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableDefinition;
+import com.google.cloud.bigquery.TableId;
 import com.google.cloud.storage.Storage;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
@@ -60,8 +62,38 @@ public class BigQueryReplicationListenerTest {
     when(bigQuery.getDataset(anyString())).thenReturn(dataset);
     Table table = mock(Table.class);
     when(dataset.get(anyString())).thenReturn(table);
+    TableDefinition tableDefinition = mock(TableDefinition.class);
+    when(table.getDefinition()).thenReturn(tableDefinition);
+    when(table.getTableId()).thenReturn(TableId.of("dataset", "table"));
+    when(tableDefinition.getType()).thenReturn(TableDefinition.Type.TABLE);
     listener.tableReplicationStart(eventTableReplication, "eventId");
     verify(dataExtractionManager).extract(table);
+  }
+
+  @Test(expected = CircusTrainException.class)
+  public void tableReplicationStartFailsOnViewTable() {
+    Dataset dataset = mock(Dataset.class);
+    when(bigQuery.getDataset(anyString())).thenReturn(dataset);
+    Table table = mock(Table.class);
+    when(dataset.get(anyString())).thenReturn(table);
+    TableDefinition tableDefinition = mock(TableDefinition.class);
+    when(table.getDefinition()).thenReturn(tableDefinition);
+    when(table.getTableId()).thenReturn(TableId.of("dataset", "table"));
+    when(tableDefinition.getType()).thenReturn(TableDefinition.Type.VIEW);
+    listener.tableReplicationStart(eventTableReplication, "eventId");
+  }
+
+  @Test(expected = CircusTrainException.class)
+  public void tableReplicationStartFailsOnExternalTable() {
+    Dataset dataset = mock(Dataset.class);
+    when(bigQuery.getDataset(anyString())).thenReturn(dataset);
+    Table table = mock(Table.class);
+    when(dataset.get(anyString())).thenReturn(table);
+    TableDefinition tableDefinition = mock(TableDefinition.class);
+    when(table.getDefinition()).thenReturn(tableDefinition);
+    when(table.getTableId()).thenReturn(TableId.of("dataset", "table"));
+    when(tableDefinition.getType()).thenReturn(TableDefinition.Type.EXTERNAL);
+    listener.tableReplicationStart(eventTableReplication, "eventId");
   }
 
   @Test(expected = CircusTrainException.class)

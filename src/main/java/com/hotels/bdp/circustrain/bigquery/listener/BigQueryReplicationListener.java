@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableDefinition;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.api.event.EventTableReplication;
@@ -41,6 +42,13 @@ public class BigQueryReplicationListener implements TableReplicationListener {
   @Override
   public void tableReplicationStart(EventTableReplication tableReplication, String eventId) {
     Table table = getTable(tableReplication);
+    if (isView(table) || isExternal(table)) {
+      throw new CircusTrainException(table.getTableId().getDataset()
+          + "."
+          + table.getTableId().getTable()
+          + " cannot be replicated as it is of type "
+          + table.getDefinition().getType());
+    }
     dataExtractionManager.extract(table);
   }
 
@@ -72,5 +80,13 @@ public class BigQueryReplicationListener implements TableReplicationListener {
       throw new CircusTrainException(databaseName + "." + tableName + " could not be found");
     }
     return table;
+  }
+
+  private boolean isView(Table table) {
+    return table.getDefinition().getType().equals(TableDefinition.Type.VIEW);
+  }
+
+  private boolean isExternal(Table table) {
+    return table.getDefinition().getType().equals(TableDefinition.Type.EXTERNAL);
   }
 }
