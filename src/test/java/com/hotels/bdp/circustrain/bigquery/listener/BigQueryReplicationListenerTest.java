@@ -18,6 +18,7 @@ package com.hotels.bdp.circustrain.bigquery.listener;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
@@ -56,21 +57,10 @@ public class BigQueryReplicationListenerTest {
 
   @Test
   public void tableReplicationStart() {
-    Dataset dataset = mock(Dataset.class);
-    when(bigQuery.getDataset(anyString())).thenReturn(dataset);
-    Table table = mock(Table.class);
-    when(dataset.get(anyString())).thenReturn(table);
     listener.tableReplicationStart(eventTableReplication, "eventId");
-    verify(dataExtractionManager).extract(table);
-  }
-
-  @Test(expected = CircusTrainException.class)
-  public void tableReplicationStartTableMissingThrowsException() {
-    Dataset dataset = mock(Dataset.class);
-    when(bigQuery.getDataset(anyString())).thenReturn(dataset);
-    when(dataset.get(anyString())).thenReturn(null);
-    listener.tableReplicationStart(eventTableReplication, "eventId");
-
+    verifyZeroInteractions(dataExtractionManager);
+    verifyZeroInteractions(bigQuery);
+    verifyZeroInteractions(storage);
   }
 
   @Test

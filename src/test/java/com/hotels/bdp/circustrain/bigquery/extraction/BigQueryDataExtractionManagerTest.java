@@ -16,10 +16,12 @@
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import static junit.framework.TestCase.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,10 +58,10 @@ public class BigQueryDataExtractionManagerTest {
     assertEquals("table", data.getTableName());
   }
 
-  @Test(expected = CircusTrainException.class)
-  public void extractingAlreadyExtractedTableThrowsExceptionTest() {
-    dataExtractionManager.extract(table);
-    dataExtractionManager.extract(table);
+  @Test
+  public void extractingAlreadyExtractedTableDoesntExecute() {
+    assertTrue(dataExtractionManager.extract(table));
+    assertFalse(dataExtractionManager.extract(table));
   }
 
   @Test
