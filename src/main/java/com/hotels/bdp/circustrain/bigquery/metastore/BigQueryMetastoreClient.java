@@ -131,6 +131,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     log.info("Getting table {}.{} from BigQuery", databaseName, tableName);
     checkDbExists(databaseName);
     com.google.cloud.bigquery.Table table = getBigQueryTable(databaseName, tableName);
+    dataExtractionManager.extract(table);
     Table hiveTable = new BigQueryToHiveTableConverter()
         .withDatabaseName(databaseName)
         .withTableName(tableName)

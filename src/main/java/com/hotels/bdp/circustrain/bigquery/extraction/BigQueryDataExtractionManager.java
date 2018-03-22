@@ -40,14 +40,15 @@ public class BigQueryDataExtractionManager {
     return key;
   }
 
-  public void extract(Table table) {
+  public boolean extract(Table table) {
     String key = getKey(table);
     if (cache.get(key) != null) {
-      throw new CircusTrainException("Attempting to extract " + table + " which has already been extracted.");
+      return false;
     }
     BigQueryExtractionData data = new BigQueryExtractionData(table);
     cache.put(key, data);
     service.extract(data);
+    return true;
   }
 
   public void cleanup(Table table) {
