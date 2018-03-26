@@ -37,12 +37,23 @@ public class BigQueryDataExtractionService {
     this.storage = storage;
   }
 
-  void extract(BigQueryExtractionData extractionData) {
+  boolean extract(BigQueryExtractionData extractionData) {
+    if (extractionData.isExtracted()) {
+      log.info("Extraction data: {} is extracted", extractionData);
+      return false;
+    }
     createBucket(extractionData);
     extractDataFromBigQuery(extractionData);
+    extractionData.setExtracted(true);
+    return true;
   }
 
-  void cleanup(BigQueryExtractionData extractionData) {
+  boolean cleanup(BigQueryExtractionData extractionData) {
+    if (extractionData.isCleaned()) {
+      log.info("Extraction data: {} has already been cleaned", extractionData);
+      return false;
+    }
+
     String dataBucket = extractionData.getDataBucket();
     String dataKey = extractionData.getDataKey();
     String format = extractionData.getFormat();
@@ -58,6 +69,8 @@ public class BigQueryDataExtractionService {
     if (!suceeded) {
       log.warn("Could not delete bucket {}", dataBucket);
     }
+    extractionData.setCleaned(true);
+    return true;
   }
 
   private void createBucket(BigQueryExtractionData extractionData) {

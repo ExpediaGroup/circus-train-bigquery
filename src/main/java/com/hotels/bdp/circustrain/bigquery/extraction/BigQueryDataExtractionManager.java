@@ -17,78 +17,137 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import com.google.cloud.bigquery.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-import com.hotels.bdp.circustrain.api.CircusTrainException;
+import com.google.cloud.bigquery.Table;
+import com.google.common.annotations.VisibleForTesting;
 
 public class BigQueryDataExtractionManager {
 
-  private final List<Table> registered = new ArrayList<>();
-  private final Map<String, BigQueryExtractionData> cache = new HashMap<>();
+  @VisibleForTesting
+  static class TableWrapper {
+
+    private final Table table;
+
+    TableWrapper(Table table) {
+      this.table = table;
+    }
+
+    private Table getTable() {
+      return this.table;
+    }
+
+    @Override
+    public String toString() {
+      return table.getTableId().getDataset() + "." + table.getTableId().getTable();
+    }
+
+    @Override
+    public int hashCode() {
+      return (makeKey(table.getTableId().getDataset(), table.getTableId().getTable())).hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (getClass() != obj.getClass()) {
+        return false;
+      }
+      TableWrapper other = (TableWrapper) obj;
+      Table otherTable = other.getTable();
+      String thisDatasetName = this.table.getTableId().getDataset();
+      String otherDatasetName = otherTable.getTableId().getDataset();
+      if (!thisDatasetName.equals(otherDatasetName)) {
+        return false;
+      }
+
+      String thisTableName = this.table.getTableId().getTable();
+      String otherTableName = otherTable.getTableId().getTable();
+      if (!thisTableName.equals(otherTableName)) {
+        return false;
+      }
+
+      return true;
+    }
+  }
+
+  private static final Logger log = LoggerFactory.getLogger(BigQueryDataExtractionManager.class);
+
   private final BigQueryDataExtractionService service;
+
+  private Map<TableWrapper, BigQueryExtractionData> cache = new HashMap<>();
 
   public BigQueryDataExtractionManager(BigQueryDataExtractionService service) {
     this.service = service;
   }
 
-  private String getKey(Table table) {
-    String databaseName = table.getTableId().getDataset();
-    String tableName = table.getTableId().getTable();
-    String key = makeKey(databaseName, tableName);
-    return key;
-  }
-
-  public void register(Table... table) {
-    registered.addAll(Arrays.asList(table));
+  public void register(Table... tables) {
+    for (Table table : tables) {
+      cacheRead(new TableWrapper(table));
+    }
   }
 
   public void extract() {
-    for (Table table : registered) {
-      extract(table);
+    for (TableWrapper wrapper : cache.keySet()) {
+      extract(wrapper);
     }
   }
 
   public void cleanup() {
-    for (Table table : registered) {
+    for (TableWrapper table : cache.keySet()) {
       cleanup(table);
     }
-    registered.clear();
   }
 
-  public ImmutableList<Table> getRegistered() {
-    return ImmutableList.copyOf(registered);
+  private BigQueryExtractionData cacheRead(TableWrapper wrapper) {
+    BigQueryExtractionData data = cache.get(wrapper);
+    if (data == null) {
+      log.info("Adding table: {} to cache", wrapper);
+      data = new BigQueryExtractionData(wrapper.getTable());
+      cache.put(wrapper, data);
+    }
+    return data;
   }
 
   public boolean extract(Table table) {
-    String key = getKey(table);
-    if (cache.get(key) != null) {
-      return false;
-    }
-    BigQueryExtractionData data = new BigQueryExtractionData(table);
-    cache.put(key, data);
-    service.extract(data);
-    return true;
+    return extract(new TableWrapper(table));
   }
 
-  public void cleanup(Table table) {
-    String key = getKey(table);
-    BigQueryExtractionData data = cache.get(key);
+  private boolean extract(TableWrapper wrapper) {
+    log.info("Extracting table: {}", wrapper);
+    BigQueryExtractionData data = cacheRead(wrapper);
+    return service.extract(data);
+  }
+
+  public boolean cleanup(Table table) {
+    return cleanup(new TableWrapper(table));
+  }
+
+  private boolean cleanup(TableWrapper wrapper) {
+    log.info("Cleaning data from table: {}", wrapper);
+    BigQueryExtractionData data = cache.get(wrapper);
     if (data == null) {
-      throw new CircusTrainException("Attempting to cleanup " + table + " this table was not extracted");
+      log.warn("Attempting to cleanup {} which table was not extracted", wrapper);
+      return false;
     }
-    service.cleanup(data);
+    return service.cleanup(data);
   }
 
   public String location(Table table) {
-    String key = getKey(table);
-    BigQueryExtractionData data = cache.get(key);
+    return location(new TableWrapper(table));
+  }
+
+  private String location(TableWrapper wrapper) {
+    BigQueryExtractionData data = cache.get(wrapper);
     if (data == null) {
       return null;
     }

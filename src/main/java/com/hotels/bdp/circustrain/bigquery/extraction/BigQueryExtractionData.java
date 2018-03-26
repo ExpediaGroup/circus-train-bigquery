@@ -29,8 +29,27 @@ class BigQueryExtractionData {
   private final String dataUri = "gs://" + dataBucket + "/" + dataKey + "." + format;
   private final Table table;
 
+  private boolean extracted = false;
+  private boolean cleaned = false;
+
   BigQueryExtractionData(Table table) {
     this.table = table;
+  }
+
+  boolean isExtracted() {
+    return extracted;
+  }
+
+  void setExtracted(boolean flag) {
+    this.extracted = flag;
+  }
+
+  boolean isCleaned() {
+    return cleaned;
+  }
+
+  void setCleaned(boolean flag) {
+    this.cleaned = flag;
   }
 
   String getTableName() {
@@ -59,6 +78,11 @@ class BigQueryExtractionData {
 
   Table getTable() {
     return table;
+  }
+
+  @Override
+  public String toString() {
+    return "Table: " + getDatasetName() + getTableName() + ". Location: " + getDataUri() + ".";
   }
 
   @Override

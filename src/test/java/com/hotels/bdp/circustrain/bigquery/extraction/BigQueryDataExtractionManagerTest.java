@@ -17,16 +17,19 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import static junit.framework.TestCase.assertTrue;
 
-import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -37,8 +40,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
-
-import com.hotels.bdp.circustrain.api.CircusTrainException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryDataExtractionManagerTest {
@@ -51,15 +52,6 @@ public class BigQueryDataExtractionManagerTest {
   public void init() {
     dataExtractionManager = new BigQueryDataExtractionManager(service);
     when(table.getTableId()).thenReturn(TableId.of("dataset", "table"));
-  }
-
-  @Test
-  public void registerTest() {
-    Table one = mock(Table.class);
-    Table two = mock(Table.class);
-    Table three = mock(Table.class);
-    dataExtractionManager.register(one, two, three);
-    assertEquals(Arrays.asList(one, two, three), dataExtractionManager.getRegistered());
   }
 
   @Test
@@ -95,7 +87,6 @@ public class BigQueryDataExtractionManagerTest {
     dataExtractionManager.cleanup();
 
     verify(service, times(3)).cleanup(any(BigQueryExtractionData.class));
-    assertEquals(0, dataExtractionManager.getRegistered().size());
   }
 
   @Test
@@ -110,6 +101,7 @@ public class BigQueryDataExtractionManagerTest {
 
   @Test
   public void extractingAlreadyExtractedTableDoesntExecute() {
+    when(service.extract(any(BigQueryExtractionData.class))).thenReturn(true, false);
     assertTrue(dataExtractionManager.extract(table));
     assertFalse(dataExtractionManager.extract(table));
   }
@@ -125,9 +117,10 @@ public class BigQueryDataExtractionManagerTest {
     assertEquals("table", data.getTableName());
   }
 
-  @Test(expected = CircusTrainException.class)
+  @Test
   public void cleanupTableWhichHasntBeenExtractedThrowsExceptionTest() {
     dataExtractionManager.cleanup(table);
+    verifyZeroInteractions(service);
   }
 
   @Test
@@ -142,5 +135,44 @@ public class BigQueryDataExtractionManagerTest {
   @Test
   public void locationForTableThatHasntBeenExtractedIsNull() {
     assertNull(dataExtractionManager.location(table));
+  }
+
+  @Test
+  public void tableWrapperHashCodeTest() {
+    BigQueryDataExtractionManager.TableWrapper wrapperOne = new BigQueryDataExtractionManager.TableWrapper(table);
+    BigQueryDataExtractionManager.TableWrapper wrapperTwo = new BigQueryDataExtractionManager.TableWrapper(table);
+
+    assertEquals(wrapperOne.hashCode(), wrapperTwo.hashCode());
+  }
+
+  @Test
+  public void tableWrapperEqualsTest() {
+    BigQueryDataExtractionManager.TableWrapper wrapperOne = new BigQueryDataExtractionManager.TableWrapper(table);
+    BigQueryDataExtractionManager.TableWrapper wrapperTwo = new BigQueryDataExtractionManager.TableWrapper(table);
+    assertEquals(wrapperOne, wrapperTwo);
+  }
+
+  @Test
+  public void tableWrapperNotEqualsTest() {
+    BigQueryDataExtractionManager.TableWrapper wrapperOne = new BigQueryDataExtractionManager.TableWrapper(table);
+    Table mock = mock(Table.class);
+    when(mock.getTableId()).thenReturn(TableId.of("dataset2", "table2"));
+    BigQueryDataExtractionManager.TableWrapper wrapperTwo = new BigQueryDataExtractionManager.TableWrapper(mock);
+    assertNotEquals(wrapperOne, wrapperTwo);
+  }
+
+  @Test
+  public void tableWrapperInSetTest() {
+    BigQueryDataExtractionManager.TableWrapper wrapper = new BigQueryDataExtractionManager.TableWrapper(table);
+    Set<BigQueryDataExtractionManager.TableWrapper> set = new HashSet<>();
+    set.add(wrapper);
+    set.add(wrapper);
+    assertEquals(1, set.size());
+    Table mock = mock(Table.class);
+    when(mock.getTableId()).thenReturn(TableId.of("dataset2", "table2"));
+    BigQueryDataExtractionManager.TableWrapper wrapperTwo = new BigQueryDataExtractionManager.TableWrapper(mock);
+    set.add(wrapperTwo);
+    assertEquals(2, set.size());
+
   }
 }
