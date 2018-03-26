@@ -34,7 +34,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionMana
 public class BigQueryCopierFactoryTest {
 
   @Test
-  public void supportsSchemes() {
+  public void supportsScheme() {
     CopierFactory unsupported = mock(CopierFactory.class);
     CopierFactory supported = mock(CopierFactory.class);
     when(unsupported.supportsSchemes(anyString(), anyString())).thenReturn(false);
@@ -47,7 +47,7 @@ public class BigQueryCopierFactoryTest {
   }
 
   @Test
-  public void doesntSupportSchemes() {
+  public void doesntSupportScheme() {
     CopierFactory unsupported = mock(CopierFactory.class);
     CopierFactory alsoUnsupported = mock(CopierFactory.class);
     when(unsupported.supportsSchemes(anyString(), anyString())).thenReturn(false);
