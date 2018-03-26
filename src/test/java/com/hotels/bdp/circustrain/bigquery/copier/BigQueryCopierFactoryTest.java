@@ -49,10 +49,10 @@ public class BigQueryCopierFactoryTest {
   @Test
   public void doesntSupportSchemes() {
     CopierFactory unsupported = mock(CopierFactory.class);
-    CopierFactory supported = mock(CopierFactory.class);
+    CopierFactory alsoUnsupported = mock(CopierFactory.class);
     when(unsupported.supportsSchemes(anyString(), anyString())).thenReturn(false);
-    when(supported.supportsSchemes(anyString(), anyString())).thenReturn(false);
-    List<CopierFactory> copierFactories = Arrays.asList(unsupported, supported);
+    when(alsoUnsupported.supportsSchemes(anyString(), anyString())).thenReturn(false);
+    List<CopierFactory> copierFactories = Arrays.asList(unsupported, alsoUnsupported);
     BigQueryDataExtractionManager dataExtractionManager = mock(BigQueryDataExtractionManager.class);
     BigQueryCopierFactory factory = new BigQueryCopierFactory(copierFactories, dataExtractionManager);
     assertFalse(factory.supportsSchemes("gs://", "s3://"));
