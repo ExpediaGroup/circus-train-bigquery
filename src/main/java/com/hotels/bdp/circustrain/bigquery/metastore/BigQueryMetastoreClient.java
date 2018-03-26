@@ -95,8 +95,6 @@ import com.hotels.bdp.circustrain.api.metastore.CloseableMetaStoreClient;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 
-import static com.hotels.bdp.circustrain.bigquery.util.BigQueryUtils.getBigQueryTable;
-
 class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryMetastoreClient.class);
@@ -132,8 +130,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   public Table getTable(String databaseName, String tableName) throws TException {
     log.info("Getting table {}.{} from BigQuery", databaseName, tableName);
     checkDbExists(databaseName);
-    com.google.cloud.bigquery.Table table = getBigQueryTable(bigQuery, databaseName, tableName);
-    dataExtractionManager.extract(table);
+    com.google.cloud.bigquery.Table table = getBigQueryTable(databaseName, tableName);
     Table hiveTable = new BigQueryToHiveTableConverter()
         .withDatabaseName(databaseName)
         .withTableName(tableName)
@@ -147,7 +144,14 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return dataExtractionManager.location(table);
   }
 
-
+  private com.google.cloud.bigquery.Table getBigQueryTable(String databaseName, String tableName)
+    throws NoSuchObjectException {
+    com.google.cloud.bigquery.Table table = bigQuery.getDataset(databaseName).get(tableName);
+    if (table == null) {
+      throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");
+    }
+    return table;
+  }
 
   @Override
   public List<ColumnStatisticsObj> getTableColumnStatistics(String s, String s1, List<String> list)
