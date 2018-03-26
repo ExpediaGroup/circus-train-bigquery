@@ -136,7 +136,7 @@ public class BigQueryDataExtractionManager {
     log.info("Cleaning data from table: {}", wrapper);
     BigQueryExtractionData data = cache.get(wrapper);
     if (data == null) {
-      log.warn("Attempting to cleanup {} which table was not extracted", wrapper);
+      log.warn("Attempting to cleanup table data {} which has not been extracted", wrapper);
       return false;
     }
     return service.cleanup(data);
