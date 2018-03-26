@@ -147,10 +147,7 @@ public class BigQueryDataExtractionManager {
   }
 
   private String location(TableWrapper wrapper) {
-    BigQueryExtractionData data = cache.get(wrapper);
-    if (data == null) {
-      return null;
-    }
+    BigQueryExtractionData data = cacheRead(wrapper);
     return "gs://" + data.getDataBucket() + "/";
   }
 }

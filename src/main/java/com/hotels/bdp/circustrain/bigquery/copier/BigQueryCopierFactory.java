@@ -38,8 +38,8 @@ import com.hotels.bdp.circustrain.api.copier.CopierFactory;
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryCondition;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 
-@Profile({ Modules.REPLICATION })
 @Component
+@Profile({ Modules.REPLICATION })
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Conditional(CircusTrainBigQueryCondition.class)
 public class BigQueryCopierFactory implements CopierFactory {
@@ -52,7 +52,7 @@ public class BigQueryCopierFactory implements CopierFactory {
   private CopierFactory supportedFactory;
 
   @Autowired
-  public BigQueryCopierFactory(List<CopierFactory> delegates, BigQueryDataExtractionManager dataExtractionManager) {
+  BigQueryCopierFactory(List<CopierFactory> delegates, BigQueryDataExtractionManager dataExtractionManager) {
     this.delegates = ImmutableList.copyOf(delegates);
     this.dataExtractionManager = dataExtractionManager;
   }
@@ -62,8 +62,6 @@ public class BigQueryCopierFactory implements CopierFactory {
     for (CopierFactory factory : delegates) {
       if (factory.supportsSchemes(sourceScheme, replicaScheme)) {
         supportedFactory = factory;
-        log.info("{} creating copier which delegates to the copier produced by {}", this.getClass().getName(),
-            factory.getClass().getName());
         return true;
       }
     }
@@ -85,6 +83,8 @@ public class BigQueryCopierFactory implements CopierFactory {
     Copier copier = supportedFactory.newInstance(eventId, sourceBaseLocation, sourceSubLocations, replicaLocation,
         copierOptions);
     Copier bigQueryCopier = new BigQueryCopier(copier, dataExtractionManager);
+    log.info("{} created copier which delegates to the copier produced by {}", this.getClass().getName(),
+        supportedFactory.getClass().getName());
     return bigQueryCopier;
   }
 

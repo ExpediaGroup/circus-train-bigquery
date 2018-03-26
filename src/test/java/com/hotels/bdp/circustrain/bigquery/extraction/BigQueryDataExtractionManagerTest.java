@@ -18,6 +18,7 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -118,7 +119,7 @@ public class BigQueryDataExtractionManagerTest {
   }
 
   @Test
-  public void cleanupTableWhichHasntBeenExtractedThrowsExceptionTest() {
+  public void cleanupTableWhichHasntBeenExtractedDoesntExecute() {
     dataExtractionManager.cleanup(table);
     verifyZeroInteractions(service);
   }
@@ -133,8 +134,8 @@ public class BigQueryDataExtractionManagerTest {
   }
 
   @Test
-  public void locationForTableThatHasntBeenExtractedIsNull() {
-    assertNull(dataExtractionManager.location(table));
+  public void locationForTableThatHasntBeenExtractedIsNotNull() {
+    assertNotNull(dataExtractionManager.location(table));
   }
 
   @Test

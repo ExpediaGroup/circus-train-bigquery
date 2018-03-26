@@ -82,7 +82,7 @@ class BigQueryExtractionData {
 
   @Override
   public String toString() {
-    return "Table: " + getDatasetName() + getTableName() + " Location: " + getDataUri() + "";
+    return "Table: " + getDatasetName() + getTableName() + " Location: " + getDataUri();
   }
 
   @Override

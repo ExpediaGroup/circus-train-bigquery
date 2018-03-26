@@ -45,6 +45,7 @@ public class BigQueryDataExtractionService {
     createBucket(extractionData);
     extractDataFromBigQuery(extractionData);
     extractionData.setExtracted(true);
+    log.info("Extracted {}", extractionData);
     return true;
   }
 
@@ -70,6 +71,7 @@ public class BigQueryDataExtractionService {
       log.warn("Could not delete bucket {}", dataBucket);
     }
     extractionData.setCleaned(true);
+    log.info("Cleaned up {}", extractionData);
     return true;
   }
 
