@@ -44,6 +44,8 @@ public class BigQueryReplicationListener implements TableReplicationListener {
         eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
+    Table table = getTable(eventTableReplication);
+    dataExtractionManager.register(table);
   }
 
   @Override
@@ -52,8 +54,7 @@ public class BigQueryReplicationListener implements TableReplicationListener {
         eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
-    Table table = getTable(eventTableReplication);
-    dataExtractionManager.cleanup(table);
+    dataExtractionManager.cleanup();
   }
 
   @Override
@@ -62,8 +63,7 @@ public class BigQueryReplicationListener implements TableReplicationListener {
         eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
-    Table table = getTable(eventTableReplication);
-    dataExtractionManager.cleanup(table);
+    dataExtractionManager.cleanup();
   }
 
   private Table getTable(EventTableReplication tableReplication) {

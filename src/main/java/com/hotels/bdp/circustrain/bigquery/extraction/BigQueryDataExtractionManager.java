@@ -17,15 +17,20 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.cloud.bigquery.Table;
 
+import com.google.common.collect.ImmutableList;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 
 public class BigQueryDataExtractionManager {
 
+  private final List<Table> registered = new ArrayList<>();
   private final Map<String, BigQueryExtractionData> cache = new HashMap<>();
   private final BigQueryDataExtractionService service;
 
@@ -38,6 +43,27 @@ public class BigQueryDataExtractionManager {
     String tableName = table.getTableId().getTable();
     String key = makeKey(databaseName, tableName);
     return key;
+  }
+
+  public void register(Table... table) {
+    registered.addAll(Arrays.asList(table));
+  }
+
+  public void extract() {
+    for (Table table : registered) {
+      extract(table);
+    }
+  }
+
+  public void cleanup() {
+    for (Table table : registered) {
+      cleanup(table);
+    }
+    registered.clear();
+  }
+
+  public ImmutableList<Table> getRegistered() {
+    return ImmutableList.copyOf(registered);
   }
 
   public boolean extract(Table table) {

@@ -18,10 +18,15 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import static junit.framework.TestCase.assertTrue;
+
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +51,51 @@ public class BigQueryDataExtractionManagerTest {
   public void init() {
     dataExtractionManager = new BigQueryDataExtractionManager(service);
     when(table.getTableId()).thenReturn(TableId.of("dataset", "table"));
+  }
+
+  @Test
+  public void registerTest() {
+    Table one = mock(Table.class);
+    Table two = mock(Table.class);
+    Table three = mock(Table.class);
+    dataExtractionManager.register(one, two, three);
+    assertEquals(Arrays.asList(one, two, three), dataExtractionManager.getRegistered());
+  }
+
+  @Test
+  public void extractRegisteredTest() {
+    Table one = mock(Table.class);
+    when(one.getTableId()).thenReturn(TableId.of("datasetOne", "tableOne"));
+
+    Table two = mock(Table.class);
+    when(two.getTableId()).thenReturn(TableId.of("datasetTwo", "tableTwo"));
+
+    Table three = mock(Table.class);
+    when(three.getTableId()).thenReturn(TableId.of("datasetThree", "tableThree"));
+
+    dataExtractionManager.register(one, two, three);
+    dataExtractionManager.extract();
+
+    verify(service, times(3)).extract(any(BigQueryExtractionData.class));
+  }
+
+  @Test
+  public void cleanupRegisteredTest() {
+    Table one = mock(Table.class);
+    when(one.getTableId()).thenReturn(TableId.of("datasetOne", "tableOne"));
+
+    Table two = mock(Table.class);
+    when(two.getTableId()).thenReturn(TableId.of("datasetTwo", "tableTwo"));
+
+    Table three = mock(Table.class);
+    when(three.getTableId()).thenReturn(TableId.of("datasetThree", "tableThree"));
+
+    dataExtractionManager.register(one, two, three);
+    dataExtractionManager.extract();
+    dataExtractionManager.cleanup();
+
+    verify(service, times(3)).cleanup(any(BigQueryExtractionData.class));
+    assertEquals(0, dataExtractionManager.getRegistered().size());
   }
 
   @Test
