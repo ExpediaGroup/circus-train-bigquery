@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -134,7 +133,7 @@ public class BigQueryDataExtractionManagerTest {
   }
 
   @Test
-  public void locationForTableThatHasntBeenExtractedIsNotNull() {
+  public void locationForTableThatHasntBeenExtractedCachesAndReturnsLocation() {
     assertNotNull(dataExtractionManager.location(table));
   }
 
