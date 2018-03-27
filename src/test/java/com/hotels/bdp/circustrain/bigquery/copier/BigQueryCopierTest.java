@@ -17,11 +17,9 @@ package com.hotels.bdp.circustrain.bigquery.copier;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import org.junit.Test;
 
-import com.hotels.bdp.circustrain.api.copier.Copier;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 
 public class BigQueryCopierTest {
@@ -29,11 +27,8 @@ public class BigQueryCopierTest {
   @Test
   public void copy() {
     BigQueryDataExtractionManager dataExtractionManager = mock(BigQueryDataExtractionManager.class);
-    Copier delegate = mock(Copier.class);
-    BigQueryCopier bigQueryCopier = new BigQueryCopier(delegate, dataExtractionManager);
+    BigQueryCopier bigQueryCopier = new BigQueryCopier(dataExtractionManager);
     bigQueryCopier.copy();
     verify(dataExtractionManager).extract();
-    verifyNoMoreInteractions(dataExtractionManager);
-    verify(delegate).copy();
   }
 }

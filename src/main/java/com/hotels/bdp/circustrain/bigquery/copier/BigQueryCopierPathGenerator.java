@@ -15,22 +15,19 @@
  */
 package com.hotels.bdp.circustrain.bigquery.copier;
 
-import com.hotels.bdp.circustrain.api.CircusTrainException;
-import com.hotels.bdp.circustrain.api.copier.Copier;
-import com.hotels.bdp.circustrain.api.metrics.Metrics;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.bdp.circustrain.api.copier.CopierPathGenerator;
+import com.hotels.bdp.circustrain.api.copier.CopierPathGeneratorParams;
+import org.apache.hadoop.fs.Path;
 
-public class BigQueryCopier implements Copier {
+public class BigQueryCopierPathGenerator implements CopierPathGenerator{
 
-  private final BigQueryDataExtractionManager dataExtractionManager;
-
-  public BigQueryCopier(BigQueryDataExtractionManager dataExtractionManager) {
-    this.dataExtractionManager = dataExtractionManager;
+  @Override
+  public Path generateSourceBaseLocation(CopierPathGeneratorParams copierPathGeneratorParams) {
+    return copierPathGeneratorParams.getOriginalSourceBaseLocation();
   }
 
   @Override
-  public Metrics copy() throws CircusTrainException {
-    dataExtractionManager.extract();
-    return Metrics.NULL_VALUE;
+  public Path generateReplicaLocation(CopierPathGeneratorParams copierPathGeneratorParams) {
+    return copierPathGeneratorParams.getOriginalReplicaLocation();
   }
 }

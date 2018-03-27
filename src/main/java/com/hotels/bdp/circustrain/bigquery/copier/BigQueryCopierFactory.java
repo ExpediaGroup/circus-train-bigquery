@@ -15,62 +15,28 @@
  */
 package com.hotels.bdp.circustrain.bigquery.copier;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-
-import com.hotels.bdp.circustrain.api.Modules;
 import com.hotels.bdp.circustrain.api.copier.Copier;
 import com.hotels.bdp.circustrain.api.copier.CopierFactory;
-import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryCondition;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 
-@Component
-@Profile({ Modules.REPLICATION })
-@Order(Ordered.HIGHEST_PRECEDENCE)
-@Conditional(CircusTrainBigQueryCondition.class)
 public class BigQueryCopierFactory implements CopierFactory {
 
-  private static final Logger log = LoggerFactory.getLogger(BigQueryCopierFactory.class);
-
-  private final List<CopierFactory> delegates;
   private final BigQueryDataExtractionManager dataExtractionManager;
 
-  private CopierFactory supportedFactory;
-
   @Autowired
-  BigQueryCopierFactory(List<CopierFactory> delegates, BigQueryDataExtractionManager dataExtractionManager) {
-    this.delegates = ImmutableList.copyOf(delegates);
+  public BigQueryCopierFactory(BigQueryDataExtractionManager dataExtractionManager) {
     this.dataExtractionManager = dataExtractionManager;
   }
 
   @Override
   public boolean supportsSchemes(String sourceScheme, String replicaScheme) {
-    for (CopierFactory factory : delegates) {
-      if (factory.supportsSchemes(sourceScheme, replicaScheme)) {
-        supportedFactory = factory;
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @VisibleForTesting
-  CopierFactory getSupportedFactory() {
-    return supportedFactory;
+    return true;
   }
 
   @Override
@@ -80,11 +46,7 @@ public class BigQueryCopierFactory implements CopierFactory {
       List<Path> sourceSubLocations,
       Path replicaLocation,
       Map<String, Object> copierOptions) {
-    Copier copier = supportedFactory.newInstance(eventId, sourceBaseLocation, sourceSubLocations, replicaLocation,
-        copierOptions);
-    Copier bigQueryCopier = new BigQueryCopier(copier, dataExtractionManager);
-    log.info("Created copier which delegates to the copier produced by {}", supportedFactory.getClass().getName());
-    return bigQueryCopier;
+    return new BigQueryCopier(dataExtractionManager);
   }
 
   @Override
@@ -93,6 +55,6 @@ public class BigQueryCopierFactory implements CopierFactory {
       Path sourceBaseLocation,
       Path replicaLocation,
       Map<String, Object> copierOptions) {
-    return newInstance(eventId, sourceBaseLocation, Collections.<Path> emptyList(), replicaLocation, copierOptions);
+    return new BigQueryCopier(dataExtractionManager);
   }
 }

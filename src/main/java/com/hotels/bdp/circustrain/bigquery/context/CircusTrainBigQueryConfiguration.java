@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -34,13 +36,19 @@ import com.google.cloud.storage.StorageOptions;
 import com.google.common.annotations.VisibleForTesting;
 
 import com.hotels.bdp.circustrain.api.Modules;
+import com.hotels.bdp.circustrain.api.copier.CopierFactory;
+import com.hotels.bdp.circustrain.api.copier.MetricsMerger;
 import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
+import com.hotels.bdp.circustrain.bigquery.copier.BigQueryCopierFactory;
+import com.hotels.bdp.circustrain.bigquery.copier.BigQueryCopierPathGenerator;
+import com.hotels.bdp.circustrain.bigquery.copier.SupportedSchemeCompositeCopierFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionService;
 import com.hotels.bdp.circustrain.bigquery.listener.BigQueryReplicationListener;
 import com.hotels.bdp.circustrain.bigquery.metastore.BigQueryMetastoreClientFactory;
 import com.hotels.bdp.circustrain.core.conf.SourceCatalog;
 import com.hotels.bdp.circustrain.gcp.context.GCPSecurity;
+import org.springframework.core.annotation.Order;
 
 @Profile({ Modules.REPLICATION })
 @Conditional(CircusTrainBigQueryCondition.class)
@@ -101,6 +109,20 @@ class CircusTrainBigQueryConfiguration {
       }
       return credential;
     }
+  }
+
+  @Bean
+  @Order(0)
+  CopierFactory supportedSchemeCompositeCopierFactory(
+      List<CopierFactory> copierFactories,
+      BigQueryDataExtractionManager bigQueryDataExtractionManager) {
+    BigQueryCopierFactory bigQueryCopierFactory = new BigQueryCopierFactory(bigQueryDataExtractionManager);
+    List<CopierFactory> delegates = new ArrayList<>();
+    delegates.add(bigQueryCopierFactory);
+    delegates.addAll(copierFactories);
+    //Problematic, some of these CopierFactories return true by default. Could filter here programatically but ugly + not future proof
+    return new SupportedSchemeCompositeCopierFactory(delegates, new BigQueryCopierPathGenerator(),
+        MetricsMerger.DEFAULT);
   }
 
   @VisibleForTesting
