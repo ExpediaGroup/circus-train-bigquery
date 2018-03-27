@@ -69,7 +69,7 @@ public class BigQueryCopierFactory implements CopierFactory {
   }
 
   @VisibleForTesting
-  public CopierFactory getSupportedFactory() {
+  CopierFactory getSupportedFactory() {
     return supportedFactory;
   }
 
@@ -83,8 +83,7 @@ public class BigQueryCopierFactory implements CopierFactory {
     Copier copier = supportedFactory.newInstance(eventId, sourceBaseLocation, sourceSubLocations, replicaLocation,
         copierOptions);
     Copier bigQueryCopier = new BigQueryCopier(copier, dataExtractionManager);
-    log.info("{} created copier which delegates to the copier produced by {}", this.getClass().getName(),
-        supportedFactory.getClass().getName());
+    log.info("Created copier which delegates to the copier produced by {}", supportedFactory.getClass().getName());
     return bigQueryCopier;
   }
 
