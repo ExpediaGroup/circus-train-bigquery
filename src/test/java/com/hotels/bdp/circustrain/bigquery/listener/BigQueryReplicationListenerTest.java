@@ -65,7 +65,7 @@ public class BigQueryReplicationListenerTest {
 
     listener.tableReplicationStart(eventTableReplication, "eventId");
 
-    verify(dataExtractionManager).register(any(Table[].class));
+    verify(dataExtractionManager).register(any(Table.class));
     verifyZeroInteractions(storage);
   }
 

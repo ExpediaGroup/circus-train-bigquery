@@ -16,16 +16,13 @@
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-
-import static junit.framework.TestCase.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,82 +44,53 @@ public class BigQueryDataExtractionManagerTest {
   @Before
   public void init() {
     dataExtractionManager = new BigQueryDataExtractionManager(service);
+    dataExtractionManager.register(table);
     when(table.getTableId()).thenReturn(TableId.of("dataset", "table"));
   }
 
   @Test
   public void extractRegisteredTest() {
-    Table one = mock(Table.class);
-    when(one.getTableId()).thenReturn(TableId.of("datasetOne", "tableOne"));
-
-    Table two = mock(Table.class);
-    when(two.getTableId()).thenReturn(TableId.of("datasetTwo", "tableTwo"));
-
-    Table three = mock(Table.class);
-    when(three.getTableId()).thenReturn(TableId.of("datasetThree", "tableThree"));
-
-    dataExtractionManager.register(one, two, three);
+    Table table = mock(Table.class);
+    when(table.getTableId()).thenReturn(TableId.of("datasetOne", "tableOne"));
     dataExtractionManager.extract();
-
-    verify(service, times(3)).extract(any(BigQueryExtractionData.class));
+    verify(service).extract(any(Table.class), any(BigQueryExtractionData.class));
   }
 
   @Test
   public void cleanupRegisteredTest() {
-    Table one = mock(Table.class);
-    when(one.getTableId()).thenReturn(TableId.of("datasetOne", "tableOne"));
+    Table table = mock(Table.class);
+    when(table.getTableId()).thenReturn(TableId.of("datasetOne", "tableOne"));
 
-    Table two = mock(Table.class);
-    when(two.getTableId()).thenReturn(TableId.of("datasetTwo", "tableTwo"));
-
-    Table three = mock(Table.class);
-    when(three.getTableId()).thenReturn(TableId.of("datasetThree", "tableThree"));
-
-    dataExtractionManager.register(one, two, three);
+    dataExtractionManager.register(table);
     dataExtractionManager.extract();
     dataExtractionManager.cleanup();
 
-    verify(service, times(3)).cleanup(any(BigQueryExtractionData.class));
+    verify(service).cleanup(any(BigQueryExtractionData.class));
   }
 
   @Test
   public void extractTest() {
-    dataExtractionManager.extract(table);
-    ArgumentCaptor<BigQueryExtractionData> captor = ArgumentCaptor.forClass(BigQueryExtractionData.class);
-    verify(service).extract(captor.capture());
-    BigQueryExtractionData data = captor.getValue();
-    assertEquals("dataset", data.getDatasetName());
-    assertEquals("table", data.getTableName());
+    dataExtractionManager.extract();
+    verify(service).extract(eq(table), any(BigQueryExtractionData.class));
   }
 
   @Test
   public void cleanupTest() {
-    dataExtractionManager.extract(table);
-    dataExtractionManager.cleanup(table);
-    ArgumentCaptor<BigQueryExtractionData> captor = ArgumentCaptor.forClass(BigQueryExtractionData.class);
-    verify(service).cleanup(captor.capture());
-    BigQueryExtractionData data = captor.getValue();
-    assertEquals("dataset", data.getDatasetName());
-    assertEquals("table", data.getTableName());
-  }
-
-  @Test
-  public void cleanupTableWhichHasntBeenExtractedDoesntExecute() {
-    dataExtractionManager.cleanup(table);
-    verifyZeroInteractions(service);
+    dataExtractionManager.cleanup();
+    verify(service).cleanup(any(BigQueryExtractionData.class));
   }
 
   @Test
   public void locationTest() {
-    dataExtractionManager.extract(table);
+    dataExtractionManager.extract();
     ArgumentCaptor<BigQueryExtractionData> captor = ArgumentCaptor.forClass(BigQueryExtractionData.class);
-    verify(service).extract(captor.capture());
+    verify(service).extract(any(Table.class), captor.capture());
     BigQueryExtractionData data = captor.getValue();
-    assertEquals("gs://" + data.getDataBucket() + "/", dataExtractionManager.location(table));
+    assertEquals("gs://" + data.getDataBucket() + "/", dataExtractionManager.location());
   }
 
   @Test
   public void locationForTableThatHasntBeenExtractedCachesAndReturnsLocation() {
-    assertNotNull(dataExtractionManager.location(table));
+    assertNotNull(dataExtractionManager.location());
   }
 }

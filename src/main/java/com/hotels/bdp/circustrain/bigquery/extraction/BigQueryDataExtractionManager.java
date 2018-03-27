@@ -15,9 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,60 +24,30 @@ public class BigQueryDataExtractionManager {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryDataExtractionManager.class);
 
-  private final Map<Table, BigQueryExtractionData> cache = new HashMap<>();
   private final BigQueryDataExtractionService service;
+
+  private Table table;
+  private BigQueryExtractionData data = new BigQueryExtractionData();
 
   public BigQueryDataExtractionManager(BigQueryDataExtractionService service) {
     this.service = service;
   }
 
-  public void register(Table... tables) {
-    for (Table table : tables) {
-      cacheRead(table);
-    }
+  public void register(Table table) {
+    this.table = table;
   }
 
   public void extract() {
-    for (Table table : cache.keySet()) {
-      extract(table);
-    }
+    log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+    service.extract(table, data);
   }
 
   public void cleanup() {
-    for (Table table : cache.keySet()) {
-      cleanup(table);
-    }
-  }
-
-  private BigQueryExtractionData cacheRead(Table table) {
-    BigQueryExtractionData data = cache.get(table);
-    if (data == null) {
-      log.info("Adding table: {}.{} to cache", table.getTableId().getDataset(), table.getTableId().getTable());
-      data = new BigQueryExtractionData(table);
-      cache.put(table, data);
-    }
-    return data;
-  }
-
-  public String location(Table table) {
-    BigQueryExtractionData data = cacheRead(table);
-    return "gs://" + data.getDataBucket() + "/";
-  }
-
-  public void extract(Table table) {
-    log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
-    BigQueryExtractionData data = cacheRead(table);
-    service.extract(data);
-  }
-
-  public void cleanup(Table table) {
     log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
-    BigQueryExtractionData data = cache.get(table);
-    if (data == null) {
-      log.warn("Attempting to cleanup table data for  {}.{} which has not been extracted",
-          table.getTableId().getDataset(), table.getTableId().getTable());
-      return;
-    }
     service.cleanup(data);
+  }
+
+  public String location() {
+    return "gs://" + data.getDataBucket() + "/";
   }
 }
