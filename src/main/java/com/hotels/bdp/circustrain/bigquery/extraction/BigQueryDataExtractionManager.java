@@ -27,8 +27,8 @@ public class BigQueryDataExtractionManager {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryDataExtractionManager.class);
 
-  private final BigQueryDataExtractionService service;
   private final Map<Table, BigQueryExtractionData> cache = new HashMap<>();
+  private final BigQueryDataExtractionService service;
 
   public BigQueryDataExtractionManager(BigQueryDataExtractionService service) {
     this.service = service;
@@ -62,6 +62,11 @@ public class BigQueryDataExtractionManager {
     return data;
   }
 
+  public String location(Table table) {
+    BigQueryExtractionData data = cacheRead(table);
+    return "gs://" + data.getDataBucket() + "/";
+  }
+
   public void extract(Table table) {
     log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
     BigQueryExtractionData data = cacheRead(table);
@@ -77,10 +82,5 @@ public class BigQueryDataExtractionManager {
       return;
     }
     service.cleanup(data);
-  }
-
-  public String location(Table table) {
-    BigQueryExtractionData data = cacheRead(table);
-    return "gs://" + data.getDataBucket() + "/";
   }
 }
