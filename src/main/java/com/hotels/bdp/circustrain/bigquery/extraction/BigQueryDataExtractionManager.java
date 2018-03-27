@@ -28,8 +28,7 @@ public class BigQueryDataExtractionManager {
   private static final Logger log = LoggerFactory.getLogger(BigQueryDataExtractionManager.class);
 
   private final BigQueryDataExtractionService service;
-
-  private Map<Table, BigQueryExtractionData> cache = new HashMap<>();
+  private final Map<Table, BigQueryExtractionData> cache = new HashMap<>();
 
   public BigQueryDataExtractionManager(BigQueryDataExtractionService service) {
     this.service = service;
