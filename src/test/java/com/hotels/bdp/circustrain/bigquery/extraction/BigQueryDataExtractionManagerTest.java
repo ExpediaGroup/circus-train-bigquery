@@ -17,7 +17,6 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -132,29 +131,5 @@ public class BigQueryDataExtractionManagerTest {
   @Test
   public void locationForTableThatHasntBeenExtractedCachesAndReturnsLocation() {
     assertNotNull(dataExtractionManager.location(table));
-  }
-
-  @Test
-  public void tableWrapperHashCodeTest() {
-    BigQueryDataExtractionManager.TableWrapper wrapperOne = new BigQueryDataExtractionManager.TableWrapper(table);
-    BigQueryDataExtractionManager.TableWrapper wrapperTwo = new BigQueryDataExtractionManager.TableWrapper(table);
-
-    assertEquals(wrapperOne.hashCode(), wrapperTwo.hashCode());
-  }
-
-  @Test
-  public void tableWrapperEqualsTest() {
-    BigQueryDataExtractionManager.TableWrapper wrapperOne = new BigQueryDataExtractionManager.TableWrapper(table);
-    BigQueryDataExtractionManager.TableWrapper wrapperTwo = new BigQueryDataExtractionManager.TableWrapper(table);
-    assertEquals(wrapperOne, wrapperTwo);
-  }
-
-  @Test
-  public void tableWrapperNotEqualsTest() {
-    BigQueryDataExtractionManager.TableWrapper wrapperOne = new BigQueryDataExtractionManager.TableWrapper(table);
-    Table mock = mock(Table.class);
-    when(mock.getTableId()).thenReturn(TableId.of("dataset2", "table2"));
-    BigQueryDataExtractionManager.TableWrapper wrapperTwo = new BigQueryDataExtractionManager.TableWrapper(mock);
-    assertNotEquals(wrapperOne, wrapperTwo);
   }
 }

@@ -15,8 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,63 +22,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.Table;
-import com.google.common.annotations.VisibleForTesting;
 
 public class BigQueryDataExtractionManager {
-
-  @VisibleForTesting
-  static class TableWrapper {
-
-    private final Table table;
-
-    TableWrapper(Table table) {
-      this.table = table;
-    }
-
-    @Override
-    public String toString() {
-      return table.getTableId().getDataset() + "." + table.getTableId().getTable();
-    }
-
-    @Override
-    public int hashCode() {
-      return (makeKey(table.getTableId().getDataset(), table.getTableId().getTable())).hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      TableWrapper other = (TableWrapper) obj;
-      Table otherTable = other.table;
-      String thisDatasetName = this.table.getTableId().getDataset();
-      String otherDatasetName = otherTable.getTableId().getDataset();
-      if (!thisDatasetName.equals(otherDatasetName)) {
-        return false;
-      }
-
-      String thisTableName = this.table.getTableId().getTable();
-      String otherTableName = otherTable.getTableId().getTable();
-      if (!thisTableName.equals(otherTableName)) {
-        return false;
-      }
-
-      return true;
-    }
-  }
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryDataExtractionManager.class);
 
   private final BigQueryDataExtractionService service;
 
-  private Map<TableWrapper, BigQueryExtractionData> cache = new HashMap<>();
+  private Map<Table, BigQueryExtractionData> cache = new HashMap<>();
 
   public BigQueryDataExtractionManager(BigQueryDataExtractionService service) {
     this.service = service;
@@ -88,62 +37,51 @@ public class BigQueryDataExtractionManager {
 
   public void register(Table... tables) {
     for (Table table : tables) {
-      cacheRead(new TableWrapper(table));
+      cacheRead(table);
     }
   }
 
   public void extract() {
-    for (TableWrapper wrapper : cache.keySet()) {
-      extract(wrapper);
+    for (Table table : cache.keySet()) {
+      extract(table);
     }
   }
 
   public void cleanup() {
-    for (TableWrapper table : cache.keySet()) {
+    for (Table table : cache.keySet()) {
       cleanup(table);
     }
   }
 
-  private BigQueryExtractionData cacheRead(TableWrapper wrapper) {
-    BigQueryExtractionData data = cache.get(wrapper);
+  private BigQueryExtractionData cacheRead(Table table) {
+    BigQueryExtractionData data = cache.get(table);
     if (data == null) {
-      log.info("Adding table: {} to cache", wrapper);
-      data = new BigQueryExtractionData(wrapper.table);
-      cache.put(wrapper, data);
+      log.info("Adding table: {}.{} to cache", table.getTableId().getDataset(), table.getTableId().getTable());
+      data = new BigQueryExtractionData(table);
+      cache.put(table, data);
     }
     return data;
   }
 
   public boolean extract(Table table) {
-    return extract(new TableWrapper(table));
-  }
-
-  private boolean extract(TableWrapper wrapper) {
-    log.info("Extracting table: {}", wrapper);
-    BigQueryExtractionData data = cacheRead(wrapper);
+    log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+    BigQueryExtractionData data = cacheRead(table);
     return service.extract(data);
   }
 
   public boolean cleanup(Table table) {
-    return cleanup(new TableWrapper(table));
-  }
-
-  private boolean cleanup(TableWrapper wrapper) {
-    log.info("Cleaning data from table: {}", wrapper);
-    BigQueryExtractionData data = cache.get(wrapper);
+    log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+    BigQueryExtractionData data = cache.get(table);
     if (data == null) {
-      log.warn("Attempting to cleanup table data {} which has not been extracted", wrapper);
+      log.warn("Attempting to cleanup table data for  {}.{} which has not been extracted",
+          table.getTableId().getDataset(), table.getTableId().getTable());
       return false;
     }
     return service.cleanup(data);
   }
 
   public String location(Table table) {
-    return location(new TableWrapper(table));
-  }
-
-  private String location(TableWrapper wrapper) {
-    BigQueryExtractionData data = cacheRead(wrapper);
+    BigQueryExtractionData data = cacheRead(table);
     return "gs://" + data.getDataBucket() + "/";
   }
 }
