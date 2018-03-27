@@ -37,10 +37,6 @@ public class BigQueryDataExtractionManager {
       this.table = table;
     }
 
-    private Table getTable() {
-      return this.table;
-    }
-
     @Override
     public String toString() {
       return table.getTableId().getDataset() + "." + table.getTableId().getTable();
@@ -63,7 +59,7 @@ public class BigQueryDataExtractionManager {
         return false;
       }
       TableWrapper other = (TableWrapper) obj;
-      Table otherTable = other.getTable();
+      Table otherTable = other.table;
       String thisDatasetName = this.table.getTableId().getDataset();
       String otherDatasetName = otherTable.getTableId().getDataset();
       if (!thisDatasetName.equals(otherDatasetName)) {
@@ -112,7 +108,7 @@ public class BigQueryDataExtractionManager {
     BigQueryExtractionData data = cache.get(wrapper);
     if (data == null) {
       log.info("Adding table: {} to cache", wrapper);
-      data = new BigQueryExtractionData(wrapper.getTable());
+      data = new BigQueryExtractionData(wrapper.table);
       cache.put(wrapper, data);
     }
     return data;
