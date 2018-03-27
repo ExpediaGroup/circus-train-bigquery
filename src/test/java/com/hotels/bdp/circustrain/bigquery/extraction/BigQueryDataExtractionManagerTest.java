@@ -96,13 +96,6 @@ public class BigQueryDataExtractionManagerTest {
   }
 
   @Test
-  public void extractingAlreadyExtractedTableDoesntExecute() {
-    when(service.extract(any(BigQueryExtractionData.class))).thenReturn(true, false);
-    assertTrue(dataExtractionManager.extract(table));
-    assertFalse(dataExtractionManager.extract(table));
-  }
-
-  @Test
   public void cleanupTest() {
     dataExtractionManager.extract(table);
     dataExtractionManager.cleanup(table);

@@ -37,14 +37,13 @@ public class BigQueryDataExtractionService {
     this.storage = storage;
   }
 
-  boolean extract(BigQueryExtractionData extractionData) {
+  void extract(BigQueryExtractionData extractionData) {
     createBucket(extractionData);
     extractDataFromBigQuery(extractionData);
     log.info("Extracted {}", extractionData);
-    return true;
   }
 
-  boolean cleanup(BigQueryExtractionData extractionData) {
+  void cleanup(BigQueryExtractionData extractionData) {
     String dataBucket = extractionData.getDataBucket();
     String dataKey = extractionData.getDataKey();
     String format = extractionData.getFormat();
@@ -62,7 +61,6 @@ public class BigQueryDataExtractionService {
     }
 
     log.info("Cleaned up {}", extractionData);
-    return true;
   }
 
   private void createBucket(BigQueryExtractionData extractionData) {

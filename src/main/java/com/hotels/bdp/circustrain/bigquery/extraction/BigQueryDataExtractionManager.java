@@ -63,21 +63,21 @@ public class BigQueryDataExtractionManager {
     return data;
   }
 
-  public boolean extract(Table table) {
+  public void extract(Table table) {
     log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
     BigQueryExtractionData data = cacheRead(table);
-    return service.extract(data);
+    service.extract(data);
   }
 
-  public boolean cleanup(Table table) {
+  public void cleanup(Table table) {
     log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
     BigQueryExtractionData data = cache.get(table);
     if (data == null) {
       log.warn("Attempting to cleanup table data for  {}.{} which has not been extracted",
           table.getTableId().getDataset(), table.getTableId().getTable());
-      return false;
+      return;
     }
-    return service.cleanup(data);
+    service.cleanup(data);
   }
 
   public String location(Table table) {
