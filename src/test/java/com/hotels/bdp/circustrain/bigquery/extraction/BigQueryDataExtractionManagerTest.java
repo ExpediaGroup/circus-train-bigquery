@@ -28,9 +28,6 @@ import static org.mockito.Mockito.when;
 
 import static junit.framework.TestCase.assertTrue;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -159,20 +156,5 @@ public class BigQueryDataExtractionManagerTest {
     when(mock.getTableId()).thenReturn(TableId.of("dataset2", "table2"));
     BigQueryDataExtractionManager.TableWrapper wrapperTwo = new BigQueryDataExtractionManager.TableWrapper(mock);
     assertNotEquals(wrapperOne, wrapperTwo);
-  }
-
-  @Test
-  public void tableWrapperInSetTest() {
-    BigQueryDataExtractionManager.TableWrapper wrapper = new BigQueryDataExtractionManager.TableWrapper(table);
-    Set<BigQueryDataExtractionManager.TableWrapper> set = new HashSet<>();
-    set.add(wrapper);
-    set.add(wrapper);
-    assertEquals(1, set.size());
-    Table mock = mock(Table.class);
-    when(mock.getTableId()).thenReturn(TableId.of("dataset2", "table2"));
-    BigQueryDataExtractionManager.TableWrapper wrapperTwo = new BigQueryDataExtractionManager.TableWrapper(mock);
-    set.add(wrapperTwo);
-    assertEquals(2, set.size());
-
   }
 }
