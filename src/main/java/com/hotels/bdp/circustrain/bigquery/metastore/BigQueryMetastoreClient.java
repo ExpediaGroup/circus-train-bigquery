@@ -135,13 +135,9 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
         .withDatabaseName(databaseName)
         .withTableName(tableName)
         .withSchema(table.getDefinition().getSchema())
-        .withLocation(getLocation(table))
+        .withLocation(dataExtractionManager.location())
         .convert();
     return hiveTable;
-  }
-
-  private String getLocation(com.google.cloud.bigquery.Table table) {
-    return dataExtractionManager.location(table);
   }
 
   private com.google.cloud.bigquery.Table getBigQueryTable(String databaseName, String tableName)

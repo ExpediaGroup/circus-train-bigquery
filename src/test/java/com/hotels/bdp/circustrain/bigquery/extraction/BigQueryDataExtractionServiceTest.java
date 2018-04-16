@@ -63,21 +63,21 @@ public class BigQueryDataExtractionServiceTest {
 
   @Test
   public void extract() throws InterruptedException {
-    BigQueryExtractionData data = new BigQueryExtractionData(table);
+    BigQueryExtractionData data = new BigQueryExtractionData();
     TableId tableId = TableId.of("dataset", "table");
     when(table.extract(anyString(), anyString())).thenReturn(job);
     when(table.getTableId()).thenReturn(tableId);
     when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(job);
     when(job.getStatus()).thenReturn(jobStatus);
     when(jobStatus.getError()).thenReturn(null);
-    service.extract(data);
+    service.extract(table, data);
     verify(storage).create(any(BucketInfo.class));
     verify(table).extract(eq("csv"), eq(data.getDataUri()));
   }
 
   @Test
   public void cleanup() {
-    BigQueryExtractionData data = new BigQueryExtractionData(table);
+    BigQueryExtractionData data = new BigQueryExtractionData();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
     when(storage.delete(any(BlobId.class))).thenReturn(true);
@@ -91,7 +91,7 @@ public class BigQueryDataExtractionServiceTest {
 
   @Test
   public void cleanupWhenDeletionFailsDoesntThrowException() {
-    BigQueryExtractionData data = new BigQueryExtractionData(table);
+    BigQueryExtractionData data = new BigQueryExtractionData();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
     when(storage.delete(any(BlobId.class))).thenReturn(false);
@@ -108,12 +108,12 @@ public class BigQueryDataExtractionServiceTest {
     expectedException.expect(CircusTrainException.class);
     expectedException.expectMessage("job no longer exists");
 
-    BigQueryExtractionData data = new BigQueryExtractionData(table);
+    BigQueryExtractionData data = new BigQueryExtractionData();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
     when(table.extract(anyString(), anyString())).thenReturn(job);
     when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(null);
-    service.extract(data);
+    service.extract(table, data);
   }
 
   @Test
@@ -124,13 +124,13 @@ public class BigQueryDataExtractionServiceTest {
     expectedException.expectMessage(bigQueryError.getLocation());
     expectedException.expectMessage(bigQueryError.getMessage());
 
-    BigQueryExtractionData data = new BigQueryExtractionData(table);
+    BigQueryExtractionData data = new BigQueryExtractionData();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
     when(table.extract(anyString(), anyString())).thenReturn(job);
     when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(job);
     when(job.getStatus()).thenReturn(jobStatus);
     when(jobStatus.getError()).thenReturn(new BigQueryError("reason", "location", "message"));
-    service.extract(data);
+    service.extract(table, data);
   }
 }

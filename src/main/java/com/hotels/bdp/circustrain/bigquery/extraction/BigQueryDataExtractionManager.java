@@ -15,56 +15,39 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.Table;
 
-import com.hotels.bdp.circustrain.api.CircusTrainException;
-
 public class BigQueryDataExtractionManager {
 
-  private final Map<String, BigQueryExtractionData> cache = new HashMap<>();
+  private static final Logger log = LoggerFactory.getLogger(BigQueryDataExtractionManager.class);
+
   private final BigQueryDataExtractionService service;
+
+  private Table table;
+  private BigQueryExtractionData data = new BigQueryExtractionData();
 
   public BigQueryDataExtractionManager(BigQueryDataExtractionService service) {
     this.service = service;
   }
 
-  private String getKey(Table table) {
-    String databaseName = table.getTableId().getDataset();
-    String tableName = table.getTableId().getTable();
-    String key = makeKey(databaseName, tableName);
-    return key;
+  public void register(Table table) {
+    this.table = table;
   }
 
-  public void extract(Table table) {
-    String key = getKey(table);
-    if (cache.get(key) != null) {
-      throw new CircusTrainException("Attempting to extract " + table + " which has already been extracted.");
-    }
-    BigQueryExtractionData data = new BigQueryExtractionData(table);
-    cache.put(key, data);
-    service.extract(data);
+  public void extract() {
+    log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+    service.extract(table, data);
   }
 
-  public void cleanup(Table table) {
-    String key = getKey(table);
-    BigQueryExtractionData data = cache.get(key);
-    if (data == null) {
-      throw new CircusTrainException("Attempting to cleanup " + table + " this table was not extracted");
-    }
+  public void cleanup() {
+    log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
     service.cleanup(data);
   }
 
-  public String location(Table table) {
-    String key = getKey(table);
-    BigQueryExtractionData data = cache.get(key);
-    if (data == null) {
-      return null;
-    }
+  public String location() {
     return "gs://" + data.getDataBucket() + "/";
   }
 }

@@ -39,9 +39,13 @@ public class BigQueryReplicationListener implements TableReplicationListener {
   }
 
   @Override
-  public void tableReplicationStart(EventTableReplication tableReplication, String eventId) {
-    Table table = getTable(tableReplication);
-    dataExtractionManager.extract(table);
+  public void tableReplicationStart(EventTableReplication eventTableReplication, String eventId) {
+    log.info("Table replication from {}.{} -> {}.{} has started.",
+        eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
+        eventTableReplication.getReplicaTable().getDatabaseName(),
+        eventTableReplication.getReplicaTable().getTableName());
+    Table table = getTable(eventTableReplication);
+    dataExtractionManager.register(table);
   }
 
   @Override
@@ -50,18 +54,16 @@ public class BigQueryReplicationListener implements TableReplicationListener {
         eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
-    Table table = getTable(eventTableReplication);
-    dataExtractionManager.cleanup(table);
+    dataExtractionManager.cleanup();
   }
 
   @Override
   public void tableReplicationFailure(EventTableReplication eventTableReplication, String eventId, Throwable t) {
-    log.warn("Table replication {}.{} -> {}.{} failed {}. Cleaning up temporary data",
+    log.warn("Table replication {}.{} -> {}.{} failed. Cleaning up temporary data",
         eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
-    Table table = getTable(eventTableReplication);
-    dataExtractionManager.cleanup(table);
+    dataExtractionManager.cleanup();
   }
 
   private Table getTable(EventTableReplication tableReplication) {

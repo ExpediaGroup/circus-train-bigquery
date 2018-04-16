@@ -16,7 +16,9 @@
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,8 +33,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
 
-import com.hotels.bdp.circustrain.api.CircusTrainException;
-
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryDataExtractionManagerTest {
 
@@ -43,52 +43,53 @@ public class BigQueryDataExtractionManagerTest {
   @Before
   public void init() {
     dataExtractionManager = new BigQueryDataExtractionManager(service);
+    dataExtractionManager.register(table);
     when(table.getTableId()).thenReturn(TableId.of("dataset", "table"));
   }
 
   @Test
-  public void extractTest() {
-    dataExtractionManager.extract(table);
-    ArgumentCaptor<BigQueryExtractionData> captor = ArgumentCaptor.forClass(BigQueryExtractionData.class);
-    verify(service).extract(captor.capture());
-    BigQueryExtractionData data = captor.getValue();
-    assertEquals("dataset", data.getDatasetName());
-    assertEquals("table", data.getTableName());
+  public void extractRegisteredTest() {
+    Table table = mock(Table.class);
+    when(table.getTableId()).thenReturn(TableId.of("datasetOne", "tableOne"));
+    dataExtractionManager.extract();
+    verify(service).extract(any(Table.class), any(BigQueryExtractionData.class));
   }
 
-  @Test(expected = CircusTrainException.class)
-  public void extractingAlreadyExtractedTableThrowsExceptionTest() {
-    dataExtractionManager.extract(table);
-    dataExtractionManager.extract(table);
+  @Test
+  public void cleanupRegisteredTest() {
+    Table table = mock(Table.class);
+    when(table.getTableId()).thenReturn(TableId.of("datasetOne", "tableOne"));
+
+    dataExtractionManager.register(table);
+    dataExtractionManager.extract();
+    dataExtractionManager.cleanup();
+
+    verify(service).cleanup(any(BigQueryExtractionData.class));
+  }
+
+  @Test
+  public void extractTest() {
+    dataExtractionManager.extract();
+    verify(service).extract(eq(table), any(BigQueryExtractionData.class));
   }
 
   @Test
   public void cleanupTest() {
-    dataExtractionManager.extract(table);
-    dataExtractionManager.cleanup(table);
-    ArgumentCaptor<BigQueryExtractionData> captor = ArgumentCaptor.forClass(BigQueryExtractionData.class);
-    verify(service).cleanup(captor.capture());
-    BigQueryExtractionData data = captor.getValue();
-    assertEquals("dataset", data.getDatasetName());
-    assertEquals("table", data.getTableName());
-  }
-
-  @Test(expected = CircusTrainException.class)
-  public void cleanupTableWhichHasntBeenExtractedThrowsExceptionTest() {
-    dataExtractionManager.cleanup(table);
+    dataExtractionManager.cleanup();
+    verify(service).cleanup(any(BigQueryExtractionData.class));
   }
 
   @Test
   public void locationTest() {
-    dataExtractionManager.extract(table);
+    dataExtractionManager.extract();
     ArgumentCaptor<BigQueryExtractionData> captor = ArgumentCaptor.forClass(BigQueryExtractionData.class);
-    verify(service).extract(captor.capture());
+    verify(service).extract(any(Table.class), captor.capture());
     BigQueryExtractionData data = captor.getValue();
-    assertEquals("gs://" + data.getDataBucket() + "/", dataExtractionManager.location(table));
+    assertEquals("gs://" + data.getDataBucket() + "/", dataExtractionManager.location());
   }
 
   @Test
-  public void locationForTableThatHasntBeenExtractedIsNull() {
-    assertNull(dataExtractionManager.location(table));
+  public void locationForTableThatHasntBeenExtractedCachesAndReturnsLocation() {
+    assertNotNull(dataExtractionManager.location());
   }
 }

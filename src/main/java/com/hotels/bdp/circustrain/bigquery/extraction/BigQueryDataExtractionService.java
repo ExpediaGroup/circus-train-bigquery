@@ -15,6 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
+import com.google.cloud.bigquery.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +38,9 @@ public class BigQueryDataExtractionService {
     this.storage = storage;
   }
 
-  void extract(BigQueryExtractionData extractionData) {
+  void extract(Table table, BigQueryExtractionData extractionData) {
     createBucket(extractionData);
-    extractDataFromBigQuery(extractionData);
+    extractDataFromBigQuery(extractionData, table);
   }
 
   void cleanup(BigQueryExtractionData extractionData) {
@@ -67,15 +68,15 @@ public class BigQueryDataExtractionService {
     storage.create(bucketInfo);
   }
 
-  private void extractDataFromBigQuery(BigQueryExtractionData extractionData) {
-    String dataset = extractionData.getDatasetName();
-    String tableName = extractionData.getTableName();
+  private void extractDataFromBigQuery(BigQueryExtractionData extractionData, Table table) {
+    String dataset = table.getTableId().getDataset();
+    String tableName = table.getTableId().getTable();
     String format = extractionData.getFormat();
     String dataUri = extractionData.getDataUri();
 
     log.info("Extracting {}.{} to temporary location {}", dataset, tableName, dataUri);
     try {
-      Job job = extractionData.getTable().extract(format, dataUri);
+      Job job = table.extract(format, dataUri);
       Job completedJob = job.waitFor();
       if (completedJob == null) {
         throw new CircusTrainException("Error extracting BigQuery table data to Google storage, job no longer exists");

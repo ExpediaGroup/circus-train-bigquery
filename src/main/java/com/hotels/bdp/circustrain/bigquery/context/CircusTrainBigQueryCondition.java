@@ -23,7 +23,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 
 import com.hotels.bdp.circustrain.bigquery.metastore.BigQueryMetastoreClientFactory;
 
-class CircusTrainBigQueryCondition implements Condition {
+public class CircusTrainBigQueryCondition implements Condition {
 
   private static final String SOURCE_CATALOG_HIVE_METASTORE_URIS = "source-catalog.hive-metastore-uris";
 
