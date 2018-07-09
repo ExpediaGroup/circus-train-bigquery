@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -8,7 +9,7 @@
   </parent>
 
   <artifactId>circus-train-bigquery</artifactId>
-  <version>1.0.3-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <name>Bigquery Client</name>
   <inceptionYear>2018</inceptionYear>
 
@@ -20,7 +21,7 @@
   </scm>
 
   <properties>
-    <circus-train-version>11.3.0</circus-train-version>
+    <circus-train-version>12.0.0</circus-train-version>
     <google-cloud.version>0.34.0-alpha</google-cloud.version>
     <hadoop.version>2.7.1</hadoop.version>
     <hive.version>2.3.2</hive.version>
@@ -92,6 +93,12 @@
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-storage</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava-jdk5</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>

@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.hotels.bdp.circustrain.core.conf.SourceCatalog;
+import com.hotels.bdp.circustrain.api.conf.SourceCatalog;
 
 public class CircusTrainBigQueryConfigurationTest {
 

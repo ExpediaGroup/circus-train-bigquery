@@ -34,12 +34,12 @@ import com.google.cloud.storage.StorageOptions;
 import com.google.common.annotations.VisibleForTesting;
 
 import com.hotels.bdp.circustrain.api.Modules;
+import com.hotels.bdp.circustrain.api.conf.SourceCatalog;
 import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionService;
 import com.hotels.bdp.circustrain.bigquery.listener.BigQueryReplicationListener;
 import com.hotels.bdp.circustrain.bigquery.metastore.BigQueryMetastoreClientFactory;
-import com.hotels.bdp.circustrain.core.conf.SourceCatalog;
 import com.hotels.bdp.circustrain.gcp.context.GCPSecurity;
 
 @Profile({ Modules.REPLICATION })

@@ -91,9 +91,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.BigQuery;
 
-import com.hotels.bdp.circustrain.api.metastore.CloseableMetaStoreClient;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
 class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
@@ -158,6 +158,11 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   @Override
   public void close() {
     // Do Nothing
+  }
+
+  @Override
+  public boolean isOpen() {
+    return true;
   }
 
   @Override
