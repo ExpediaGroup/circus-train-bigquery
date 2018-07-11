@@ -16,8 +16,6 @@
 package com.hotels.bdp.circustrain.bigquery.metastore;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.BigQuery;
 
@@ -30,14 +28,10 @@ public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClien
 
   public static final String ACCEPT_PREFIX = "bigquery://";
 
-  private static final Logger log = LoggerFactory.getLogger(BigQueryMetastoreClientFactory.class);
-
-  private final BigQuery bigQuery;
-  private final BigQueryDataExtractionManager dataExtractionManager;
+  private final BigQueryMetastoreClient metastoreClient;
 
   public BigQueryMetastoreClientFactory(BigQuery bigQuery, BigQueryDataExtractionManager dataExtractionManager) {
-    this.bigQuery = bigQuery;
-    this.dataExtractionManager = dataExtractionManager;
+    this.metastoreClient = new BigQueryMetastoreClient(bigQuery, dataExtractionManager);
   }
 
   @Override
@@ -47,7 +41,6 @@ public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClien
 
   @Override
   public CloseableMetaStoreClient newInstance(HiveConf conf, String name) throws MetaStoreClientException {
-    log.info("Creating new instance of BigQueryMetastoreClient");
-    return new BigQueryMetastoreClient(bigQuery, dataExtractionManager);
+    return metastoreClient;
   }
 }

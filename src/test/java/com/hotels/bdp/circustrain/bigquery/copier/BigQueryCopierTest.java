@@ -32,7 +32,7 @@ public class BigQueryCopierTest {
     Copier delegate = mock(Copier.class);
     BigQueryCopier bigQueryCopier = new BigQueryCopier(delegate, dataExtractionManager);
     bigQueryCopier.copy();
-    verify(dataExtractionManager).extract();
+    verify(dataExtractionManager).extractAll();
     verifyNoMoreInteractions(dataExtractionManager);
     verify(delegate).copy();
   }

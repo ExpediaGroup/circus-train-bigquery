@@ -38,7 +38,7 @@ public class BigQueryCopier implements Copier {
   @Override
   public Metrics copy() throws CircusTrainException {
     log.info("Extracting table data for copying by {}", copier.getClass().getName());
-    dataExtractionManager.extract();
+    dataExtractionManager.extractAll();
     log.info("Delegating to {} to execute copying of the data", copier.getClass().getName());
     return copier.copy();
   }

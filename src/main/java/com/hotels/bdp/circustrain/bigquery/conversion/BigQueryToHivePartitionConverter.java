@@ -17,28 +17,30 @@ package com.hotels.bdp.circustrain.bigquery.conversion;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
+import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
-import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Schema;
+import com.google.cloud.bigquery.TableResult;
 
-public class BigQueryToHiveTableConverter {
+public class BigQueryToHivePartitionConverter {
 
-  private final Table table = new Table();
+  private Partition partition = new Partition();
 
-  public BigQueryToHiveTableConverter() {
-    table.setDbName("default");
-    table.setTableName("default");
-    table.setOwner("");
-    table.setLastAccessTime(0);
-    table.setRetention(0);
-    table.setPartitionKeys(new ArrayList<FieldSchema>());
+  public BigQueryToHivePartitionConverter() {
+    partition.setDbName("default");
+    partition.setTableName("default");
+    partition.setValues(new ArrayList<String>());
+    partition.setLastAccessTime(0);
     StorageDescriptor sd = new StorageDescriptor();
     sd.setLocation("");
     sd.setParameters(new HashMap<String, String>());
@@ -61,38 +63,46 @@ public class BigQueryToHiveTableConverter {
     serDeParameters.put("field.delim", ",");
     serDeInfo.setParameters(serDeParameters);
     sd.setSerdeInfo(serDeInfo);
-    table.setSd(sd);
+    partition.setSd(sd);
   }
 
-  public Table convert() {
-    return new Table(table);
+  public Partition convert() {
+    return new Partition(partition);
   }
 
-  public BigQueryToHiveTableConverter withDatabaseName(String dbName) {
-    table.setDbName(dbName);
+  public BigQueryToHivePartitionConverter withDatabaseName(String dbName) {
+    partition.setDbName(dbName);
     return this;
   }
 
-  public BigQueryToHiveTableConverter withTableName(String tableName) {
-    table.setTableName(tableName);
+  public BigQueryToHivePartitionConverter withTableName(String tableName) {
+    partition.setTableName(tableName);
     return this;
   }
 
-  public BigQueryToHiveTableConverter withLocation(String location) {
-    table.getSd().setLocation(location);
+  public BigQueryToHivePartitionConverter withLocation(String location) {
+    partition.getSd().setLocation(location);
     return this;
   }
 
-  public BigQueryToHiveTableConverter withSchema(Schema schema) {
+  // TODO: Refactor so that Fields and FieldValueList are passed rather than TableResult
+  public BigQueryToHivePartitionConverter withValues(TableResult result) {
     BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
+    // NOTE: Should this be set or list? Does Hive take duplicate Partitions
+    Set<String> values = new LinkedHashSet<>();
+    Schema schema = result.getSchema();
     for (Field field : schema.getFields()) {
-      FieldSchema fieldSchema = new FieldSchema();
-      fieldSchema.setName(field.getName().toLowerCase());
-      fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
-      table.getSd().addToCols(fieldSchema);
+      String key = field.getName().toLowerCase();
+      for (FieldValueList row : result.iterateAll()) {
+        String data = row.get(key).getValue().toString();
+        String value = key + "=" + data;
+        values.add(value);
+      }
+    }
+
+    for (String value : values) {
+      partition.addToValues(value);
     }
     return this;
   }
-
-
 }

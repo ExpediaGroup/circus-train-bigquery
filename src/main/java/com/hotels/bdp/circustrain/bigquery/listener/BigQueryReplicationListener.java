@@ -54,7 +54,7 @@ public class BigQueryReplicationListener implements TableReplicationListener {
         eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
-    dataExtractionManager.cleanup();
+    dataExtractionManager.cleanupAll();
   }
 
   @Override
@@ -63,7 +63,7 @@ public class BigQueryReplicationListener implements TableReplicationListener {
         eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
-    dataExtractionManager.cleanup();
+    dataExtractionManager.cleanupAll();
   }
 
   private Table getTable(EventTableReplication tableReplication) {

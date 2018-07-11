@@ -15,39 +15,61 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.Table;
+import com.google.common.annotations.VisibleForTesting;
 
 public class BigQueryDataExtractionManager {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryDataExtractionManager.class);
 
   private final BigQueryDataExtractionService service;
-
-  private Table table;
-  private BigQueryExtractionData data = new BigQueryExtractionData();
+  private final Map<Table, BigQueryExtractionData> locationMap;
 
   public BigQueryDataExtractionManager(BigQueryDataExtractionService service) {
     this.service = service;
+    this.locationMap = new HashMap<>();
+  }
+
+  @VisibleForTesting
+  BigQueryDataExtractionManager(
+      BigQueryDataExtractionService service,
+      Map<Table, BigQueryExtractionData> locationMap) {
+    this.service = service;
+    this.locationMap = locationMap;
   }
 
   public void register(Table table) {
-    this.table = table;
+    locationMap.put(table, new BigQueryExtractionData());
   }
 
-  public void extract() {
-    log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
-    service.extract(table, data);
+  public void extractAll() {
+    for (Map.Entry<Table, BigQueryExtractionData> entry : locationMap.entrySet()) {
+      Table table = entry.getKey();
+      BigQueryExtractionData extractionData = entry.getValue();
+      log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+      service.extract(table, extractionData);
+    }
   }
 
-  public void cleanup() {
-    log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
-    service.cleanup(data);
+  public void cleanupAll() {
+    for (Map.Entry<Table, BigQueryExtractionData> entry : locationMap.entrySet()) {
+      Table table = entry.getKey();
+      BigQueryExtractionData extractionData = entry.getValue();
+      log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+      service.cleanup(extractionData);
+    }
   }
 
-  public String location() {
-    return "gs://" + data.getDataBucket() + "/";
+  public String getDataLocation(Table table) {
+    if (!locationMap.containsKey(table)) {
+      return null;
+    }
+    return "gs://" + locationMap.get(table).getDataBucket() + "/";
   }
 }

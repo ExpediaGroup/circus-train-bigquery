@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.common.ValidTxnList;
@@ -90,7 +91,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobId;
+import com.google.cloud.bigquery.JobInfo;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.TableResult;
 
+import com.hotels.bdp.circustrain.CircusTrain;
+import com.hotels.bdp.circustrain.api.CircusTrainException;
+import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHivePartitionConverter;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
@@ -130,14 +139,65 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   public Table getTable(String databaseName, String tableName) throws TException {
     log.info("Getting table {}.{} from BigQuery", databaseName, tableName);
     checkDbExists(databaseName);
-    com.google.cloud.bigquery.Table table = getBigQueryTable(databaseName, tableName);
-    Table hiveTable = new BigQueryToHiveTableConverter()
+    com.google.cloud.bigquery.Table bigQueryTable = getBigQueryTable(databaseName, tableName);
+    Table hiveTable = convertBigQueryTableToHive(bigQueryTable);
+    return hiveTable;
+  }
+
+  //TODO: Tidy up exception handling
+  private Partition applyPartitionFilter(String databaseName, String tableName, String partitionFilter) {
+    QueryJobConfiguration queryConfig = QueryJobConfiguration
+        .newBuilder(String.format(partitionFilter, databaseName, tableName))
+        .setUseLegacySql(false)
+        .build();
+
+    JobId jobId = JobId.of(UUID.randomUUID().toString());
+    Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
+
+    try {
+      queryJob = queryJob.waitFor();
+    } catch (InterruptedException e) {
+      throw new CircusTrainException(e);
+    }
+
+    if (queryJob == null) {
+      throw new RuntimeException("Job no longer exists");
+    } else if (queryJob.getStatus().getError() != null) {
+      throw new RuntimeException(queryJob.getStatus().getError().toString());
+    }
+
+    TableResult result = null;
+    try {
+      result = queryJob.getQueryResults();
+    } catch (InterruptedException e) {
+      throw new CircusTrainException(e);
+    }
+
+    try {
+      com.google.cloud.bigquery.Table filteredTable = getBigQueryTable(databaseName, tableName);
+    } catch (NoSuchObjectException e) {
+      throw new CircusTrainException(e);
+    }
+
+    Partition partition = new BigQueryToHivePartitionConverter()
+        .withDatabaseName(databaseName)
+        .withTableName(tableName)
+        .withValues(result)
+        .withLocation(dataExtractionManager.location())
+        .convert();
+    log.info(partition.toString());
+    return partition;
+  }
+
+  private Table convertBigQueryTableToHive(com.google.cloud.bigquery.Table table) {
+    String databaseName = table.getTableId().getDataset();
+    String tableName = table.getTableId().getTable();
+    return new BigQueryToHiveTableConverter()
         .withDatabaseName(databaseName)
         .withTableName(tableName)
         .withSchema(table.getDefinition().getSchema())
-        .withLocation(dataExtractionManager.location())
+        .withLocation(dataExtractionManager.getDataLocation(table))
         .convert();
-    return hiveTable;
   }
 
   private com.google.cloud.bigquery.Table getBigQueryTable(String databaseName, String tableName)

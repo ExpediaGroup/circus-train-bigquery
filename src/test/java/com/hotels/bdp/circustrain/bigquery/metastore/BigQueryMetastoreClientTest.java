@@ -17,7 +17,6 @@ package com.hotels.bdp.circustrain.bigquery.metastore;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -50,7 +49,6 @@ import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryMetastoreClientTest {
@@ -114,7 +112,7 @@ public class BigQueryMetastoreClientTest {
     String tableName = "table";
     TableId tableId = TableId.of(dbName, tableName);
     String location = "gs://foo/baz";
-    when(dataExtractionManager.location()).thenReturn(location);
+    when(dataExtractionManager.getDataLocation(table)).thenReturn(location);
     when(bigQuery.getDataset(anyString())).thenReturn(dataset);
     when(dataset.get(anyString())).thenReturn(table);
     TableDefinition tableDefinition = mock(TableDefinition.class);

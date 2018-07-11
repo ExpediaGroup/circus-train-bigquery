@@ -77,7 +77,7 @@ public class BigQueryReplicationListenerTest {
     Table table = mock(Table.class);
     when(dataset.get(anyString())).thenReturn(table);
     listener.tableReplicationSuccess(eventTableReplication, "eventId");
-    verify(dataExtractionManager).cleanup();
+    verify(dataExtractionManager).cleanupAll();
   }
 
   @Test
@@ -88,6 +88,6 @@ public class BigQueryReplicationListenerTest {
     Table table = mock(Table.class);
     when(dataset.get(anyString())).thenReturn(table);
     listener.tableReplicationFailure(eventTableReplication, "eventId", mock(CircusTrainException.class));
-    verify(dataExtractionManager).cleanup();
+    verify(dataExtractionManager).cleanupAll();
   }
 }
