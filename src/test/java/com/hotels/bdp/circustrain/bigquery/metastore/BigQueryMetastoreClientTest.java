@@ -62,7 +62,7 @@ public class BigQueryMetastoreClientTest {
 
   @Before
   public void init() {
-    bigQueryMetastoreClient = new BigQueryMetastoreClient(bigQuery, dataExtractionManager);
+    bigQueryMetastoreClient = new BigQueryMetastoreClient(null, bigQuery, dataExtractionManager);
   }
 
   @Test

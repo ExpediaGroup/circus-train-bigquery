@@ -15,96 +15,20 @@
  */
 package com.hotels.bdp.circustrain.bigquery.context;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
-import com.google.api.services.bigquery.BigqueryScopes;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
-import com.google.common.annotations.VisibleForTesting;
-
-import com.hotels.bdp.circustrain.api.Modules;
-import com.hotels.bdp.circustrain.api.conf.SourceCatalog;
-import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionService;
-import com.hotels.bdp.circustrain.bigquery.listener.BigQueryReplicationListener;
-import com.hotels.bdp.circustrain.bigquery.metastore.BigQueryMetastoreClientFactory;
-import com.hotels.bdp.circustrain.gcp.context.GCPSecurity;
-
-@Profile({ Modules.REPLICATION })
-@Conditional(CircusTrainBigQueryCondition.class)
 @Configuration
-class CircusTrainBigQueryConfiguration {
+@ConfigurationProperties(prefix = "bigquery-configuration")
+public class CircusTrainBigQueryConfiguration {
 
-  @Bean
-  BigQuery bigQuery(GCPSecurity gcpSecurity, SourceCatalog sourceCatalog) throws IOException {
-    return BigQueryOptions
-        .newBuilder()
-        .setCredentials(getCredential(gcpSecurity))
-        .setProjectId(getProjectId(sourceCatalog))
-        .build()
-        .getService();
+  private String partitionFilter;
+
+  public String getPartitionFilter() {
+    return partitionFilter;
   }
 
-  @Bean
-  Storage googleStorage(GCPSecurity gcpSecurity, SourceCatalog sourceCatalog) throws IOException {
-    return StorageOptions
-        .newBuilder()
-        .setCredentials(getCredential(gcpSecurity))
-        .setProjectId(getProjectId(sourceCatalog))
-        .build()
-        .getService();
-  }
-
-  @Bean
-  BigQueryMetastoreClientFactory bigQueryMetastoreClientFactory(
-      BigQuery bigQuery,
-      BigQueryDataExtractionManager bigQueryDataExtractionManager) {
-    return new BigQueryMetastoreClientFactory(bigQuery, bigQueryDataExtractionManager);
-  }
-
-  @Bean
-  BigQueryDataExtractionService bigQueryDataExtractionService(Storage googleStorage) {
-    return new BigQueryDataExtractionService(googleStorage);
-  }
-
-  @Bean
-  BigQueryDataExtractionManager bigQueryDataExtractionManager(
-      BigQueryDataExtractionService bigQueryDataExtractionService) {
-    return new BigQueryDataExtractionManager(bigQueryDataExtractionService);
-  }
-
-  @Bean
-  TableReplicationListener bigQueryReplicationListener(
-      BigQueryDataExtractionManager bigQueryDataExtractionManager,
-      BigQuery bigQuery) {
-    return new BigQueryReplicationListener(bigQueryDataExtractionManager, bigQuery);
-  }
-
-  private GoogleCredentials getCredential(GCPSecurity gcpSecurity) throws IOException {
-    File credentialFile = new File(gcpSecurity.getCredentialProvider());
-    try (InputStream credentialStream = new FileInputStream(credentialFile)) {
-      GoogleCredentials credential = GoogleCredentials.fromStream(credentialStream);
-      if (credential.createScopedRequired()) {
-        credential = credential.createScoped(BigqueryScopes.all());
-      }
-      return credential;
-    }
-  }
-
-  @VisibleForTesting
-  String getProjectId(SourceCatalog sourceCatalog) {
-    return sourceCatalog.getHiveMetastoreUris().split("(bigquery:\\/\\/.*?)")[1];
+  public void setPartitionFilter(String partitionFilter) {
+    this.partitionFilter = partitionFilter;
   }
 }

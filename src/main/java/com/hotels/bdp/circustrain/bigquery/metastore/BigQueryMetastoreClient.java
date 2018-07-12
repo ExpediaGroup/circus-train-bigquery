@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.common.ValidTxnList;
@@ -90,7 +91,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobId;
+import com.google.cloud.bigquery.JobInfo;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.TableId;
+import com.google.cloud.bigquery.TableResult;
 
+import com.hotels.bdp.circustrain.api.CircusTrainException;
+import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
+import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHivePartitionConverter;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
@@ -99,10 +109,15 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryMetastoreClient.class);
 
+  private final CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration;
   private final BigQuery bigQuery;
   private final BigQueryDataExtractionManager dataExtractionManager;
 
-  BigQueryMetastoreClient(BigQuery bigQuery, BigQueryDataExtractionManager dataExtractionManager) {
+  BigQueryMetastoreClient(
+      CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration,
+      BigQuery bigQuery,
+      BigQueryDataExtractionManager dataExtractionManager) {
+    this.circusTrainBigQueryConfiguration = circusTrainBigQueryConfiguration;
     this.bigQuery = bigQuery;
     this.dataExtractionManager = dataExtractionManager;
   }
@@ -111,6 +126,13 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     if (bigQuery.getDataset(databaseName) == null) {
       throw new UnknownDBException("Dataset " + databaseName + " doesn't exist in BigQuery");
     }
+  }
+
+  private String getPartitionFilter() {
+    if (circusTrainBigQueryConfiguration == null) {
+      return null;
+    }
+    return circusTrainBigQueryConfiguration.getPartitionFilter();
   }
 
   @Override
@@ -131,11 +153,34 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     log.info("Getting table {}.{} from BigQuery", databaseName, tableName);
     checkDbExists(databaseName);
     com.google.cloud.bigquery.Table bigQueryTable = getBigQueryTable(databaseName, tableName);
-    Table hiveTable = convertBigQueryTableToHive(bigQueryTable);
+    Table hiveTable = convertBigQueryTableToHiveTable(bigQueryTable);
+    addPartitionIfFiltered(hiveTable);
     return hiveTable;
   }
 
-  private Table convertBigQueryTableToHive(com.google.cloud.bigquery.Table table) {
+  private void addPartitionIfFiltered(Table table) {
+    String partitionFilter = getPartitionFilter();
+    if (partitionFilter != null) {
+      log.info("Partition filter specified. applying BigQuery filter \"{}\"", partitionFilter);
+      String datasetName = table.getDbName();
+      String randomisedTableName = UUID.randomUUID().toString().replaceAll("-", "_");
+      Partition partition = applyPartitionFilter(datasetName, randomisedTableName, partitionFilter);
+      // Add partition metadata to table
+    } else {
+      log.info("Partition filter not specified. No filter applied");
+    }
+  }
+
+  private com.google.cloud.bigquery.Table getBigQueryTable(String databaseName, String tableName)
+    throws NoSuchObjectException {
+    com.google.cloud.bigquery.Table table = bigQuery.getDataset(databaseName).get(tableName);
+    if (table == null) {
+      throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");
+    }
+    return table;
+  }
+
+  private Table convertBigQueryTableToHiveTable(com.google.cloud.bigquery.Table table) {
     String databaseName = table.getTableId().getDataset();
     String tableName = table.getTableId().getTable();
     return new BigQueryToHiveTableConverter()
@@ -146,13 +191,62 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
         .convert();
   }
 
-  private com.google.cloud.bigquery.Table getBigQueryTable(String databaseName, String tableName)
-    throws NoSuchObjectException {
-    com.google.cloud.bigquery.Table table = bigQuery.getDataset(databaseName).get(tableName);
-    if (table == null) {
-      throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");
+  // TODO: Get partitionFilter String from somewhere and sanitise it making sure
+  // query isn't destructive and doesn't run against table that isnt on source configuration
+  private Partition applyPartitionFilter(String databaseName, String tableName, String filterQuery) {
+    try {
+      final TableResult result = selectPartitionFilterResultsIntoTable(databaseName, tableName, filterQuery);
+      com.google.cloud.bigquery.Table filteredTable = getBigQueryTable(databaseName, tableName);
+      dataExtractionManager.register(filteredTable);
+      return convertBigQueryTableToHivePartition(filteredTable, result);
+    } catch (NoSuchObjectException e) {
+      throw new CircusTrainException(e);
     }
-    return table;
+  }
+
+  private TableResult selectPartitionFilterResultsIntoTable(
+      String databaseName,
+      String tableName,
+      String partitionFilter) {
+    return executeJob(configureFilterJob(databaseName, tableName, partitionFilter));
+  }
+
+  private QueryJobConfiguration configureFilterJob(String databaseName, String tableName, String partitionFilter) {
+    return QueryJobConfiguration
+        .newBuilder(partitionFilter)
+        .setDestinationTable(TableId.of(databaseName, tableName))
+        .setUseLegacySql(true)
+        .setAllowLargeResults(true)
+        .build();
+  }
+
+  private TableResult executeJob(QueryJobConfiguration configuration) {
+    try {
+      JobId jobId = JobId.of(UUID.randomUUID().toString());
+      Job queryJob = bigQuery.create(JobInfo.newBuilder(configuration).setJobId(jobId).build());
+      queryJob = queryJob.waitFor();
+
+      if (queryJob == null) {
+        throw new RuntimeException("Job no longer exists");
+      } else if (queryJob.getStatus().getError() != null) {
+        throw new RuntimeException(queryJob.getStatus().getError().toString());
+      }
+      return queryJob.getQueryResults();
+    } catch (InterruptedException e) {
+      throw new CircusTrainException(e);
+    }
+  }
+
+  private Partition convertBigQueryTableToHivePartition(com.google.cloud.bigquery.Table table, TableResult result) {
+    String databaseName = table.getTableId().getDataset();
+    String tableName = table.getTableId().getTable();
+    return new BigQueryToHivePartitionConverter()
+        .withDatabaseName(databaseName)
+        .withTableName(tableName)
+        .withSchema(result.getSchema())
+        .withValues(result.iterateAll())
+        .withLocation(dataExtractionManager.getDataLocation(table))
+        .convert();
   }
 
   @Override

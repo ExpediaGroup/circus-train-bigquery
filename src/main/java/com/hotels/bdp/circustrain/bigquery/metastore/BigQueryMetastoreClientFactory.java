@@ -19,6 +19,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 
 import com.google.cloud.bigquery.BigQuery;
 
+import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 import com.hotels.bdp.circustrain.core.metastore.ConditionalMetaStoreClientFactory;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
@@ -30,8 +31,12 @@ public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClien
 
   private final BigQueryMetastoreClient metastoreClient;
 
-  public BigQueryMetastoreClientFactory(BigQuery bigQuery, BigQueryDataExtractionManager dataExtractionManager) {
-    this.metastoreClient = new BigQueryMetastoreClient(bigQuery, dataExtractionManager);
+  public BigQueryMetastoreClientFactory(
+      CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration,
+      BigQuery bigQuery,
+      BigQueryDataExtractionManager dataExtractionManager) {
+    this.metastoreClient = new BigQueryMetastoreClient(circusTrainBigQueryConfiguration, bigQuery,
+        dataExtractionManager);
   }
 
   @Override

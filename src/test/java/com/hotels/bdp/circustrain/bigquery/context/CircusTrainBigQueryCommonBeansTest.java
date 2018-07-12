@@ -21,13 +21,13 @@ import org.junit.Test;
 
 import com.hotels.bdp.circustrain.api.conf.SourceCatalog;
 
-public class CircusTrainBigQueryConfigurationTest {
+public class CircusTrainBigQueryCommonBeansTest {
 
   @Test
   public void getProjectId() {
     SourceCatalog sourceCatalog = new SourceCatalog();
     sourceCatalog.setHiveMetastoreUris("bigquery://test-project-id");
-    CircusTrainBigQueryConfiguration configuration = new CircusTrainBigQueryConfiguration();
+    CircusTrainBigQueryCommonBeans configuration = new CircusTrainBigQueryCommonBeans();
     assertEquals("test-project-id", configuration.getProjectId(sourceCatalog));
   }
 }
