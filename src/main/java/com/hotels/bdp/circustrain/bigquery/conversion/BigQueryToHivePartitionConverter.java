@@ -84,4 +84,9 @@ public class BigQueryToHivePartitionConverter {
     partition.setValues(values);
     return this;
   }
+
+  public BigQueryToHivePartitionConverter withValue(String value) {
+    partition.addToValues(value);
+    return this;
+  }
 }

@@ -16,7 +16,9 @@
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,8 @@ public class BigQueryDataExtractionManager {
 
   private final BigQueryDataExtractionService service;
   private final Map<Table, BigQueryExtractionData> locationMap;
+  private final Set<BigQueryExtractionData> extracted = new HashSet<>();
+  private final Set<BigQueryExtractionData> cleaned = new HashSet<>();
 
   public BigQueryDataExtractionManager(BigQueryDataExtractionService service) {
     this.service = service;
@@ -37,9 +41,7 @@ public class BigQueryDataExtractionManager {
   }
 
   @VisibleForTesting
-  BigQueryDataExtractionManager(
-      BigQueryDataExtractionService service,
-      Map<Table, BigQueryExtractionData> locationMap) {
+  BigQueryDataExtractionManager(BigQueryDataExtractionService service, Map<Table, BigQueryExtractionData> locationMap) {
     this.service = service;
     this.locationMap = locationMap;
   }
@@ -52,8 +54,11 @@ public class BigQueryDataExtractionManager {
     for (Map.Entry<Table, BigQueryExtractionData> entry : locationMap.entrySet()) {
       Table table = entry.getKey();
       BigQueryExtractionData extractionData = entry.getValue();
-      log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
-      service.extract(table, extractionData);
+      if (!extracted.contains(extractionData)) {
+        log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+        service.extract(table, extractionData);
+        extracted.add(extractionData);
+      }
     }
   }
 
@@ -61,8 +66,11 @@ public class BigQueryDataExtractionManager {
     for (Map.Entry<Table, BigQueryExtractionData> entry : locationMap.entrySet()) {
       Table table = entry.getKey();
       BigQueryExtractionData extractionData = entry.getValue();
-      log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
-      service.cleanup(extractionData);
+      if (!cleaned.contains(extractionData)) {
+        log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+        service.cleanup(extractionData);
+        cleaned.add(extractionData);
+      }
     }
   }
 

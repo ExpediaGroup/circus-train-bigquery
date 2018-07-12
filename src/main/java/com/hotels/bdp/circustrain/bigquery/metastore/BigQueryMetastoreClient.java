@@ -168,6 +168,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     log.info("Getting table {}.{} from BigQuery", databaseName, tableName);
     checkDbExists(databaseName);
     com.google.cloud.bigquery.Table bigQueryTable = getBigQueryTable(databaseName, tableName);
+    dataExtractionManager.register(bigQueryTable);
     Table hiveTable = convertBigQueryTableToHiveTable(bigQueryTable);
     addPartitionIfFiltered(hiveTable);
     cacheTable(hiveTable);
@@ -234,7 +235,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       com.google.cloud.bigquery.Table filteredTable = getBigQueryTable(destinationDBName, destinationTableName);
       dataExtractionManager.register(filteredTable);
       addPartitionKeys(originalTable, filteredTable.getDefinition().getSchema());
-      generatePartitions(filteredTable, result);
+      generateHivePartitions(originalTable, filteredTable, result);
     } catch (NoSuchObjectException e) {
       throw new CircusTrainException(e);
     }
@@ -290,7 +291,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     }
   }
 
-  private void generatePartitions(com.google.cloud.bigquery.Table table, TableResult result) {
+  private void generateHivePartitions(Table originalTable, com.google.cloud.bigquery.Table table, TableResult result) {
     Schema schema = table.getDefinition().getSchema();
     if (schema == null) {
       return;
@@ -299,38 +300,53 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     Map<String, List<String>> map = new HashMap<>();
     for (Field field : schema.getFields()) {
       String key = field.getName().toLowerCase();
+      log.info("Generating partitions for {}", key);
       for (FieldValueList row : result.iterateAll()) {
-        String data = row.get(key).getValue().toString();
+        String val = row.get(key).getValue().toString();
         if (map.containsKey(key)) {
-          map.get(key).add(data);
+          // map.get(key).add(partitionValueFormatter(key, val));
+          map.get(key).add(val);
         } else {
           List<String> vals = new ArrayList<>();
-          String formattedValue = key + "=" + data;
-          vals.add(formattedValue);
+          // vals.add(partitionValueFormatter(key, val));
+          vals.add(val);
           map.put(key, vals);
         }
       }
     }
 
-    final String databaseName = table.getTableId().getDataset();
-    final String tableName = table.getTableId().getTable();
-
     for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-      Partition partition = new BigQueryToHivePartitionConverter()
-          .withDatabaseName(databaseName)
-          .withTableName(tableName)
-          .withValues(entry.getValue())
-          .withLocation(dataExtractionManager.getDataLocation(table))
-          .convert();
-      cachePartition(partition);
+      for (String value : entry.getValue()) {
+        Partition partition = new BigQueryToHivePartitionConverter()
+            .withDatabaseName(originalTable.getDbName())
+            .withTableName(originalTable.getTableName())
+            .withValue(value)
+            .withLocation(dataExtractionManager.getDataLocation(table))
+            .convert();
+        log.info("Generated partition {}", partition);
+        cachePartition(partition);
+      }
     }
   }
 
   @Override
   public List<Partition> listPartitions(String dbName, String tblName, short max)
     throws NoSuchObjectException, MetaException, TException {
+    log.info("Getting cached partitions for {}.{}", dbName, tblName);
     String key = makeKey(dbName, tblName);
-    return partitionCache.get(key);
+    List<Partition> partitions = partitionCache.get(key);
+    log.info("Fetched {} partition(s)", partitions.size());
+    return partitions;
+  }
+
+  @Override
+  public Map<String, List<ColumnStatisticsObj>> getPartitionColumnStatistics(
+      String s,
+      String s1,
+      List<String> list,
+      List<String> list1)
+    throws NoSuchObjectException, MetaException, TException {
+    return new HashMap<>();
   }
 
   @Override
@@ -823,16 +839,6 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   @Override
   public boolean updatePartitionColumnStatistics(ColumnStatistics columnStatistics)
     throws NoSuchObjectException, InvalidObjectException, MetaException, TException, InvalidInputException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Map<String, List<ColumnStatisticsObj>> getPartitionColumnStatistics(
-      String s,
-      String s1,
-      List<String> list,
-      List<String> list1)
-    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException();
   }
 

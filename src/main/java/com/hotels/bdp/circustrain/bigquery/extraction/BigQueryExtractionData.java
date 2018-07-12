@@ -17,6 +17,8 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import java.util.UUID;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 class BigQueryExtractionData {
 
   private final String format = "csv";
@@ -38,5 +40,28 @@ class BigQueryExtractionData {
 
   String getDataBucket() {
     return dataBucket;
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder().append(format).append(dataBucket).append(dataKey).append(dataUri).toHashCode();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    BigQueryExtractionData other = (BigQueryExtractionData) o;
+    if (other.dataBucket != this.dataBucket) {
+      return false;
+    }
+    if (other.dataKey != this.dataKey) {
+      return false;
+    }
+    if (other.dataUri != this.dataUri) {
+      return false;
+    }
+    if (other.format != this.format) {
+      return false;
+    }
+    return true;
   }
 }
