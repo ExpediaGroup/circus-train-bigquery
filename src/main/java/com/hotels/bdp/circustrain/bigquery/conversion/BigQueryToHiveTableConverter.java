@@ -17,6 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.conversion;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -26,11 +27,15 @@ import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Schema;
 
+//TODO Rename?
 public class BigQueryToHiveTableConverter {
 
-  private final Table table = new Table();
+  private Table table = new Table();
+
+  private Schema schema = null;
 
   public BigQueryToHiveTableConverter() {
     table.setDbName("default");
@@ -91,8 +96,35 @@ public class BigQueryToHiveTableConverter {
       fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
       table.getSd().addToCols(fieldSchema);
     }
+    this.schema = schema;
     return this;
   }
 
+  public BigQueryToHiveTableConverter withValues(Iterable<FieldValueList> fieldValues) {
+    if (schema == null) {
+      return this;
+    }
+
+    BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
+    List<FieldSchema> partitionKeys = new ArrayList<>();
+    for (Field field : schema.getFields()) {
+      String key = field.getName().toLowerCase();
+      for (FieldValueList row : fieldValues) {
+        try {
+          // Verify key exists if exception isnt thrown
+          row.get(key);
+          FieldSchema fieldSchema = new FieldSchema();
+          fieldSchema.setName(row.get(key).toString());
+          fieldSchema.setType(typeConverter.convert(field.getType().toString()));
+          partitionKeys.add(fieldSchema);
+        } catch (IllegalArgumentException e) {
+          // Do nothing
+        }
+
+      }
+    }
+    table.setPartitionKeys(partitionKeys);
+    return this;
+  }
 
 }

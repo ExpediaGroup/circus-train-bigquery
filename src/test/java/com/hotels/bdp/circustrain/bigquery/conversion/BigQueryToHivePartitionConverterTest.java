@@ -1,8 +1,21 @@
+/**
+ * Copyright (C) 2018 Expedia Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hotels.bdp.circustrain.bigquery.conversion;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 
@@ -10,12 +23,6 @@ import org.apache.hadoop.hive.metastore.api.Partition;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.FieldValue;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.cloud.bigquery.Schema;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryToHivePartitionConverterTest {
@@ -43,26 +50,9 @@ public class BigQueryToHivePartitionConverterTest {
 
   @Test
   public void withValues() {
-    Field stringField = Field.of("foo", LegacySQLTypeName.STRING);
-
-    Schema schema = Schema.of(stringField);
-    FieldValueList fieldValues = mock(FieldValueList.class);
-    FieldValue field = mock(FieldValue.class);
-    when(fieldValues.get("foo")).thenReturn(field);
-    when(field.getValue()).thenReturn("baz");
-    fieldValues.add(field);
-
     Partition partition = new BigQueryToHivePartitionConverter()
-        .withSchema(schema)
-        .withValues(Collections.singletonList(fieldValues))
+        .withValues(Collections.singletonList("foo=baz"))
         .convert();
     assertEquals(partition.getValues().get(0), "foo=baz");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void unsupportedTypeThrowsException() {
-    Field unsupportedField = Field.of("record", LegacySQLTypeName.RECORD);
-    Schema schema = Schema.of(unsupportedField);
-    new BigQueryToHivePartitionConverter().withSchema(schema).convert();
   }
 }

@@ -15,9 +15,9 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-class BigQueryDataExtractionKey {
+public class BigQueryDataExtractionKey {
 
-  static String makeKey(String databaseName, String tableName) {
+  public static String makeKey(String databaseName, String tableName) {
     return databaseName + "." + tableName;
   }
 }

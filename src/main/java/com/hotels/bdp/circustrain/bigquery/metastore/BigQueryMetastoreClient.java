@@ -15,8 +15,12 @@
  */
 package com.hotels.bdp.circustrain.bigquery.metastore;
 
+import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -91,10 +95,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
 
@@ -102,6 +109,7 @@ import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHivePartitionConverter;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
+import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTypeConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
@@ -112,6 +120,8 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   private final CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration;
   private final BigQuery bigQuery;
   private final BigQueryDataExtractionManager dataExtractionManager;
+  private final Map<String, Table> tableCache = new HashMap<>();
+  private final Map<String, List<Partition>> partitionCache = new HashMap<>();
 
   BigQueryMetastoreClient(
       CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration,
@@ -150,11 +160,17 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public Table getTable(String databaseName, String tableName) throws TException {
+    String tableKey = makeKey(databaseName, tableName);
+    if (tableCache.containsKey(tableKey)) {
+      log.info("Loading table {}.{} from tableCache", databaseName, tableName);
+      return tableCache.get(tableKey);
+    }
     log.info("Getting table {}.{} from BigQuery", databaseName, tableName);
     checkDbExists(databaseName);
     com.google.cloud.bigquery.Table bigQueryTable = getBigQueryTable(databaseName, tableName);
     Table hiveTable = convertBigQueryTableToHiveTable(bigQueryTable);
     addPartitionIfFiltered(hiveTable);
+    cacheTable(hiveTable);
     return hiveTable;
   }
 
@@ -164,10 +180,24 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       log.info("Partition filter specified. applying BigQuery filter \"{}\"", partitionFilter);
       String datasetName = table.getDbName();
       String randomisedTableName = UUID.randomUUID().toString().replaceAll("-", "_");
-      Partition partition = applyPartitionFilter(datasetName, randomisedTableName, partitionFilter);
-      // Add partition metadata to table
+      applyPartitionFilter(table, datasetName, randomisedTableName, partitionFilter);
     } else {
       log.info("Partition filter not specified. No filter applied");
+    }
+  }
+
+  private void cacheTable(Table table) {
+    tableCache.put(makeKey(table.getDbName(), table.getTableName()), table);
+  }
+
+  private void cachePartition(Partition partition) {
+    String partitionKey = makeKey(partition.getDbName(), partition.getTableName());
+    if (partitionCache.containsKey(partitionKey)) {
+      partitionCache.get(partitionKey).add(partition);
+    } else {
+      List<Partition> partitions = new ArrayList<>();
+      partitions.add(partition);
+      partitionCache.put(partitionKey, partitions);
     }
   }
 
@@ -193,15 +223,38 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   // TODO: Get partitionFilter String from somewhere and sanitise it making sure
   // query isn't destructive and doesn't run against table that isnt on source configuration
-  private Partition applyPartitionFilter(String databaseName, String tableName, String filterQuery) {
+  private void applyPartitionFilter(
+      Table originalTable,
+      String destinationDBName,
+      String destinationTableName,
+      String filterQuery) {
     try {
-      final TableResult result = selectPartitionFilterResultsIntoTable(databaseName, tableName, filterQuery);
-      com.google.cloud.bigquery.Table filteredTable = getBigQueryTable(databaseName, tableName);
+      final TableResult result = selectPartitionFilterResultsIntoTable(destinationDBName, destinationTableName,
+          filterQuery);
+      com.google.cloud.bigquery.Table filteredTable = getBigQueryTable(destinationDBName, destinationTableName);
       dataExtractionManager.register(filteredTable);
-      return convertBigQueryTableToHivePartition(filteredTable, result);
+      addPartitionKeys(originalTable, filteredTable.getDefinition().getSchema());
+      generatePartitions(filteredTable, result);
     } catch (NoSuchObjectException e) {
       throw new CircusTrainException(e);
     }
+  }
+
+  private void addPartitionKeys(Table table, Schema filteredTableSchema) {
+    if (filteredTableSchema == null) {
+      return;
+    }
+    BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
+    List<FieldSchema> partitionKeys = new ArrayList<>();
+    for (Field field : filteredTableSchema.getFields()) {
+      FieldSchema fieldSchema = new FieldSchema();
+      fieldSchema.setName(field.getName().toLowerCase());
+      fieldSchema.setType(typeConverter.convert(field.getType().toString()));
+      partitionKeys.add(fieldSchema);
+    }
+    table.setPartitionKeys(partitionKeys);
+    log.info("added partition keys: {} to replication table object {}.{}", table.getPartitionKeys(), table.getDbName(),
+        table.getTableName());
   }
 
   private TableResult selectPartitionFilterResultsIntoTable(
@@ -237,16 +290,47 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     }
   }
 
-  private Partition convertBigQueryTableToHivePartition(com.google.cloud.bigquery.Table table, TableResult result) {
-    String databaseName = table.getTableId().getDataset();
-    String tableName = table.getTableId().getTable();
-    return new BigQueryToHivePartitionConverter()
-        .withDatabaseName(databaseName)
-        .withTableName(tableName)
-        .withSchema(result.getSchema())
-        .withValues(result.iterateAll())
-        .withLocation(dataExtractionManager.getDataLocation(table))
-        .convert();
+  private void generatePartitions(com.google.cloud.bigquery.Table table, TableResult result) {
+    Schema schema = table.getDefinition().getSchema();
+    if (schema == null) {
+      return;
+    }
+
+    Map<String, List<String>> map = new HashMap<>();
+    for (Field field : schema.getFields()) {
+      String key = field.getName().toLowerCase();
+      for (FieldValueList row : result.iterateAll()) {
+        String data = row.get(key).getValue().toString();
+        if (map.containsKey(key)) {
+          map.get(key).add(data);
+        } else {
+          List<String> vals = new ArrayList<>();
+          String formattedValue = key + "=" + data;
+          vals.add(formattedValue);
+          map.put(key, vals);
+        }
+      }
+    }
+
+    final String databaseName = table.getTableId().getDataset();
+    final String tableName = table.getTableId().getTable();
+
+    for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+      Partition partition = new BigQueryToHivePartitionConverter()
+          .withDatabaseName(databaseName)
+          .withTableName(tableName)
+          .withValues(entry.getValue())
+          .withLocation(dataExtractionManager.getDataLocation(table))
+          .convert();
+      cachePartition(partition);
+    }
+  }
+
+  @Override
+  public List<Partition> listPartitions(String dbName, String tblName, short max)
+    throws NoSuchObjectException, MetaException, TException {
+    String key = makeKey(dbName, tblName);
+    return partitionCache.get(key);
   }
 
   @Override
@@ -441,12 +525,6 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   @Override
   public Partition getPartitionWithAuthInfo(String s, String s1, List<String> list, String s2, List<String> list1)
     throws MetaException, UnknownTableException, NoSuchObjectException, TException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public List<Partition> listPartitions(String s, String s1, short i)
-    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException();
   }
 

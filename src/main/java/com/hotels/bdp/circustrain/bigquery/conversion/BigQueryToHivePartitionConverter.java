@@ -17,9 +17,8 @@ package com.hotels.bdp.circustrain.bigquery.conversion;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
@@ -27,14 +26,10 @@ import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.Schema;
-
+//TODO Rename?
 public class BigQueryToHivePartitionConverter {
 
   private Partition partition = new Partition();
-  private Schema schema;
 
   public BigQueryToHivePartitionConverter() {
     partition.setDbName("default");
@@ -85,30 +80,8 @@ public class BigQueryToHivePartitionConverter {
     return this;
   }
 
-  public BigQueryToHivePartitionConverter withSchema(Schema schema) {
-    this.schema = schema;
-    return this;
-  }
-
-  public BigQueryToHivePartitionConverter withValues(Iterable<FieldValueList> fieldValues) {
-    if (schema == null) {
-      return this;
-    }
-
-    // NOTE: Should this be set or list? Does Hive take duplicate Partitions
-    Set<String> values = new LinkedHashSet<>();
-    for (Field field : schema.getFields()) {
-      String key = field.getName().toLowerCase();
-      for (FieldValueList row : fieldValues) {
-        String data = row.get(key).getValue().toString();
-        String value = key + "=" + data;
-        values.add(value);
-      }
-    }
-
-    for (String value : values) {
-      partition.addToValues(value);
-    }
+  public BigQueryToHivePartitionConverter withValues(List<String> values) {
+    partition.setValues(values);
     return this;
   }
 }
