@@ -145,14 +145,14 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   private String getPartitionFilter() {
-    if (circusTrainBigQueryConfiguration == null) {
+    if (circusTrainBigQueryConfiguration == null || circusTrainBigQueryConfiguration.getPartitionFilter() == null) {
       return null;
     }
     return circusTrainBigQueryConfiguration.getPartitionFilter().trim().toLowerCase();
   }
 
   private String getPartitionBy() {
-    if (circusTrainBigQueryConfiguration == null) {
+    if (circusTrainBigQueryConfiguration == null || circusTrainBigQueryConfiguration.getPartitionBy() == null) {
       return null;
     }
     return circusTrainBigQueryConfiguration.getPartitionBy().trim().toLowerCase();
@@ -181,32 +181,30 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     log.info("Getting table {}.{} from BigQuery", databaseName, tableName);
     checkDbExists(databaseName);
     com.google.cloud.bigquery.Table bigQueryTable = getBigQueryTable(databaseName, tableName);
+    dataExtractionManager.register(bigQueryTable);
     Table hiveTable = convertBigQueryTableToHiveTable(bigQueryTable);
     addPartitionIfFiltered(hiveTable);
-    dataExtractionManager.register(bigQueryTable);
     cacheTable(hiveTable);
     return hiveTable;
   }
 
+  private boolean shouldPartition() {
+    if (isBlank(getPartitionBy())) {
+      return false;
+    }
+    return true;
+  }
+
   private boolean addPartitionIfFiltered(Table table) {
-    validateBigQueryOptionsPartitionConfiguration();
-    String partitionFilter = getPartitionFilter();
-    if (isNotBlank(partitionFilter)) {
-      log.info("Partition filter specified. applying BigQuery filter \"{}\"", partitionFilter);
+    if (shouldPartition()) {
+      log.info("Partitioning table {}.{} with key {} and filter {}", table.getDbName(), table.getTableName(),
+          getPartitionBy(), getPartitionFilter());
       applyPartitionFilterV2(table);
       return true;
     } else {
-      log.info("Partition filter not specified. No filter applied");
+      log.info("Partitioning not configured for table {}.{}. No filter applied", table.getDbName(),
+          table.getTableName());
       return false;
-    }
-  }
-
-  private void validateBigQueryOptionsPartitionConfiguration() {
-    String partitionBy = getPartitionBy();
-    String partitionFilter = getPartitionFilter();
-    if ((isBlank(partitionBy) && isNotBlank(partitionFilter))
-        || (isNotBlank(partitionBy) && isBlank(partitionFilter))) {
-      throw new CircusTrainException("Both partition-by and partition-filter must be configured");
     }
   }
 
@@ -253,9 +251,21 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
         .convert();
   }
 
+  private String getSelectStatment(Table hiveTable) {
+    final String partitionBy = getPartitionBy();
+    final String partitionFilter = getPartitionFilter();
+    if (isNotBlank(partitionBy) && isNotBlank(partitionFilter)) {
+      return String.format("select * from %s.%s where %s", hiveTable.getDbName(), hiveTable.getTableName(),
+          getPartitionFilter());
+    } else if (isNotBlank(partitionBy) && isBlank(partitionFilter)) {
+      return String.format("select * from %s.%s", hiveTable.getDbName(), hiveTable.getTableName());
+    } else {
+      throw new IllegalStateException();
+    }
+  }
+
   private void applyPartitionFilterV2(Table hiveTable) {
-    String selectStatement = String.format("select * from %s.%s where %s", hiveTable.getDbName(),
-        hiveTable.getTableName(), getPartitionFilter());
+    String selectStatement = getSelectStatment(hiveTable);
     String datasetName = hiveTable.getDbName();
     String tableName = randomTableName();
     TableResult result = selectQueryIntoBigQueryTable(datasetName, tableName, selectStatement);
@@ -343,11 +353,12 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       }
     }
     table.setPartitionKeys(partitionKeys);
-    log.info("added partition keys: {} to replication table object {}.{}", table.getPartitionKeys(), table.getDbName(),
+    log.info("Added partition keys: {} to replication table object {}.{}", table.getPartitionKeys(), table.getDbName(),
         table.getTableName());
   }
 
   private TableResult selectQueryIntoBigQueryTable(String databaseName, String tableName, String partitionFilter) {
+    log.info("Executing '{}'", partitionFilter);
     return executeJob(configureFilterJob(databaseName, tableName, partitionFilter));
   }
 
