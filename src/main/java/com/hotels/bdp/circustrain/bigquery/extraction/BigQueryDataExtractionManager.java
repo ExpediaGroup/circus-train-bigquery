@@ -15,8 +15,10 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import java.util.HashMap;
+import javafx.util.Pair;
+
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,29 +33,44 @@ public class BigQueryDataExtractionManager {
   private static final Logger log = LoggerFactory.getLogger(BigQueryDataExtractionManager.class);
 
   private final BigQueryDataExtractionService service;
-  private final Map<Table, BigQueryExtractionData> locationMap;
+  private final Map<Table, Pair<BigQueryExtractionData, Boolean>> locationMap;
   private final Set<BigQueryExtractionData> extracted = new HashSet<>();
-  private final Set<BigQueryExtractionData> cleaned = new HashSet<>();
 
   public BigQueryDataExtractionManager(BigQueryDataExtractionService service) {
     this.service = service;
-    this.locationMap = new HashMap<>();
+    this.locationMap = new LinkedHashMap<>();
   }
 
   @VisibleForTesting
-  BigQueryDataExtractionManager(BigQueryDataExtractionService service, Map<Table, BigQueryExtractionData> locationMap) {
+  BigQueryDataExtractionManager(
+      BigQueryDataExtractionService service,
+      Map<Table, Pair<BigQueryExtractionData, Boolean>> locationMap) {
     this.service = service;
     this.locationMap = locationMap;
   }
 
   public void register(Table table) {
-    locationMap.put(table, new BigQueryExtractionData());
+    this.register(table, new BigQueryExtractionData(), false);
+  }
+
+  public void register(Table table, boolean deleteTable) {
+    this.register(table, new BigQueryExtractionData(), deleteTable);
+  }
+
+  public void register(Table table, BigQueryExtractionData extractionData) {
+    Pair<BigQueryExtractionData, Boolean> deleteInfo = new Pair<>(extractionData, false);
+    locationMap.put(table, deleteInfo);
+  }
+
+  public void register(Table table, BigQueryExtractionData extractionData, boolean deleteTable) {
+    Pair<BigQueryExtractionData, Boolean> deleteInfo = new Pair<>(extractionData, deleteTable);
+    locationMap.put(table, deleteInfo);
   }
 
   public void extractAll() {
-    for (Map.Entry<Table, BigQueryExtractionData> entry : locationMap.entrySet()) {
+    for (Map.Entry<Table, Pair<BigQueryExtractionData, Boolean>> entry : locationMap.entrySet()) {
       Table table = entry.getKey();
-      BigQueryExtractionData extractionData = entry.getValue();
+      BigQueryExtractionData extractionData = entry.getValue().getKey();
       if (!extracted.contains(extractionData)) {
         log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
         service.extract(table, extractionData);
@@ -63,13 +80,16 @@ public class BigQueryDataExtractionManager {
   }
 
   public void cleanupAll() {
-    for (Map.Entry<Table, BigQueryExtractionData> entry : locationMap.entrySet()) {
+    for (Map.Entry<Table, Pair<BigQueryExtractionData, Boolean>> entry : locationMap.entrySet()) {
       Table table = entry.getKey();
-      BigQueryExtractionData extractionData = entry.getValue();
-      if (!cleaned.contains(extractionData)) {
-        log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
-        service.cleanup(extractionData);
-        cleaned.add(extractionData);
+      Pair<BigQueryExtractionData, Boolean> deleteInfo = entry.getValue();
+      BigQueryExtractionData extractionData = entry.getValue().getKey();
+      Boolean deleteTable = deleteInfo.getValue();
+      log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+      service.cleanup(extractionData);
+      if (deleteTable) {
+        log.info("Deleting table {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+        table.delete();
       }
     }
   }
@@ -78,6 +98,6 @@ public class BigQueryDataExtractionManager {
     if (!locationMap.containsKey(table)) {
       return null;
     }
-    return "gs://" + locationMap.get(table).getDataBucket() + "/";
+    return "gs://" + locationMap.get(table).getKey().getDataBucket() + "/";
   }
 }

@@ -15,14 +15,20 @@
  */
 package com.hotels.bdp.circustrain.bigquery.metastore;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.hadoop.hive.common.ObjectPair;
@@ -145,6 +151,13 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return circusTrainBigQueryConfiguration.getPartitionFilter();
   }
 
+  private String getPartitionBy() {
+    if (circusTrainBigQueryConfiguration == null) {
+      return null;
+    }
+    return circusTrainBigQueryConfiguration.getPartitionBy();
+  }
+
   @Override
   public Database getDatabase(String databaseName) throws TException {
     log.info("Getting database {} from BigQuery", databaseName);
@@ -176,14 +189,22 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   private void addPartitionIfFiltered(Table table) {
+    validateBigQueryOptionsPartitionConfiguration();
     String partitionFilter = getPartitionFilter();
-    if (partitionFilter != null) {
+    if (isNotBlank(partitionFilter)) {
       log.info("Partition filter specified. applying BigQuery filter \"{}\"", partitionFilter);
-      String datasetName = table.getDbName();
-      String randomisedTableName = UUID.randomUUID().toString().replaceAll("-", "_");
-      applyPartitionFilter(table, datasetName, randomisedTableName, partitionFilter);
+      applyPartitionFilterV2(table);
     } else {
       log.info("Partition filter not specified. No filter applied");
+    }
+  }
+
+  private void validateBigQueryOptionsPartitionConfiguration() {
+    String partitionBy = getPartitionBy();
+    String partitionFilter = getPartitionFilter();
+    if ((isBlank(partitionBy) && isNotBlank(partitionFilter))
+        || (isNotBlank(partitionBy) && isBlank(partitionFilter))) {
+      throw new CircusTrainException("Both partition-by and partition-filter must be configured");
     }
   }
 
@@ -202,13 +223,21 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     }
   }
 
-  private com.google.cloud.bigquery.Table getBigQueryTable(String databaseName, String tableName)
+  private com.google.cloud.bigquery.Table getBigQueryTableHelper(String databaseName, String tableName)
     throws NoSuchObjectException {
     com.google.cloud.bigquery.Table table = bigQuery.getDataset(databaseName).get(tableName);
     if (table == null) {
       throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");
     }
     return table;
+  }
+
+  private com.google.cloud.bigquery.Table getBigQueryTable(String databaseName, String tableName) {
+    try {
+      return getBigQueryTableHelper(databaseName, tableName);
+    } catch (NoSuchObjectException e) {
+      throw new CircusTrainException(e);
+    }
   }
 
   private Table convertBigQueryTableToHiveTable(com.google.cloud.bigquery.Table table) {
@@ -222,22 +251,61 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
         .convert();
   }
 
-  // TODO: Get partitionFilter String from somewhere and sanitise it making sure
-  // query isn't destructive and doesn't run against table that isnt on source configuration
-  private void applyPartitionFilter(
-      Table originalTable,
-      String destinationDBName,
-      String destinationTableName,
-      String filterQuery) {
-    try {
-      final TableResult result = selectPartitionFilterResultsIntoTable(destinationDBName, destinationTableName,
-          filterQuery);
-      com.google.cloud.bigquery.Table filteredTable = getBigQueryTable(destinationDBName, destinationTableName);
-      dataExtractionManager.register(filteredTable);
-      addPartitionKeys(originalTable, filteredTable.getDefinition().getSchema());
-      generateHivePartitions(originalTable, filteredTable, result);
-    } catch (NoSuchObjectException e) {
-      throw new CircusTrainException(e);
+  private void applyPartitionFilterV2(Table hiveTable) {
+    String selectStatement = String.format("select * from %s.%s where %s", hiveTable.getDbName(),
+        hiveTable.getTableName(), getPartitionFilter());
+    String datasetName = hiveTable.getDbName();
+    String tableName = randomTableName();
+    TableResult result = selectQueryIntoBigQueryTable(datasetName, tableName, selectStatement);
+    com.google.cloud.bigquery.Table filteredTable = getBigQueryTable(datasetName, tableName);
+    addPartitionKeys(hiveTable, filteredTable.getDefinition().getSchema());
+    generateHivePartitionsV2(hiveTable, filteredTable, result);
+  }
+
+  private String randomTableName() {
+    return UUID.randomUUID().toString().replaceAll("-", "_");
+  }
+
+  private void generateHivePartitionsV2(
+      Table hiveTable,
+      com.google.cloud.bigquery.Table filteredTable,
+      TableResult result) {
+    Schema schema = filteredTable.getDefinition().getSchema();
+    if (schema == null) {
+      return;
+    }
+
+    final String partitionKey = getPartitionBy();
+    Set<String> values = new LinkedHashSet<>();
+    for (FieldValueList row : result.iterateAll()) {
+      values.add(row.get(partitionKey).getValue().toString());
+    }
+
+    Map<com.google.cloud.bigquery.Table, String> partitionMap = new LinkedHashMap<>();
+    final String sourceDBName = filteredTable.getTableId().getDataset();
+    final String sourceTableName = filteredTable.getTableId().getTable();
+    final String destinationDBName = hiveTable.getDbName();
+    for (String value : values) {
+      String statement = String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey,
+          value);
+      String destinationTableName = randomTableName();
+      selectQueryIntoBigQueryTable(destinationDBName, destinationTableName, statement);
+      com.google.cloud.bigquery.Table part = getBigQueryTable(destinationDBName, destinationTableName);
+      dataExtractionManager.register(part, true);
+      partitionMap.put(part, value);
+    }
+
+    for (Map.Entry<com.google.cloud.bigquery.Table, String> entry : partitionMap.entrySet()) {
+      com.google.cloud.bigquery.Table part = entry.getKey();
+      String value = entry.getValue();
+      Partition partition = new BigQueryToHivePartitionConverter()
+          .withDatabaseName(hiveTable.getDbName())
+          .withTableName(hiveTable.getTableName())
+          .withValue(value)
+          .withLocation(dataExtractionManager.getDataLocation(part))
+          .convert();
+      log.info("Generated partition {}", partition);
+      cachePartition(partition);
     }
   }
 
@@ -247,21 +315,22 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     }
     BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
     List<FieldSchema> partitionKeys = new ArrayList<>();
+    String partitionKey = getPartitionBy().toLowerCase();
     for (Field field : filteredTableSchema.getFields()) {
-      FieldSchema fieldSchema = new FieldSchema();
-      fieldSchema.setName(field.getName().toLowerCase());
-      fieldSchema.setType(typeConverter.convert(field.getType().toString()));
-      partitionKeys.add(fieldSchema);
+      String fieldName = field.getName().toLowerCase();
+      if (partitionKey.equals(fieldName)) {
+        FieldSchema fieldSchema = new FieldSchema();
+        fieldSchema.setName(fieldName);
+        fieldSchema.setType(typeConverter.convert(field.getType().toString()));
+        partitionKeys.add(fieldSchema);
+      }
     }
     table.setPartitionKeys(partitionKeys);
     log.info("added partition keys: {} to replication table object {}.{}", table.getPartitionKeys(), table.getDbName(),
         table.getTableName());
   }
 
-  private TableResult selectPartitionFilterResultsIntoTable(
-      String databaseName,
-      String tableName,
-      String partitionFilter) {
+  private TableResult selectQueryIntoBigQueryTable(String databaseName, String tableName, String partitionFilter) {
     return executeJob(configureFilterJob(databaseName, tableName, partitionFilter));
   }
 
@@ -288,44 +357,6 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       return queryJob.getQueryResults();
     } catch (InterruptedException e) {
       throw new CircusTrainException(e);
-    }
-  }
-
-  private void generateHivePartitions(Table originalTable, com.google.cloud.bigquery.Table table, TableResult result) {
-    Schema schema = table.getDefinition().getSchema();
-    if (schema == null) {
-      return;
-    }
-
-    Map<String, List<String>> map = new HashMap<>();
-    for (Field field : schema.getFields()) {
-      String key = field.getName().toLowerCase();
-      log.info("Generating partitions for {}", key);
-      for (FieldValueList row : result.iterateAll()) {
-        String val = row.get(key).getValue().toString();
-        if (map.containsKey(key)) {
-          // map.get(key).add(partitionValueFormatter(key, val));
-          map.get(key).add(val);
-        } else {
-          List<String> vals = new ArrayList<>();
-          // vals.add(partitionValueFormatter(key, val));
-          vals.add(val);
-          map.put(key, vals);
-        }
-      }
-    }
-
-    for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-      for (String value : entry.getValue()) {
-        Partition partition = new BigQueryToHivePartitionConverter()
-            .withDatabaseName(originalTable.getDbName())
-            .withTableName(originalTable.getTableName())
-            .withValue(value)
-            .withLocation(dataExtractionManager.getDataLocation(table))
-            .convert();
-        log.info("Generated partition {}", partition);
-        cachePartition(partition);
-      }
     }
   }
 

@@ -15,6 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
+import javafx.util.Pair;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -43,7 +44,7 @@ public class BigQueryDataExtractionManagerTest {
 
   private @Mock BigQueryDataExtractionService service;
   private List<Table> tables = new ArrayList<>();
-  private Map<Table, BigQueryExtractionData> map = new HashMap<>();
+  private Map<Table, Pair<BigQueryExtractionData, Boolean>> map = new HashMap<>();
   private BigQueryDataExtractionManager manager;
 
   @Before
@@ -73,7 +74,7 @@ public class BigQueryDataExtractionManagerTest {
     registerTables();
     manager.extractAll();
     for (Table table : tables) {
-      verify(service).extract(eq(table), eq(map.get(table)));
+      verify(service).extract(eq(table), eq(map.get(table).getKey()));
     }
   }
 
@@ -83,7 +84,7 @@ public class BigQueryDataExtractionManagerTest {
     manager.extractAll();
     manager.cleanupAll();
     for (Table table : tables) {
-      verify(service).cleanup(eq(map.get(table)));
+      verify(service).cleanup(eq(map.get(table).getKey()));
     }
   }
 
@@ -104,7 +105,7 @@ public class BigQueryDataExtractionManagerTest {
   public void locationTest() {
     Table table = tables.get(0);
     manager.register(table);
-    String location = "gs://" + map.get(table).getDataBucket() + "/";
+    String location = "gs://" + map.get(table).getKey().getDataBucket() + "/";
     assertThat(location, is(manager.getDataLocation(table)));
   }
 
