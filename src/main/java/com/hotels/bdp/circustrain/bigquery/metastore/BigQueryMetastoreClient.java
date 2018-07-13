@@ -213,6 +213,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   private void cachePartition(Partition partition) {
+    log.debug("Caching partition {}", partition);
     String partitionKey = makeKey(partition.getDbName(), partition.getTableName());
     if (partitionCache.containsKey(partitionKey)) {
       partitionCache.get(partitionKey).add(partition);
@@ -358,7 +359,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   private TableResult selectQueryIntoBigQueryTable(String databaseName, String tableName, String partitionFilter) {
-    log.info("Executing '{}'", partitionFilter);
+    log.debug("Executing '{}'", partitionFilter);
     return executeJob(configureFilterJob(databaseName, tableName, partitionFilter));
   }
 
