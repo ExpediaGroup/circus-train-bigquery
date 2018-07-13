@@ -189,17 +189,14 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   private boolean shouldPartition() {
-    if (isBlank(getPartitionBy())) {
-      return false;
-    }
-    return true;
+    return isNotBlank(getPartitionBy());
   }
 
   private boolean addPartitionIfFiltered(Table table) {
     if (shouldPartition()) {
       log.info("Partitioning table {}.{} with key {} and filter {}", table.getDbName(), table.getTableName(),
           getPartitionBy(), getPartitionFilter());
-      applyPartitionFilterV2(table);
+      applyPartitionFilter(table);
       return true;
     } else {
       log.info("Partitioning not configured for table {}.{}. No filter applied", table.getDbName(),
@@ -265,7 +262,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     }
   }
 
-  private void applyPartitionFilterV2(Table hiveTable) {
+  private void applyPartitionFilter(Table hiveTable) {
     String selectStatement = getSelectStatment(hiveTable);
     String datasetName = hiveTable.getDbName();
     String tableName = randomTableName();
@@ -273,7 +270,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     com.google.cloud.bigquery.Table filteredTable = getBigQueryTable(datasetName, tableName);
     dataExtractionManager.register(filteredTable);
     addPartitionKeys(hiveTable, filteredTable.getDefinition().getSchema());
-    generateHivePartitionsV2(hiveTable, filteredTable, result);
+    generateHivePartitions(hiveTable, filteredTable, result);
   }
 
   private String randomTableName() {
@@ -292,7 +289,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return partitionKey;
   }
 
-  private void generateHivePartitionsV2(
+  private void generateHivePartitions(
       Table hiveTable,
       com.google.cloud.bigquery.Table filteredTable,
       TableResult result) {
@@ -349,7 +346,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       if (partitionKey.equals(fieldName)) {
         FieldSchema fieldSchema = new FieldSchema();
         fieldSchema.setName(fieldName);
-        fieldSchema.setType(typeConverter.convert(field.getType().toString()));
+        fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
         partitionKeys.add(fieldSchema);
       }
     }
