@@ -21,12 +21,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.BigQuery;
 
-import com.hotels.bdp.circustrain.api.metastore.CloseableMetaStoreClient;
-import com.hotels.bdp.circustrain.api.metastore.MetaStoreClientException;
-import com.hotels.bdp.circustrain.api.metastore.MetaStoreClientFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.bdp.circustrain.core.metastore.ConditionalMetaStoreClientFactory;
+import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
+import com.hotels.hcommon.hive.metastore.exception.MetaStoreClientException;
 
-public class BigQueryMetastoreClientFactory implements MetaStoreClientFactory {
+public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClientFactory {
 
   public static final String ACCEPT_PREFIX = "bigquery://";
 
