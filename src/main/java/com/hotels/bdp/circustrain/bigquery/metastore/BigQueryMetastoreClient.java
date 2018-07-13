@@ -148,14 +148,14 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     if (circusTrainBigQueryConfiguration == null) {
       return null;
     }
-    return circusTrainBigQueryConfiguration.getPartitionFilter();
+    return circusTrainBigQueryConfiguration.getPartitionFilter().trim().toLowerCase();
   }
 
   private String getPartitionBy() {
     if (circusTrainBigQueryConfiguration == null) {
       return null;
     }
-    return circusTrainBigQueryConfiguration.getPartitionBy();
+    return circusTrainBigQueryConfiguration.getPartitionBy().trim().toLowerCase();
   }
 
   @Override
@@ -181,21 +181,23 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     log.info("Getting table {}.{} from BigQuery", databaseName, tableName);
     checkDbExists(databaseName);
     com.google.cloud.bigquery.Table bigQueryTable = getBigQueryTable(databaseName, tableName);
-    dataExtractionManager.register(bigQueryTable);
     Table hiveTable = convertBigQueryTableToHiveTable(bigQueryTable);
     addPartitionIfFiltered(hiveTable);
+    dataExtractionManager.register(bigQueryTable);
     cacheTable(hiveTable);
     return hiveTable;
   }
 
-  private void addPartitionIfFiltered(Table table) {
+  private boolean addPartitionIfFiltered(Table table) {
     validateBigQueryOptionsPartitionConfiguration();
     String partitionFilter = getPartitionFilter();
     if (isNotBlank(partitionFilter)) {
       log.info("Partition filter specified. applying BigQuery filter \"{}\"", partitionFilter);
       applyPartitionFilterV2(table);
+      return true;
     } else {
       log.info("Partition filter not specified. No filter applied");
+      return false;
     }
   }
 
@@ -258,12 +260,25 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     String tableName = randomTableName();
     TableResult result = selectQueryIntoBigQueryTable(datasetName, tableName, selectStatement);
     com.google.cloud.bigquery.Table filteredTable = getBigQueryTable(datasetName, tableName);
+    dataExtractionManager.register(filteredTable);
     addPartitionKeys(hiveTable, filteredTable.getDefinition().getSchema());
     generateHivePartitionsV2(hiveTable, filteredTable, result);
   }
 
   private String randomTableName() {
     return UUID.randomUUID().toString().replaceAll("-", "_");
+  }
+
+  private String sanitisePartitionKey(Schema schema) {
+    // Case sensitive in Google Cloud
+    String partitionKey = getPartitionBy();
+    for (Field field : schema.getFields()) {
+      if (field.getName().toLowerCase().equals(partitionKey.toLowerCase())) {
+        partitionKey = field.getName();
+        break;
+      }
+    }
+    return partitionKey;
   }
 
   private void generateHivePartitionsV2(
@@ -275,12 +290,14 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       return;
     }
 
-    final String partitionKey = getPartitionBy();
+    String partitionKey = sanitisePartitionKey(schema);
+    log.info("Getting values for partition key {}", partitionKey);
     Set<String> values = new LinkedHashSet<>();
     for (FieldValueList row : result.iterateAll()) {
       values.add(row.get(partitionKey).getValue().toString());
     }
 
+    log.info("Generating Hive partitions");
     Map<com.google.cloud.bigquery.Table, String> partitionMap = new LinkedHashMap<>();
     final String sourceDBName = filteredTable.getTableId().getDataset();
     final String sourceTableName = filteredTable.getTableId().getTable();

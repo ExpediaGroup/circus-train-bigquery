@@ -15,7 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import javafx.util.Pair;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -30,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -99,7 +99,6 @@ public class BigQueryDataExtractionManagerTest {
     manager.cleanupAll();
     verifyZeroInteractions(service);
   }
-
 
   @Test
   public void locationTest() {

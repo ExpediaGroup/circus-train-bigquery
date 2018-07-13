@@ -15,13 +15,13 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import javafx.util.Pair;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,12 +58,12 @@ public class BigQueryDataExtractionManager {
   }
 
   public void register(Table table, BigQueryExtractionData extractionData) {
-    Pair<BigQueryExtractionData, Boolean> deleteInfo = new Pair<>(extractionData, false);
+    Pair<BigQueryExtractionData, Boolean> deleteInfo = Pair.of(extractionData, false);
     locationMap.put(table, deleteInfo);
   }
 
   public void register(Table table, BigQueryExtractionData extractionData, boolean deleteTable) {
-    Pair<BigQueryExtractionData, Boolean> deleteInfo = new Pair<>(extractionData, deleteTable);
+    Pair<BigQueryExtractionData, Boolean> deleteInfo = Pair.of(extractionData, deleteTable);
     locationMap.put(table, deleteInfo);
   }
 
