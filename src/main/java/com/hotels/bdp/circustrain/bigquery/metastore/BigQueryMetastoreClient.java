@@ -23,6 +23,7 @@ import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtract
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -242,10 +243,12 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     final String tableName = table.getTableId().getTable();
     final String tableLocation = dataExtractionManager.getExtractedDataBaseLocation(table);
     final Schema schema = table.getDefinition().getSchema();
+    final List<FieldSchema> cols = Collections.unmodifiableList(getCols(table));
     return new BigQueryToHiveTableConverter()
         .withDatabaseName(databaseName)
         .withTableName(tableName)
         .withSchema(schema)
+        .withCols(cols)
         .withLocation(tableLocation)
         .convert();
   }
@@ -311,12 +314,16 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     final String sourceDBName = filteredTable.getTableId().getDataset();
     final String sourceTableName = filteredTable.getTableId().getTable();
     final String destinationDBName = hiveTable.getDbName();
+
+    // TODO: Cache BQ tables
     com.google.cloud.bigquery.Table bigQueryRepresentation = getBigQueryTable(hiveTable.getDbName(),
         hiveTable.getTableName());
+
     final String tableBucket = dataExtractionManager.getExtractedDataBucket(bigQueryRepresentation);
     final String tableFolder = dataExtractionManager.getExtractedDataFolder(bigQueryRepresentation);
 
     for (String value : values) {
+      log.info("Generated partition value '{}' for key '{}'", value, partitionKey);
       String statement = String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey,
           value);
       String destinationTableName = randomTableName();
@@ -330,6 +337,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       partitionMap.put(part, value);
     }
 
+    List<FieldSchema> cols = Collections.unmodifiableList(hiveTable.getSd().getCols());
     for (Map.Entry<com.google.cloud.bigquery.Table, String> entry : partitionMap.entrySet()) {
       com.google.cloud.bigquery.Table part = entry.getKey();
       String value = entry.getValue();
@@ -337,11 +345,26 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
           .withDatabaseName(hiveTable.getDbName())
           .withTableName(hiveTable.getTableName())
           .withValue(value)
+          .withCols(cols)
           .withLocation(dataExtractionManager.getExtractedDataBaseLocation(part))
           .convert();
       log.info("Generated partition {}", partition);
       cachePartition(partition);
     }
+  }
+
+  private List<FieldSchema> getCols(com.google.cloud.bigquery.Table table) {
+    BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
+    List<FieldSchema> partitionKeys = new ArrayList<>();
+
+    for (Field field : table.getDefinition().getSchema().getFields()) {
+      String fieldName = field.getName().toLowerCase();
+      FieldSchema fieldSchema = new FieldSchema();
+      fieldSchema.setName(fieldName);
+      fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
+      partitionKeys.add(fieldSchema);
+    }
+    return partitionKeys;
   }
 
   private void addPartitionKeys(Table table, Schema filteredTableSchema) {

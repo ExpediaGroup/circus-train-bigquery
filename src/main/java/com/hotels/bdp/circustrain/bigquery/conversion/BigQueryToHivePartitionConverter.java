@@ -85,6 +85,11 @@ public class BigQueryToHivePartitionConverter {
     return this;
   }
 
+  public BigQueryToHivePartitionConverter withCols(List<FieldSchema> cols) {
+    partition.getSd().setCols(cols);
+    return this;
+  }
+
   public BigQueryToHivePartitionConverter withValue(String value) {
     partition.addToValues(value);
     return this;
