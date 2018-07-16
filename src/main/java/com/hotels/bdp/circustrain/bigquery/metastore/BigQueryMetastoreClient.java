@@ -193,16 +193,14 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return isNotBlank(getPartitionBy());
   }
 
-  private boolean addPartitionIfFiltered(Table table) {
+  private void addPartitionIfFiltered(Table table) {
     if (shouldPartition()) {
       log.info("Partitioning table {}.{} with key '{}' and filter '{}'", table.getDbName(), table.getTableName(),
           getPartitionBy(), getPartitionFilter());
       applyPartitionFilter(table);
-      return true;
     } else {
       log.info("Partitioning not configured for table {}.{}. No filter applied", table.getDbName(),
           table.getTableName());
-      return false;
     }
   }
 
@@ -240,11 +238,10 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   private Table convertBigQueryTableToHiveTable(com.google.cloud.bigquery.Table table) {
-    String databaseName = table.getTableId().getDataset();
-    String tableName = table.getTableId().getTable();
-    Schema schema = table.getDefinition().getSchema();
-    String tableLocation = dataExtractionManager.getExtractedDataBaseLocation(table);
-    log.info("Table Location = {}", tableLocation);
+    final String databaseName = table.getTableId().getDataset();
+    final String tableName = table.getTableId().getTable();
+    final String tableLocation = dataExtractionManager.getExtractedDataBaseLocation(table);
+    final Schema schema = table.getDefinition().getSchema();
     return new BigQueryToHiveTableConverter()
         .withDatabaseName(databaseName)
         .withTableName(tableName)
@@ -314,16 +311,19 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     final String sourceDBName = filteredTable.getTableId().getDataset();
     final String sourceTableName = filteredTable.getTableId().getTable();
     final String destinationDBName = hiveTable.getDbName();
-    final String tableBucket = dataExtractionManager
-        .getExtractedDataBucket(getBigQueryTable(hiveTable.getDbName(), hiveTable.getTableName()));
+    com.google.cloud.bigquery.Table bigQueryRepresentation = getBigQueryTable(hiveTable.getDbName(),
+        hiveTable.getTableName());
+    final String tableBucket = dataExtractionManager.getExtractedDataBucket(bigQueryRepresentation);
+    final String tableFolder = dataExtractionManager.getExtractedDataFolder(bigQueryRepresentation);
+
     for (String value : values) {
       String statement = String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey,
           value);
       String destinationTableName = randomTableName();
       selectQueryIntoBigQueryTable(destinationDBName, destinationTableName, statement);
       com.google.cloud.bigquery.Table part = getBigQueryTable(destinationDBName, destinationTableName);
-      BigQueryExtractionData extractionData = new BigQueryExtractionData(tableBucket,
-          BigQueryExtractionData.randomUri(), BigQueryExtractionData.randomUri(), "csv");
+      String fileName = partitionKey + "=" + value;
+      BigQueryExtractionData extractionData = new BigQueryExtractionData(tableBucket, tableFolder, fileName);
       dataExtractionManager.register(part, extractionData, true);
       partitionMap.put(part, value);
     }
@@ -331,12 +331,11 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     for (Map.Entry<com.google.cloud.bigquery.Table, String> entry : partitionMap.entrySet()) {
       com.google.cloud.bigquery.Table part = entry.getKey();
       String value = entry.getValue();
-      log.info("Part uri: {}", dataExtractionManager.getExtractedDataUri(part));
       Partition partition = new BigQueryToHivePartitionConverter()
           .withDatabaseName(hiveTable.getDbName())
           .withTableName(hiveTable.getTableName())
           .withValue(value)
-          .withLocation(dataExtractionManager.getExtractedDataUri(part))
+          .withLocation(dataExtractionManager.getExtractedDataBaseLocation(part))
           .convert();
       log.info("Generated partition {}", partition);
       cachePartition(partition);

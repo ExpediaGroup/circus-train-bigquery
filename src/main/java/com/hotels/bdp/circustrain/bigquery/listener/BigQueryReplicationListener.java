@@ -19,9 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.Table;
 
-import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.api.event.EventTableReplication;
 import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
@@ -44,8 +42,6 @@ public class BigQueryReplicationListener implements TableReplicationListener {
         eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
-    Table table = getTable(eventTableReplication);
-    dataExtractionManager.register(table);
   }
 
   @Override
@@ -64,15 +60,5 @@ public class BigQueryReplicationListener implements TableReplicationListener {
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
     dataExtractionManager.cleanupAll();
-  }
-
-  private Table getTable(EventTableReplication tableReplication) {
-    String databaseName = tableReplication.getSourceTable().getDatabaseName();
-    String tableName = tableReplication.getSourceTable().getTableName();
-    com.google.cloud.bigquery.Table table = bigQuery.getDataset(databaseName).get(tableName);
-    if (table == null) {
-      throw new CircusTrainException(databaseName + "." + tableName + " could not be found");
-    }
-    return table;
   }
 }

@@ -15,7 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.listener;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -65,7 +64,6 @@ public class BigQueryReplicationListenerTest {
 
     listener.tableReplicationStart(eventTableReplication, "eventId");
 
-    verify(dataExtractionManager).register(any(Table.class));
     verifyZeroInteractions(storage);
   }
 

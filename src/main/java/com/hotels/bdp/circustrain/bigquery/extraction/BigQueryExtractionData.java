@@ -15,8 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import static jodd.util.StringUtil.isEmpty;
-
 import java.util.UUID;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -33,30 +31,26 @@ public class BigQueryExtractionData {
   private final String dataUri;
 
   public BigQueryExtractionData() {
-    this(DEFAULT_BUCKET_PREFIX + randomUri(), null, randomUri(), DEFAULT_FORMAT);
+    this(DEFAULT_BUCKET_PREFIX + randomUri());
   }
 
   public BigQueryExtractionData(String bucket) {
-    this(bucket, null, randomUri(), DEFAULT_FORMAT);
+    this(bucket, randomUri());
   }
 
   public BigQueryExtractionData(String bucket, String folder) {
     this(bucket, folder, randomUri(), DEFAULT_FORMAT);
   }
 
-  public BigQueryExtractionData(String bucket, String folder, String file) {
-    this(bucket, folder, file, DEFAULT_FORMAT);
+  public BigQueryExtractionData(String bucket, String folder, String fileName) {
+    this(bucket, folder, fileName, DEFAULT_FORMAT);
   }
 
   public BigQueryExtractionData(String bucket, String folder, String fileName, String fileFormat) {
     this.dataBucket = bucket;
     this.dataFolder = folder;
     this.dataFormat = fileFormat;
-    if (isEmpty(dataFolder)) {
-      this.dataKey = fileName + "." + fileFormat;
-    } else {
-      this.dataKey = folder + "/" + fileName + "." + fileFormat;
-    }
+    this.dataKey = folder + "/" + fileName + "." + fileFormat;
     this.dataUri = "gs://" + dataBucket + "/" + dataKey;
   }
 

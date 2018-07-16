@@ -104,7 +104,7 @@ public class BigQueryDataExtractionManagerTest {
   public void locationTest() {
     Table table = tables.get(0);
     manager.register(table);
-    String location = "gs://" + map.get(table).getKey().getBucket() + "/";
+    String location = "gs://" + map.get(table).getKey().getBucket() + "/" + map.get(table).getKey().getFolder() + "/";
     assertThat(location, is(manager.getExtractedDataBaseLocation(table)));
   }
 

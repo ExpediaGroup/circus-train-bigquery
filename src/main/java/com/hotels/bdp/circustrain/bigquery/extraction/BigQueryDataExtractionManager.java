@@ -58,10 +58,14 @@ public class BigQueryDataExtractionManager {
 
   public void register(Table table, BigQueryExtractionData extractionData) {
     Pair<BigQueryExtractionData, Boolean> deleteInfo = Pair.of(extractionData, false);
-    locationMap.put(table, deleteInfo);
+    this.register(table, extractionData, false);
   }
 
   public void register(Table table, BigQueryExtractionData extractionData, boolean deleteTable) {
+    if (locationMap.containsKey(table)) {
+      log.info("Table {}.{} already registered for extraction. Skipping registration", table.getTableId().getDataset(),
+          table.getTableId().getTable());
+    }
     Pair<BigQueryExtractionData, Boolean> deleteInfo = Pair.of(extractionData, deleteTable);
     log.info("Registering table {}.{} for extraction to {}", table.getTableId().getDataset(),
         table.getTableId().getTable(), extractionData.getUri());
@@ -99,7 +103,11 @@ public class BigQueryDataExtractionManager {
     if (!locationMap.containsKey(table)) {
       return null;
     }
-    return "gs://" + locationMap.get(table).getKey().getBucket() + "/";
+    return "gs://"
+        + locationMap.get(table).getKey().getBucket()
+        + "/"
+        + locationMap.get(table).getKey().getFolder()
+        + "/";
   }
 
   public String getExtractedDataUri(Table table) {
@@ -114,6 +122,13 @@ public class BigQueryDataExtractionManager {
       return null;
     }
     return locationMap.get(table).getKey().getBucket();
+  }
+
+  public String getExtractedDataFolder(Table table) {
+    if (!locationMap.containsKey(table)) {
+      return null;
+    }
+    return locationMap.get(table).getKey().getFolder();
   }
 
   public String getExtractedDataKey(Table table) {
