@@ -17,6 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.metastore;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
 
@@ -25,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,7 +41,9 @@ import org.apache.hadoop.hive.metastore.PartitionDropOptions;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.AggrStats;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
+import org.apache.hadoop.hive.metastore.api.BinaryColumnStatsData;
 import org.apache.hadoop.hive.metastore.api.ColumnStatistics;
+import org.apache.hadoop.hive.metastore.api.ColumnStatisticsData;
 import org.apache.hadoop.hive.metastore.api.ColumnStatisticsObj;
 import org.apache.hadoop.hive.metastore.api.CompactionResponse;
 import org.apache.hadoop.hive.metastore.api.CompactionType;
@@ -212,6 +216,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   private void cachePartition(Partition partition) {
     log.debug("Caching partition {}", partition);
     String partitionKey = makeKey(partition.getDbName(), partition.getTableName());
+
     if (partitionCache.containsKey(partitionKey)) {
       partitionCache.get(partitionKey).add(partition);
     } else {
@@ -305,6 +310,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     String partitionKey = sanitisePartitionKey(schema);
     log.info("Getting values for partition key '{}'", partitionKey);
     Set<String> values = new LinkedHashSet<>();
+
     for (FieldValueList row : result.iterateAll()) {
       values.add(row.get(partitionKey).getValue().toString());
     }
@@ -350,6 +356,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
           .convert();
       log.info("Generated partition {}", partition);
       cachePartition(partition);
+      // cachePartition(partitionName, partition);
     }
   }
 
@@ -431,18 +438,80 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public Map<String, List<ColumnStatisticsObj>> getPartitionColumnStatistics(
-      String s,
-      String s1,
-      List<String> list,
-      List<String> list1)
+      String dbName,
+      String tableName,
+      List<String> partNames,
+      List<String> colNames)
     throws NoSuchObjectException, MetaException, TException {
-    return new HashMap<>();
+    Map<String, List<ColumnStatisticsObj>> map = new HashMap<>();
+
+    // TODO: Revisit logic for supporting multiple partitions
+    // TODO: Use cached table
+    // TODO: Get working
+    Set<String> set = new HashSet<>(colNames);
+    com.google.cloud.bigquery.Table table = getBigQueryTable(dbName, tableName);
+    List<FieldSchema> cols = getCols(table);
+
+    List<ColumnStatisticsObj> statObjects = new ArrayList<>();
+    for (FieldSchema fieldSchema : cols) {
+      if (validFieldSchema(fieldSchema)) {
+        if (set.contains(fieldSchema.getName())) {
+          ColumnStatisticsObj obj = new ColumnStatisticsObj();
+          obj.setColType(fieldSchema.getType());
+          obj.setColName(fieldSchema.getName());
+          ColumnStatisticsData statisticsData = new ColumnStatisticsData();
+          BinaryColumnStatsData mockData = new BinaryColumnStatsData();
+          mockData.setMaxColLen(Long.MAX_VALUE);
+          mockData.setAvgColLen(Double.MAX_VALUE);
+          mockData.setBitVectors("");
+          mockData.setNumNulls(Long.MAX_VALUE);
+          statisticsData.setBinaryStats(mockData);
+          obj.setStatsData(statisticsData);
+          log.info("Adding column statistics object {} to partition column statistics for {}.{}", obj, dbName,
+              tableName);
+          statObjects.add(obj);
+        }
+      }
+    }
+    for (String partName : partNames) {
+      log.info("Setting statistics objects for partition {}", partName);
+      map.put(partName, statObjects);
+    }
+    return map;
+  }
+
+  private boolean validFieldSchema(FieldSchema fieldSchema) {
+    return isNotEmpty(fieldSchema.getName()) && isNotEmpty(fieldSchema.getType());
   }
 
   @Override
-  public List<ColumnStatisticsObj> getTableColumnStatistics(String s, String s1, List<String> list)
+  public List<ColumnStatisticsObj> getTableColumnStatistics(String dbName, String tableName, List<String> colNames)
     throws NoSuchObjectException, MetaException, TException {
-    return null;
+    // TODO: Use cached table
+    Set<String> set = new HashSet<>(colNames);
+    com.google.cloud.bigquery.Table table = getBigQueryTable(dbName, tableName);
+    List<FieldSchema> cols = getCols(table);
+    List<ColumnStatisticsObj> statObjects = new ArrayList<>();
+    for (FieldSchema fieldSchema : cols) {
+      if (validFieldSchema(fieldSchema)) {
+        if (set.contains(fieldSchema.getName())) {
+          ColumnStatisticsObj obj = new ColumnStatisticsObj();
+          obj.setColType(fieldSchema.getType());
+          obj.setColName(fieldSchema.getName());
+          ColumnStatisticsData statisticsData = new ColumnStatisticsData();
+          BinaryColumnStatsData mockData = new BinaryColumnStatsData();
+          mockData.setMaxColLen(Long.MAX_VALUE);
+          mockData.setAvgColLen(Double.MAX_VALUE);
+          mockData.setBitVectors("");
+          mockData.setNumNulls(Long.MAX_VALUE);
+          statisticsData.setBinaryStats(mockData);
+          obj.setStatsData(statisticsData);
+          log.info("Adding column statistics object {} to table column statistics for {}.{}", obj, dbName, tableName);
+          statObjects.add(obj);
+        }
+      }
+    }
+    return statObjects;
   }
 
   @Override
