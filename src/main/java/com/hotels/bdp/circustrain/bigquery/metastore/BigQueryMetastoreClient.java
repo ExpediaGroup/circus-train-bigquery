@@ -300,7 +300,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     }
 
     String partitionKey = sanitisePartitionKey(schema);
-    log.info("Getting values for partition key {}", partitionKey);
+    log.info("Getting values for partition key '{}'", partitionKey);
     Set<String> values = new LinkedHashSet<>();
     for (FieldValueList row : result.iterateAll()) {
       values.add(row.get(partitionKey).getValue().toString());
@@ -322,8 +322,10 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       String destinationTableName = randomTableName();
       selectQueryIntoBigQueryTable(destinationDBName, destinationTableName, statement);
       com.google.cloud.bigquery.Table part = getBigQueryTable(destinationDBName, destinationTableName);
+      String partitionBucket = tableBucket;
+      String partitionFolder = tableFolder + "/" + BigQueryExtractionData.randomUri();
       String fileName = partitionKey + "=" + value;
-      BigQueryExtractionData extractionData = new BigQueryExtractionData(tableBucket, tableFolder, fileName);
+      BigQueryExtractionData extractionData = new BigQueryExtractionData(partitionBucket, partitionFolder, fileName);
       dataExtractionManager.register(part, extractionData, true);
       partitionMap.put(part, value);
     }
