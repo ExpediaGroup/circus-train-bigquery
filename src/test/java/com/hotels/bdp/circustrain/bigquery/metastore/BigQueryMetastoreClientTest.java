@@ -112,7 +112,7 @@ public class BigQueryMetastoreClientTest {
     String tableName = "table";
     TableId tableId = TableId.of(dbName, tableName);
     String location = "gs://foo/baz";
-    when(dataExtractionManager.getDataLocation(table)).thenReturn(location);
+    when(dataExtractionManager.getExtractedDataBaseLocation(table)).thenReturn(location);
     when(bigQuery.getDataset(anyString())).thenReturn(dataset);
     when(dataset.get(anyString())).thenReturn(table);
     TableDefinition tableDefinition = mock(TableDefinition.class);

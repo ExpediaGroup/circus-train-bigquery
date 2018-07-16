@@ -15,7 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -64,6 +63,8 @@ public class BigQueryDataExtractionManager {
 
   public void register(Table table, BigQueryExtractionData extractionData, boolean deleteTable) {
     Pair<BigQueryExtractionData, Boolean> deleteInfo = Pair.of(extractionData, deleteTable);
+    log.info("Registering table {}.{} for extraction to {}", table.getTableId().getDataset(),
+        table.getTableId().getTable(), extractionData.getUri());
     locationMap.put(table, deleteInfo);
   }
 
@@ -94,10 +95,31 @@ public class BigQueryDataExtractionManager {
     }
   }
 
-  public String getDataLocation(Table table) {
+  public String getExtractedDataBaseLocation(Table table) {
     if (!locationMap.containsKey(table)) {
       return null;
     }
-    return "gs://" + locationMap.get(table).getKey().getDataBucket() + "/";
+    return "gs://" + locationMap.get(table).getKey().getBucket() + "/";
+  }
+
+  public String getExtractedDataUri(Table table) {
+    if (!locationMap.containsKey(table)) {
+      return null;
+    }
+    return locationMap.get(table).getKey().getUri();
+  }
+
+  public String getExtractedDataBucket(Table table) {
+    if (!locationMap.containsKey(table)) {
+      return null;
+    }
+    return locationMap.get(table).getKey().getBucket();
+  }
+
+  public String getExtractedDataKey(Table table) {
+    if (!locationMap.containsKey(table)) {
+      return null;
+    }
+    return locationMap.get(table).getKey().getKey();
   }
 }

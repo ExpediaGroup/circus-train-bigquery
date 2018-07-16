@@ -117,6 +117,7 @@ import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHivePartitionCon
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTypeConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryExtractionData;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
 class BigQueryMetastoreClient implements CloseableMetaStoreClient {
@@ -194,7 +195,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   private boolean addPartitionIfFiltered(Table table) {
     if (shouldPartition()) {
-      log.info("Partitioning table {}.{} with key {} and filter {}", table.getDbName(), table.getTableName(),
+      log.info("Partitioning table {}.{} with key '{}' and filter '{}'", table.getDbName(), table.getTableName(),
           getPartitionBy(), getPartitionFilter());
       applyPartitionFilter(table);
       return true;
@@ -241,11 +242,14 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   private Table convertBigQueryTableToHiveTable(com.google.cloud.bigquery.Table table) {
     String databaseName = table.getTableId().getDataset();
     String tableName = table.getTableId().getTable();
+    Schema schema = table.getDefinition().getSchema();
+    String tableLocation = dataExtractionManager.getExtractedDataBaseLocation(table);
+    log.info("Table Location = {}", tableLocation);
     return new BigQueryToHiveTableConverter()
         .withDatabaseName(databaseName)
         .withTableName(tableName)
-        .withSchema(table.getDefinition().getSchema())
-        .withLocation(dataExtractionManager.getDataLocation(table))
+        .withSchema(schema)
+        .withLocation(tableLocation)
         .convert();
   }
 
@@ -310,24 +314,29 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     final String sourceDBName = filteredTable.getTableId().getDataset();
     final String sourceTableName = filteredTable.getTableId().getTable();
     final String destinationDBName = hiveTable.getDbName();
+    final String tableBucket = dataExtractionManager
+        .getExtractedDataBucket(getBigQueryTable(hiveTable.getDbName(), hiveTable.getTableName()));
     for (String value : values) {
       String statement = String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey,
           value);
       String destinationTableName = randomTableName();
       selectQueryIntoBigQueryTable(destinationDBName, destinationTableName, statement);
       com.google.cloud.bigquery.Table part = getBigQueryTable(destinationDBName, destinationTableName);
-      dataExtractionManager.register(part, true);
+      BigQueryExtractionData extractionData = new BigQueryExtractionData(tableBucket,
+          BigQueryExtractionData.randomUri(), BigQueryExtractionData.randomUri(), "csv");
+      dataExtractionManager.register(part, extractionData, true);
       partitionMap.put(part, value);
     }
 
     for (Map.Entry<com.google.cloud.bigquery.Table, String> entry : partitionMap.entrySet()) {
       com.google.cloud.bigquery.Table part = entry.getKey();
       String value = entry.getValue();
+      log.info("Part uri: {}", dataExtractionManager.getExtractedDataUri(part));
       Partition partition = new BigQueryToHivePartitionConverter()
           .withDatabaseName(hiveTable.getDbName())
           .withTableName(hiveTable.getTableName())
           .withValue(value)
-          .withLocation(dataExtractionManager.getDataLocation(part))
+          .withLocation(dataExtractionManager.getExtractedDataUri(part))
           .convert();
       log.info("Generated partition {}", partition);
       cachePartition(partition);

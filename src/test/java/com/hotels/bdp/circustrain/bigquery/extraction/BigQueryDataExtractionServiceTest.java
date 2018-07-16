@@ -72,7 +72,7 @@ public class BigQueryDataExtractionServiceTest {
     when(jobStatus.getError()).thenReturn(null);
     service.extract(table, data);
     verify(storage).create(any(BucketInfo.class));
-    verify(table).extract(eq("csv"), eq(data.getDataUri()));
+    verify(table).extract(eq("csv"), eq(data.getUri()));
   }
 
   @Test
@@ -118,7 +118,7 @@ public class BigQueryDataExtractionServiceTest {
 
   @Test
   public void jobError() throws InterruptedException {
-    BigQueryError bigQueryError = new BigQueryError("reason", "getDataLocation", "message");
+    BigQueryError bigQueryError = new BigQueryError("reason", "getExtractedDataBaseLocation", "message");
     expectedException.expect(CircusTrainException.class);
     expectedException.expectMessage(bigQueryError.getReason());
     expectedException.expectMessage(bigQueryError.getLocation());
@@ -130,7 +130,7 @@ public class BigQueryDataExtractionServiceTest {
     when(table.extract(anyString(), anyString())).thenReturn(job);
     when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(job);
     when(job.getStatus()).thenReturn(jobStatus);
-    when(jobStatus.getError()).thenReturn(new BigQueryError("reason", "getDataLocation", "message"));
+    when(jobStatus.getError()).thenReturn(new BigQueryError("reason", "getExtractedDataBaseLocation", "message"));
     service.extract(table, data);
   }
 }

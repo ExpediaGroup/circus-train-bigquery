@@ -15,12 +15,12 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import com.google.cloud.bigquery.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.Table;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
@@ -44,35 +44,50 @@ public class BigQueryDataExtractionService {
   }
 
   void cleanup(BigQueryExtractionData extractionData) {
-    String dataBucket = extractionData.getDataBucket();
-    String dataKey = extractionData.getDataKey();
-    String format = extractionData.getFormat();
-    String dataUri = extractionData.getDataUri();
+    String dataBucket = extractionData.getBucket();
+    String dataKey = extractionData.getKey();
+    String dataUri = extractionData.getUri();
 
-    BlobId blobId = BlobId.of(dataBucket, dataKey + "." + format);
+    BlobId blobId = BlobId.of(dataBucket, dataKey);
     boolean suceeded = storage.delete(blobId);
     if (!suceeded) {
       log.warn("Could not delete object {}", dataUri);
     }
+
+    // TODO: Handle better
     Bucket bucket = storage.get(dataBucket);
-    suceeded = bucket.delete();
-    if (!suceeded) {
-      log.warn("Could not delete bucket {}", dataBucket);
+    try {
+      suceeded = bucket.delete();
+      if (!suceeded) {
+        log.warn("Could not delete bucket {}", dataBucket);
+      } else {
+        log.info("Deleted {}", dataBucket);
+      }
+    } catch (Exception e) {
+      log.warn(e.toString());
     }
   }
 
   private void createBucket(BigQueryExtractionData extractionData) {
-    String dataBucket = extractionData.getDataBucket();
+    String dataBucket = extractionData.getBucket();
+    if (bucketExists(dataBucket)) {
+      log.info("Bucket {} already exists. Skipped creation", dataBucket);
+      return;
+    }
     log.info("Creating bucket {}", dataBucket);
     BucketInfo bucketInfo = BucketInfo.of(dataBucket);
     storage.create(bucketInfo);
+  }
+
+  private boolean bucketExists(String bucketName) {
+    return storage.get(bucketName, Storage.BucketGetOption.fields()) != null;
   }
 
   private void extractDataFromBigQuery(BigQueryExtractionData extractionData, Table table) {
     String dataset = table.getTableId().getDataset();
     String tableName = table.getTableId().getTable();
     String format = extractionData.getFormat();
-    String dataUri = extractionData.getDataUri();
+    String dataUri = extractionData.getUri();
 
     log.info("Extracting {}.{} to temporary location {}", dataset, tableName, dataUri);
     try {

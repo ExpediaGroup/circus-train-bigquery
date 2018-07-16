@@ -43,7 +43,7 @@ public class BigQueryToHivePartitionConverterTest {
 
   @Test
   public void withLocation() {
-    String location = "getDataLocation";
+    String location = "getExtractedDataBaseLocation";
     Partition partition = new BigQueryToHivePartitionConverter().withLocation(location).convert();
     assertEquals(partition.getSd().getLocation(), location);
   }

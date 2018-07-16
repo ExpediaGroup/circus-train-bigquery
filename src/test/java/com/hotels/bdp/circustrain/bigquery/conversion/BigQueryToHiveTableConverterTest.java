@@ -45,7 +45,7 @@ public class BigQueryToHiveTableConverterTest {
 
   @Test
   public void withLocation() {
-    String location = "getDataLocation";
+    String location = "getExtractedDataBaseLocation";
     Table table = new BigQueryToHiveTableConverter().withLocation(location).convert();
     assertEquals(table.getSd().getLocation(), location);
   }
