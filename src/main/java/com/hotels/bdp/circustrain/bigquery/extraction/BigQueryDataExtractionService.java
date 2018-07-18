@@ -52,19 +52,6 @@ public class BigQueryDataExtractionService {
     deleteBucket(dataBucket);
   }
 
-  private void deleteBucket(String dataBucket) {
-    try {
-      Bucket bucket = storage.get(dataBucket);
-      boolean suceeded = bucket.delete();
-      if (suceeded) {
-        log.info("Deleted bucket {}", dataBucket);
-      } else {
-        log.warn("Could not delete bucket {}", dataBucket);
-      }
-    } catch (Exception e) {
-      log.warn(e.toString());
-    }
-  }
 
   private void deleteObjectsInBucket(String dataBucket) {
     try {
@@ -76,6 +63,20 @@ public class BigQueryDataExtractionService {
         } else {
           log.warn("Could not delete object {}", blob);
         }
+      }
+    } catch (Exception e) {
+      log.warn(e.toString());
+    }
+  }
+
+  private void deleteBucket(String dataBucket) {
+    try {
+      Bucket bucket = storage.get(dataBucket);
+      boolean suceeded = bucket.delete();
+      if (suceeded) {
+        log.info("Deleted bucket {}", dataBucket);
+      } else {
+        log.warn("Could not delete bucket {}", dataBucket);
       }
     } catch (Exception e) {
       log.warn(e.toString());
