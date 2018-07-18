@@ -15,18 +15,16 @@
  */
 package com.hotels.bdp.circustrain.bigquery.metastore;
 
+import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
-
-import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -42,6 +40,7 @@ import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.AggrStats;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.BinaryColumnStatsData;
+import org.apache.hadoop.hive.metastore.api.BooleanColumnStatsData;
 import org.apache.hadoop.hive.metastore.api.ColumnStatistics;
 import org.apache.hadoop.hive.metastore.api.ColumnStatisticsData;
 import org.apache.hadoop.hive.metastore.api.ColumnStatisticsObj;
@@ -51,6 +50,9 @@ import org.apache.hadoop.hive.metastore.api.ConfigValSecurityException;
 import org.apache.hadoop.hive.metastore.api.CurrentNotificationEventId;
 import org.apache.hadoop.hive.metastore.api.DataOperationType;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.Decimal;
+import org.apache.hadoop.hive.metastore.api.DecimalColumnStatsData;
+import org.apache.hadoop.hive.metastore.api.DoubleColumnStatsData;
 import org.apache.hadoop.hive.metastore.api.EnvironmentContext;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.FireEventRequest;
@@ -73,6 +75,7 @@ import org.apache.hadoop.hive.metastore.api.InvalidOperationException;
 import org.apache.hadoop.hive.metastore.api.InvalidPartitionException;
 import org.apache.hadoop.hive.metastore.api.LockRequest;
 import org.apache.hadoop.hive.metastore.api.LockResponse;
+import org.apache.hadoop.hive.metastore.api.LongColumnStatsData;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.MetadataPpdResult;
 import org.apache.hadoop.hive.metastore.api.NoSuchLockException;
@@ -93,6 +96,7 @@ import org.apache.hadoop.hive.metastore.api.SetPartitionsStatsRequest;
 import org.apache.hadoop.hive.metastore.api.ShowCompactResponse;
 import org.apache.hadoop.hive.metastore.api.ShowLocksRequest;
 import org.apache.hadoop.hive.metastore.api.ShowLocksResponse;
+import org.apache.hadoop.hive.metastore.api.StringColumnStatsData;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.metastore.api.TableMeta;
 import org.apache.hadoop.hive.metastore.api.TxnAbortedException;
@@ -128,6 +132,26 @@ import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryMetastoreClient.class);
+  private static final String PART_KEY = "part";
+  private static final String BOOLEAN_COL = "boolCol";
+  private static final String BOOLEAN_TYPE = "boolean";
+  private static final String BOOLEAN_VAL = "true";
+  private static final String LONG_COL = "longCol";
+  private static final String LONG_TYPE = "long";
+  private static final String INT_TYPE = "int";
+  private static final String INT_VAL = "1234";
+  private static final String DOUBLE_COL = "doubleCol";
+  private static final String DOUBLE_TYPE = "double";
+  private static final String DOUBLE_VAL = "3.1415";
+  private static final String STRING_COL = "stringCol";
+  private static final String STRING_TYPE = "string";
+  private static final String STRING_VAL = "stringval";
+  private static final String BINARY_COL = "binaryCol";
+  private static final String BINARY_TYPE = "binary";
+  private static final String BINARY_VAL = "1";
+  private static final String DECIMAL_COL = "decimalCol";
+  private static final String DECIMAL_TYPE = "decimal(5,3)";
+  private static final String DECIMAL_VAL = "12.123";
 
   private final CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration;
   private final BigQuery bigQuery;
@@ -436,6 +460,10 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return partitions;
   }
 
+  private boolean validFieldSchema(FieldSchema fieldSchema) {
+    return isNotEmpty(fieldSchema.getName().trim()) && isNotEmpty(fieldSchema.getType().trim());
+  }
+
   @Override
   public Map<String, List<ColumnStatisticsObj>> getPartitionColumnStatistics(
       String dbName,
@@ -443,75 +471,170 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       List<String> partNames,
       List<String> colNames)
     throws NoSuchObjectException, MetaException, TException {
-    Map<String, List<ColumnStatisticsObj>> map = new HashMap<>();
-
     // TODO: Revisit logic for supporting multiple partitions
     // TODO: Use cached table
     // TODO: Get working
-    Set<String> set = new HashSet<>(colNames);
-    com.google.cloud.bigquery.Table table = getBigQueryTable(dbName, tableName);
-    List<FieldSchema> cols = getCols(table);
 
-    List<ColumnStatisticsObj> statObjects = new ArrayList<>();
-    for (FieldSchema fieldSchema : cols) {
-      if (validFieldSchema(fieldSchema)) {
-        if (set.contains(fieldSchema.getName())) {
-          ColumnStatisticsObj obj = new ColumnStatisticsObj();
-          obj.setColType(fieldSchema.getType());
-          obj.setColName(fieldSchema.getName());
-          ColumnStatisticsData statisticsData = new ColumnStatisticsData();
-          BinaryColumnStatsData mockData = new BinaryColumnStatsData();
-          mockData.setMaxColLen(Long.MAX_VALUE);
-          mockData.setAvgColLen(Double.MAX_VALUE);
-          mockData.setBitVectors("");
-          mockData.setNumNulls(Long.MAX_VALUE);
-          statisticsData.setBinaryStats(mockData);
-          obj.setStatsData(statisticsData);
-          log.info("Adding column statistics object {} to partition column statistics for {}.{}", obj, dbName,
-              tableName);
-          statObjects.add(obj);
-        }
-      }
-    }
+    Map<String, List<ColumnStatisticsObj>> map = new HashMap<>();
+    List<ColumnStatisticsObj> statObjects = getTableColumnStatistics(dbName, tableName, colNames);
     for (String partName : partNames) {
       log.info("Setting statistics objects for partition {}", partName);
       map.put(partName, statObjects);
     }
     return map;
-  }
 
-  private boolean validFieldSchema(FieldSchema fieldSchema) {
-    return isNotEmpty(fieldSchema.getName()) && isNotEmpty(fieldSchema.getType());
   }
 
   @Override
   public List<ColumnStatisticsObj> getTableColumnStatistics(String dbName, String tableName, List<String> colNames)
     throws NoSuchObjectException, MetaException, TException {
-    // TODO: Use cached table
-    Set<String> set = new HashSet<>(colNames);
     com.google.cloud.bigquery.Table table = getBigQueryTable(dbName, tableName);
     List<FieldSchema> cols = getCols(table);
     List<ColumnStatisticsObj> statObjects = new ArrayList<>();
     for (FieldSchema fieldSchema : cols) {
-      if (validFieldSchema(fieldSchema)) {
-        if (set.contains(fieldSchema.getName())) {
-          ColumnStatisticsObj obj = new ColumnStatisticsObj();
-          obj.setColType(fieldSchema.getType());
-          obj.setColName(fieldSchema.getName());
-          ColumnStatisticsData statisticsData = new ColumnStatisticsData();
-          BinaryColumnStatsData mockData = new BinaryColumnStatsData();
-          mockData.setMaxColLen(Long.MAX_VALUE);
-          mockData.setAvgColLen(Double.MAX_VALUE);
-          mockData.setBitVectors("");
-          mockData.setNumNulls(Long.MAX_VALUE);
-          statisticsData.setBinaryStats(mockData);
-          obj.setStatsData(statisticsData);
-          log.info("Adding column statistics object {} to table column statistics for {}.{}", obj, dbName, tableName);
-          statObjects.add(obj);
-        }
+      String type = fieldSchema.getType();
+      switch (type) {
+        case BOOLEAN_TYPE :
+          statObjects.add(mockBooleanStats(10));
+          break;
+        case LONG_TYPE :
+          statObjects.add(mockLongStats(10));
+          break;
+        case STRING_TYPE:
+          statObjects.add(mockStringStats(10));
+          break;
+        case DOUBLE_TYPE:
+          statObjects.add(mockDoubleStats(10));
+          break;
+        case BINARY_TYPE:
+          statObjects.add(mockBinaryStats(10));
+          break;
+        case DECIMAL_TYPE:
+          statObjects.add(mockDecimalStats(10));
+          break;
+        default:
+          break;
       }
     }
     return statObjects;
+  }
+
+
+
+  private ColumnStatisticsObj mockBooleanStats(int i) {
+    long trues = 37 + 100*i;
+    long falses = 12 + 50*i;
+    long nulls = 2 + i;
+    ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
+    colStatsObj.setColName(BOOLEAN_COL);
+    colStatsObj.setColType(BOOLEAN_TYPE);
+    ColumnStatisticsData data = new ColumnStatisticsData();
+    BooleanColumnStatsData boolData = new BooleanColumnStatsData();
+    boolData.setNumTrues(trues);
+    boolData.setNumFalses(falses);
+    boolData.setNumNulls(nulls);
+    data.setBooleanStats(boolData);
+    colStatsObj.setStatsData(data);
+    return colStatsObj;
+  }
+
+  private ColumnStatisticsObj mockLongStats(int i) {
+    long high = 120938479124L + 100*i;
+    long low = -12341243213412124L - 50*i;
+    long nulls = 23 + i;
+    long dVs = 213L + 10*i;
+    ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
+    colStatsObj.setColName(LONG_COL);
+    colStatsObj.setColType(LONG_TYPE);
+    ColumnStatisticsData data = new ColumnStatisticsData();
+    LongColumnStatsData longData = new LongColumnStatsData();
+    longData.setHighValue(high);
+    longData.setLowValue(low);
+    longData.setNumNulls(nulls);
+    longData.setNumDVs(dVs);
+    data.setLongStats(longData);
+    colStatsObj.setStatsData(data);
+    return colStatsObj;
+  }
+
+  private ColumnStatisticsObj mockDoubleStats(int i) {
+    double high = 123423.23423 + 100*i;
+    double low = 0.00001234233 - 50*i;
+    long nulls = 92 + i;
+    long dVs = 1234123421L + 10*i;
+    ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
+    colStatsObj.setColName(DOUBLE_COL);
+    colStatsObj.setColType(DOUBLE_TYPE);
+    ColumnStatisticsData data = new ColumnStatisticsData();
+    DoubleColumnStatsData doubleData = new DoubleColumnStatsData();
+    doubleData.setHighValue(high);
+    doubleData.setLowValue(low);
+    doubleData.setNumNulls(nulls);
+    doubleData.setNumDVs(dVs);
+    data.setDoubleStats(doubleData);
+    colStatsObj.setStatsData(data);
+    return colStatsObj;
+  }
+
+  private ColumnStatisticsObj mockStringStats(int i) {
+    long maxLen = 1234 + 10*i;
+    double avgLen = 32.3 + i;
+    long nulls = 987 + 10*i;
+    long dVs = 906 + i;
+    ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
+    colStatsObj.setColName(STRING_COL);
+    colStatsObj.setColType(STRING_TYPE);
+    ColumnStatisticsData data = new ColumnStatisticsData();
+    StringColumnStatsData stringData = new StringColumnStatsData();
+    stringData.setMaxColLen(maxLen);
+    stringData.setAvgColLen(avgLen);
+    stringData.setNumNulls(nulls);
+    stringData.setNumDVs(dVs);
+    data.setStringStats(stringData);
+    colStatsObj.setStatsData(data);
+    return colStatsObj;
+  }
+
+  private ColumnStatisticsObj mockBinaryStats(int i) {;
+    long maxLen = 123412987L + 10*i;
+    double avgLen = 76.98 + i;
+    long nulls = 976998797L + 10*i;
+    ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
+    colStatsObj.setColName(BINARY_COL);
+    colStatsObj.setColType(BINARY_TYPE);
+    ColumnStatisticsData data = new ColumnStatisticsData();
+    BinaryColumnStatsData binaryData = new BinaryColumnStatsData();
+    binaryData.setMaxColLen(maxLen);
+    binaryData.setAvgColLen(avgLen);
+    binaryData.setNumNulls(nulls);
+    data.setBinaryStats(binaryData);
+    colStatsObj.setStatsData(data);
+    return colStatsObj;
+  }
+
+  private ColumnStatisticsObj mockDecimalStats(int i) {
+    Decimal high = new Decimal();
+    high.setScale((short)3);
+    String strHigh = String.valueOf(3876 + 100*i);
+    high.setUnscaled(strHigh.getBytes());
+    Decimal low = new Decimal();
+    low.setScale((short)3);
+    String strLow = String.valueOf(38 + i);
+    low.setUnscaled(strLow.getBytes());
+    long nulls = 13 + i;
+    long dVs = 923947293L + 100*i;
+    ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
+    colStatsObj.setColName(DECIMAL_COL);
+    colStatsObj.setColType(DECIMAL_TYPE);
+    ColumnStatisticsData data = new ColumnStatisticsData();
+    DecimalColumnStatsData decimalData = new DecimalColumnStatsData();
+    decimalData.setHighValue(high);
+    decimalData.setLowValue(low);
+    decimalData.setNumNulls(nulls);
+    decimalData.setNumDVs(dVs);
+    data.setDecimalStats(decimalData);
+    colStatsObj.setStatsData(data);
+    return colStatsObj;
   }
 
   @Override
