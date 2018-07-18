@@ -21,7 +21,7 @@ class BigQueryExtractionData {
 
   private final String format = "csv";
   private final String dataBucket = "circus-train-bigquery-tmp-" + UUID.randomUUID().toString().toLowerCase();
-  private final String dataKey = UUID.randomUUID().toString().toLowerCase();
+  private final String dataKey = UUID.randomUUID().toString().toLowerCase() + "-*";
   private final String dataUri = "gs://" + dataBucket + "/" + dataKey + "." + format;
 
   String getDataKey() {

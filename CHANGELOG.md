@@ -1,3 +1,7 @@
+# TBD
+### Changed
+* Support sharded exports to enable replications of larger tables See [#10](https://github.com/HotelsDotCom/circus-train-bigquery/issues/10).
+
 # 2.0.0 - 2018-07-13
 ### Changed
 * Updated project to be compatible with Circus Train 12.0.0 and up
