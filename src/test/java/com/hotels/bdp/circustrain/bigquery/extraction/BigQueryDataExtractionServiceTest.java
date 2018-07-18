@@ -22,6 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
@@ -89,14 +90,26 @@ public class BigQueryDataExtractionServiceTest {
     Bucket bucket = mock(Bucket.class);
     when(bucket.delete()).thenReturn(true);
     when(storage.get(anyString())).thenReturn(bucket);
-    Blob blob = mock(Blob.class);
-    List<Blob> blobs = ImmutableList.of(blob);
+
+    List<Blob> blobs = new ArrayList<>();
+    final int numBlobs = 10;
+    for (int i = 0; i < numBlobs; ++i) {
+      Blob blob = mock(Blob.class);
+      BlobId blobId = BlobId.of(data.getDataBucket(), data.getDataKey() + i);
+      when(blob.getBlobId()).thenReturn(blobId);
+      blobs.add(blob);
+    }
+
     Page pages = mock(Page.class);
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(blobs);
 
     service.cleanup(data);
-    verify(storage).delete(any(BlobId.class));
+
+    for (int i = 0; i < numBlobs; ++i) {
+      verify(storage).delete(blobs.get(i).getBlobId());
+    }
+
     verify(bucket).delete();
   }
 

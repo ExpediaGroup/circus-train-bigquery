@@ -52,7 +52,6 @@ public class BigQueryDataExtractionService {
     deleteBucket(dataBucket);
   }
 
-
   private void deleteObjectsInBucket(String dataBucket) {
     try {
       Iterable<Blob> blobs = storage.list(dataBucket).iterateAll();
@@ -65,7 +64,7 @@ public class BigQueryDataExtractionService {
         }
       }
     } catch (Exception e) {
-      log.warn(e.toString());
+      log.warn("Error deleting objects in bucket {}", dataBucket, e);
     }
   }
 
@@ -79,7 +78,7 @@ public class BigQueryDataExtractionService {
         log.warn("Could not delete bucket {}", dataBucket);
       }
     } catch (Exception e) {
-      log.warn(e.toString());
+      log.warn("Error deleting bucket {}", dataBucket, e);
     }
   }
 
