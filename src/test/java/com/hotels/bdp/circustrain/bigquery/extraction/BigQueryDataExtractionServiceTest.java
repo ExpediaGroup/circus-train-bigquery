@@ -114,7 +114,7 @@ public class BigQueryDataExtractionServiceTest {
   }
 
   @Test
-  public void cleanupWhenDeletionFailsDoesntThrowException() {
+  public void cleanupWhenDeletionFailsOnBlobDoesntThrowException() {
     BigQueryExtractionData data = new BigQueryExtractionData();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
@@ -127,6 +127,87 @@ public class BigQueryDataExtractionServiceTest {
     Page pages = mock(Page.class);
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(blobs);
+
+    service.cleanup(data);
+    verify(storage).delete(any(BlobId.class));
+    verify(bucket).delete();
+  }
+
+  @Test
+  public void cleanupWhenDeletionThrowsExceptionOnBlobDoesntThrowException() {
+    BigQueryExtractionData data = new BigQueryExtractionData();
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    when(storage.delete(any(BlobId.class))).thenThrow(new RuntimeException());
+    Bucket bucket = mock(Bucket.class);
+    when(bucket.delete()).thenReturn(true);
+    when(storage.get(anyString())).thenReturn(bucket);
+    Blob blob = mock(Blob.class);
+    List<Blob> blobs = ImmutableList.of(blob);
+    Page pages = mock(Page.class);
+    when(storage.list(anyString())).thenReturn(pages);
+    when(pages.iterateAll()).thenReturn(blobs);
+
+    service.cleanup(data);
+    verify(storage).delete(any(BlobId.class));
+    verify(bucket).delete();
+  }
+
+  @Test
+  public void cleanupWhenDeletionThrowsExceptionOnBlobDoesntStillCleansRemainingBlobs() {
+    BigQueryExtractionData data = new BigQueryExtractionData();
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    when(storage.delete(any(BlobId.class))).thenReturn(true);
+    Bucket bucket = mock(Bucket.class);
+    when(bucket.delete()).thenReturn(true);
+    when(storage.get(anyString())).thenReturn(bucket);
+
+    List<Blob> blobs = new ArrayList<>();
+    final int numBlobs = 10;
+    final int exceptionThrowingBlob = numBlobs / 2;
+
+    for (int i = 0; i < numBlobs; ++i) {
+      Blob blob = mock(Blob.class);
+      BlobId blobId = BlobId.of(data.getDataBucket(), data.getDataKey() + i);
+      if (i == exceptionThrowingBlob) {
+        when(blob.getBlobId()).thenThrow(new RuntimeException());
+      } else {
+        when(blob.getBlobId()).thenReturn(blobId);
+      }
+      blobs.add(blob);
+    }
+
+    Page pages = mock(Page.class);
+    when(storage.list(anyString())).thenReturn(pages);
+    when(pages.iterateAll()).thenReturn(blobs);
+
+    service.cleanup(data);
+
+    for (int i = 0; i < numBlobs; ++i) {
+      if (i != exceptionThrowingBlob) {
+        verify(storage).delete(blobs.get(i).getBlobId());
+      }
+    }
+
+    verify(bucket).delete();
+  }
+
+  @Test
+  public void cleanupWhenBucketDeletionThrowExceptionDoesntFailJob() {
+    BigQueryExtractionData data = new BigQueryExtractionData();
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    when(storage.delete(any(BlobId.class))).thenReturn(true);
+    Bucket bucket = mock(Bucket.class);
+    when(bucket.delete()).thenReturn(true);
+    when(storage.get(anyString())).thenReturn(bucket);
+    Blob blob = mock(Blob.class);
+    List<Blob> blobs = ImmutableList.of(blob);
+    Page pages = mock(Page.class);
+    when(storage.list(anyString())).thenReturn(pages);
+    when(pages.iterateAll()).thenReturn(blobs);
+    when(storage.delete(any(BlobId.class))).thenThrow(new RuntimeException());
 
     service.cleanup(data);
     verify(storage).delete(any(BlobId.class));
