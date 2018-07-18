@@ -67,12 +67,16 @@ public class BigQueryDataExtractionService {
   }
 
   private void deleteObjectsInBucket(String dataBucket) {
-    Iterable<Blob> blobs = storage.list(dataBucket).iterateAll();
-    for (Blob blob : blobs) {
-      boolean suceeded = storage.delete(blob.getBlobId());
-      if (!suceeded) {
-        log.warn("Could not delete object {}", blob);
+    try {
+      Iterable<Blob> blobs = storage.list(dataBucket).iterateAll();
+      for (Blob blob : blobs) {
+        boolean suceeded = storage.delete(blob.getBlobId());
+        if (!suceeded) {
+          log.warn("Could not delete object {}", blob);
+        }
       }
+    } catch (Exception e) {
+      log.warn(e.toString());
     }
   }
 
