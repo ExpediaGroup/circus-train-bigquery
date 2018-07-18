@@ -1,3 +1,7 @@
+# TBD
+### Fixed
+* Set Hive replica table metadata to ignore header in replicated CSV files. See [#12](https://github.com/HotelsDotCom/circus-train-bigquery/issues/12)
+
 # 2.0.0 - 2018-07-13
 ### Changed
 * Updated project to be compatible with Circus Train 12.0.0 and up
