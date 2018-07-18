@@ -21,6 +21,7 @@ class BigQueryExtractionData {
 
   private final String format = "csv";
   private final String dataBucket = "circus-train-bigquery-tmp-" + UUID.randomUUID().toString().toLowerCase();
+  // Wildcard key enables sharding of exported data > 1GB - https://cloud.google.com/bigquery/docs/exporting-data
   private final String dataKey = UUID.randomUUID().toString().toLowerCase() + "-*";
   private final String dataUri = "gs://" + dataBucket + "/" + dataKey + "." + format;
 
