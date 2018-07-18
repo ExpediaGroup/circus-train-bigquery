@@ -22,6 +22,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,16 +33,19 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.google.api.gax.paging.Page;
 import com.google.cloud.RetryOption;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobStatus;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
+import com.google.common.collect.ImmutableList;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 
@@ -84,6 +89,12 @@ public class BigQueryDataExtractionServiceTest {
     Bucket bucket = mock(Bucket.class);
     when(bucket.delete()).thenReturn(true);
     when(storage.get(anyString())).thenReturn(bucket);
+    Blob blob = mock(Blob.class);
+    List<Blob> blobs = ImmutableList.of(blob);
+    Page pages = mock(Page.class);
+    when(storage.list(anyString())).thenReturn(pages);
+    when(pages.iterateAll()).thenReturn(blobs);
+
     service.cleanup(data);
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
@@ -98,6 +109,12 @@ public class BigQueryDataExtractionServiceTest {
     Bucket bucket = mock(Bucket.class);
     when(bucket.delete()).thenReturn(true);
     when(storage.get(anyString())).thenReturn(bucket);
+    Blob blob = mock(Blob.class);
+    List<Blob> blobs = ImmutableList.of(blob);
+    Page pages = mock(Page.class);
+    when(storage.list(anyString())).thenReturn(pages);
+    when(pages.iterateAll()).thenReturn(blobs);
+
     service.cleanup(data);
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();

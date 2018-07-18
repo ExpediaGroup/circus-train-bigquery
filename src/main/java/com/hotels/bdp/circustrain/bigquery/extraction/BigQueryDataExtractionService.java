@@ -15,13 +15,13 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import com.google.cloud.bigquery.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.Job;
-import com.google.cloud.storage.BlobId;
+import com.google.cloud.bigquery.Table;
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
@@ -44,20 +44,35 @@ public class BigQueryDataExtractionService {
   }
 
   void cleanup(BigQueryExtractionData extractionData) {
-    String dataBucket = extractionData.getDataBucket();
-    String dataKey = extractionData.getDataKey();
-    String format = extractionData.getFormat();
-    String dataUri = extractionData.getDataUri();
+    deleteBucketAndContents(extractionData.getDataBucket());
+  }
 
-    BlobId blobId = BlobId.of(dataBucket, dataKey + "." + format);
-    boolean suceeded = storage.delete(blobId);
-    if (!suceeded) {
-      log.warn("Could not delete object {}", dataUri);
+  private void deleteBucketAndContents(String dataBucket) {
+    deleteObjectsInBucket(dataBucket);
+    deleteBucket(dataBucket);
+  }
+
+  private void deleteBucket(String dataBucket) {
+    try {
+      Bucket bucket = storage.get(dataBucket);
+      boolean suceeded = bucket.delete();
+      if (!suceeded) {
+        log.warn("Could not delete bucket {}", dataBucket);
+      } else {
+        log.info("Deleted {}", dataBucket);
+      }
+    } catch (Exception e) {
+      log.warn(e.toString());
     }
-    Bucket bucket = storage.get(dataBucket);
-    suceeded = bucket.delete();
-    if (!suceeded) {
-      log.warn("Could not delete bucket {}", dataBucket);
+  }
+
+  private void deleteObjectsInBucket(String dataBucket) {
+    Iterable<Blob> blobs = storage.list(dataBucket).iterateAll();
+    for (Blob blob : blobs) {
+      boolean suceeded = storage.delete(blob.getBlobId());
+      if (!suceeded) {
+        log.warn("Could not delete object {}", blob);
+      }
     }
   }
 
