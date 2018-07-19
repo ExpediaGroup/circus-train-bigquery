@@ -209,6 +209,11 @@ public class BigQueryDataExtractionServiceTest {
   public void exceptionNotThrownWhenListFails() {
     BigQueryExtractionData data = new BigQueryExtractionData();
     when(storage.list(anyString())).thenThrow(new StorageException(new IOException()));
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    Bucket bucket = mock(Bucket.class);
+    when(bucket.delete()).thenThrow(new StorageException(new IOException()));
+    when(storage.get(anyString())).thenReturn(bucket);
     service.cleanup(data);
     verify(storage, times(0)).delete(any(BlobId.class));
   }
