@@ -25,6 +25,7 @@ import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 
@@ -63,11 +64,11 @@ public class BigQueryDataExtractionService {
           } else {
             log.warn("Could not delete object {}", blob);
           }
-        } catch (Exception e) {
+        } catch (StorageException e) {
           log.warn("Error deleting object {} in bucket {}", blob, dataBucket, e);
         }
       }
-    } catch (Exception e) {
+    } catch (StorageException e) {
       log.warn("Error fetching objects in bucket {} for deletion", dataBucket, e);
     }
   }
@@ -81,7 +82,7 @@ public class BigQueryDataExtractionService {
       } else {
         log.warn("Could not delete bucket {}", dataBucket);
       }
-    } catch (Exception e) {
+    } catch (StorageException e) {
       log.warn("Error deleting bucket {}", dataBucket, e);
     }
   }
