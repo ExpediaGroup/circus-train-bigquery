@@ -19,6 +19,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -163,33 +164,21 @@ public class BigQueryDataExtractionServiceTest {
     when(bucket.delete()).thenReturn(true);
     when(storage.get(anyString())).thenReturn(bucket);
 
-    List<Blob> blobs = new ArrayList<>();
-    final int numBlobs = 10;
-    final int exceptionThrowingBlob = numBlobs / 2;
+    BlobId firstCall = BlobId.of(data.getDataBucket(), data.getDataKey() + 1);
+    BlobId thirdCall = BlobId.of(data.getDataBucket(), data.getDataKey() + 3);
 
-    for (int i = 0; i < numBlobs; ++i) {
-      Blob blob = mock(Blob.class);
-      BlobId blobId = BlobId.of(data.getDataBucket(), data.getDataKey() + i);
-      if (i == exceptionThrowingBlob) {
-        when(blob.getBlobId()).thenThrow(new RuntimeException());
-      } else {
-        when(blob.getBlobId()).thenReturn(blobId);
-      }
-      blobs.add(blob);
-    }
+    Blob blob = mock(Blob.class);
+    when(blob.getBlobId()).thenReturn(firstCall).thenThrow(new RuntimeException()).thenReturn(thirdCall);
 
     Page pages = mock(Page.class);
     when(storage.list(anyString())).thenReturn(pages);
-    when(pages.iterateAll()).thenReturn(blobs);
+    when(pages.iterateAll()).thenReturn(ImmutableList.of(blob, blob, blob));
 
     service.cleanup(data);
 
-    for (int i = 0; i < numBlobs; ++i) {
-      if (i != exceptionThrowingBlob) {
-        verify(storage).delete(blobs.get(i).getBlobId());
-      }
-    }
-
+    verify(storage).delete(firstCall);
+    verify(storage).delete(thirdCall);
+    verify(storage, times(2)).delete(any(BlobId.class));
     verify(bucket).delete();
   }
 
@@ -212,6 +201,14 @@ public class BigQueryDataExtractionServiceTest {
     service.cleanup(data);
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
+  }
+
+  @Test
+  public void exceptionNotThrownWhenListFails() {
+    BigQueryExtractionData data = new BigQueryExtractionData();
+    when(storage.list(anyString())).thenThrow(new RuntimeException());
+    service.cleanup(data);
+    verify(storage, times(0)).delete(any(BlobId.class));
   }
 
   @Test
