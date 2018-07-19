@@ -1,9 +1,13 @@
-# TBD
+# 2.0.2 - 2018-07-19
+### Fixed
+* Jobs no longer fail when parts of the best effort temporary data cleanup fail.
+
+# 2.0.1 - 2018-07-18
 ### Changed
 * Support sharded exports to enable replications of larger tables See [#10](https://github.com/HotelsDotCom/circus-train-bigquery/issues/10).
 ### Fixed
 * Set Hive replica table metadata to ignore header in replicated CSV files. See [#12](https://github.com/HotelsDotCom/circus-train-bigquery/issues/12)
-* Jobs no longer fail when parts of the best effort temporary data cleanup fail.
+
 
 # 2.0.0 - 2018-07-13
 ### Changed
