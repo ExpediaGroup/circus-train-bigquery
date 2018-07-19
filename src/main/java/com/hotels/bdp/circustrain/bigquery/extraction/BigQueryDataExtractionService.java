@@ -21,10 +21,11 @@ import org.slf4j.LoggerFactory;
 import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.Table;
-import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 
@@ -44,27 +45,45 @@ public class BigQueryDataExtractionService {
   }
 
   void cleanup(BigQueryExtractionData extractionData) {
-    String dataBucket = extractionData.getBucket();
-    String dataKey = extractionData.getKey();
-    String dataUri = extractionData.getUri();
+    deleteBucketAndContents(extractionData.getBucket());
+  }
 
-    BlobId blobId = BlobId.of(dataBucket, dataKey);
-    boolean suceeded = storage.delete(blobId);
-    if (!suceeded) {
-      log.warn("Could not delete object {}", dataUri);
-    }
+  private void deleteBucketAndContents(String dataBucket) {
+    deleteObjectsInBucket(dataBucket);
+    deleteBucket(dataBucket);
+  }
 
-    // TODO: Handle better
-    Bucket bucket = storage.get(dataBucket);
+  private void deleteObjectsInBucket(String dataBucket) {
     try {
-      suceeded = bucket.delete();
-      if (!suceeded) {
-        log.warn("Could not delete bucket {}", dataBucket);
-      } else {
-        log.info("Deleted {}", dataBucket);
+      Iterable<Blob> blobs = storage.list(dataBucket).iterateAll();
+      for (Blob blob : blobs) {
+        try {
+          boolean suceeded = storage.delete(blob.getBlobId());
+          if (suceeded) {
+            log.info("Deleted object {}", blob);
+          } else {
+            log.warn("Could not delete object {}", blob);
+          }
+        } catch (StorageException e) {
+          log.warn("Error deleting object {} in bucket {}", blob, dataBucket, e);
+        }
       }
-    } catch (Exception e) {
-      log.warn(e.toString());
+    } catch (StorageException e) {
+      log.warn("Error fetching objects in bucket {} for deletion", dataBucket, e);
+    }
+  }
+
+  private void deleteBucket(String dataBucket) {
+    try {
+      Bucket bucket = storage.get(dataBucket);
+      boolean suceeded = bucket.delete();
+      if (suceeded) {
+        log.info("Deleted bucket {}", dataBucket);
+      } else {
+        log.warn("Could not delete bucket {}", dataBucket);
+      }
+    } catch (StorageException e) {
+      log.warn("Error deleting bucket {}", dataBucket, e);
     }
   }
 

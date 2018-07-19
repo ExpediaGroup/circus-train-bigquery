@@ -24,10 +24,10 @@ public class CircusTrainBigQueryConfiguration {
 
   private String partitionFilter;
 
-  //Use value in partitionBy statement to extract column
+  // Use value in partitionBy statement to extract column
   private String partitionBy;
 
-  //Use value in partitionFilter to extract data they want to copy
+  // Use value in partitionFilter to extract data they want to copy
   public String getPartitionFilter() {
     return partitionFilter;
   }

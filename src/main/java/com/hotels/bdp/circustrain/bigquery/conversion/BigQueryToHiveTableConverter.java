@@ -64,6 +64,7 @@ public class BigQueryToHiveTableConverter {
     Map<String, String> serDeParameters = new HashMap<>();
     serDeParameters.put("serialization.format", ",");
     serDeParameters.put("field.delim", ",");
+    serDeParameters.put("skip.header.line.count", "1");
     serDeInfo.setParameters(serDeParameters);
     sd.setSerdeInfo(serDeInfo);
     table.setSd(sd);

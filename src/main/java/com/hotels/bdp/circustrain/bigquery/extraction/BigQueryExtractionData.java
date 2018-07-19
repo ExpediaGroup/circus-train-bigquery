@@ -22,6 +22,8 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 public class BigQueryExtractionData {
 
   private static final String DEFAULT_BUCKET_PREFIX = "circus-train-bigquery-tmp-";
+  // Wildcard key enables sharding of exported data > 1GB - https://cloud.google.com/bigquery/docs/exporting-data
+  private static final String SHARD_DATA_POSTFIX = "-*";
   private static final String DEFAULT_FORMAT = "csv";
 
   private final String dataFormat;
@@ -39,7 +41,7 @@ public class BigQueryExtractionData {
   }
 
   public BigQueryExtractionData(String bucket, String folder) {
-    this(bucket, folder, randomUri(), DEFAULT_FORMAT);
+    this(bucket, folder, randomUri() + SHARD_DATA_POSTFIX, DEFAULT_FORMAT);
   }
 
   public BigQueryExtractionData(String bucket, String folder, String fileName) {
