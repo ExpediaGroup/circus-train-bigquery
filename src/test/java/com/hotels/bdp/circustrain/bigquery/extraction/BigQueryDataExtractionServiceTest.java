@@ -19,9 +19,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +48,7 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 import com.google.common.collect.ImmutableList;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
@@ -114,7 +117,7 @@ public class BigQueryDataExtractionServiceTest {
   }
 
   @Test
-  public void cleanupWhenDeletionFailsDoesntThrowException() {
+  public void cleanupWhenDeletionFailsOnBlobDoesntThrowException() {
     BigQueryExtractionData data = new BigQueryExtractionData();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
@@ -131,6 +134,88 @@ public class BigQueryDataExtractionServiceTest {
     service.cleanup(data);
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
+  }
+
+  @Test
+  public void cleanupWhenDeletionThrowsExceptionOnBlobDoesntThrowException() {
+    BigQueryExtractionData data = new BigQueryExtractionData();
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    when(storage.delete(any(BlobId.class))).thenThrow(new StorageException(new IOException()));
+    Bucket bucket = mock(Bucket.class);
+    when(bucket.delete()).thenReturn(true);
+    when(storage.get(anyString())).thenReturn(bucket);
+    Blob blob = mock(Blob.class);
+    List<Blob> blobs = ImmutableList.of(blob);
+    Page pages = mock(Page.class);
+    when(storage.list(anyString())).thenReturn(pages);
+    when(pages.iterateAll()).thenReturn(blobs);
+
+    service.cleanup(data);
+    verify(storage).delete(any(BlobId.class));
+    verify(bucket).delete();
+  }
+
+  @Test
+  public void cleanupWhenDeletionThrowsExceptionOnBlobDoesntStillCleansRemainingBlobs() {
+    BigQueryExtractionData data = new BigQueryExtractionData();
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    when(storage.delete(any(BlobId.class))).thenReturn(true);
+    Bucket bucket = mock(Bucket.class);
+    when(bucket.delete()).thenReturn(true);
+    when(storage.get(anyString())).thenReturn(bucket);
+
+    BlobId firstCall = BlobId.of(data.getDataBucket(), data.getDataKey() + 1);
+    BlobId thirdCall = BlobId.of(data.getDataBucket(), data.getDataKey() + 3);
+
+    Blob blob = mock(Blob.class);
+    when(blob.getBlobId()).thenReturn(firstCall).thenThrow(new StorageException(new IOException())).thenReturn(thirdCall);
+
+    Page pages = mock(Page.class);
+    when(storage.list(anyString())).thenReturn(pages);
+    when(pages.iterateAll()).thenReturn(ImmutableList.of(blob, blob, blob));
+
+    service.cleanup(data);
+
+    verify(storage).delete(firstCall);
+    verify(storage).delete(thirdCall);
+    verify(storage, times(2)).delete(any(BlobId.class));
+    verify(bucket).delete();
+  }
+
+  @Test
+  public void cleanupWhenBucketDeletionThrowExceptionDoesntFailJob() {
+    BigQueryExtractionData data = new BigQueryExtractionData();
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    when(storage.delete(any(BlobId.class))).thenReturn(true);
+    Bucket bucket = mock(Bucket.class);
+    when(bucket.delete()).thenReturn(true);
+    when(storage.get(anyString())).thenReturn(bucket);
+    Blob blob = mock(Blob.class);
+    List<Blob> blobs = ImmutableList.of(blob);
+    Page pages = mock(Page.class);
+    when(storage.list(anyString())).thenReturn(pages);
+    when(pages.iterateAll()).thenReturn(blobs);
+    when(storage.delete(any(BlobId.class))).thenThrow(new StorageException(new IOException()));
+
+    service.cleanup(data);
+    verify(storage).delete(any(BlobId.class));
+    verify(bucket).delete();
+  }
+
+  @Test
+  public void exceptionNotThrownWhenListFails() {
+    BigQueryExtractionData data = new BigQueryExtractionData();
+    when(storage.list(anyString())).thenThrow(new StorageException(new IOException()));
+    TableId tableId = TableId.of("dataset", "table");
+    when(table.getTableId()).thenReturn(tableId);
+    Bucket bucket = mock(Bucket.class);
+    when(bucket.delete()).thenThrow(new StorageException(new IOException()));
+    when(storage.get(anyString())).thenReturn(bucket);
+    service.cleanup(data);
+    verify(storage, times(0)).delete(any(BlobId.class));
   }
 
   @Test
