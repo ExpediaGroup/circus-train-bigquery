@@ -455,7 +455,6 @@ public class BigQueryReplicaMetastoreClient implements CloseableMetaStoreClient 
       for (int i = 0; i < partition.getValues().size(); ++i) {
         partition.getValues().set(i, partition.getValues().get(i).trim());
         sb.append(partition.getValues().get(i)).append("  ");
-        // TODO: Fix this hack
       }
       log.info("Partition = {}", partition.toString());
       log.info("Partition SD = {}", partition.getSd().toString());
@@ -478,7 +477,6 @@ public class BigQueryReplicaMetastoreClient implements CloseableMetaStoreClient 
       for (int i = 0; i < partition.getValues().size(); ++i) {
         partition.getValues().set(i, partition.getValues().get(i).trim());
         sb.append(partition.getValues().get(i)).append("  ");
-        // TODO: Fix this hack
       }
       log.info("Partition = {}\n", partition.toString());
       log.info("Partition SD = {}\n", partition.getSd().toString());
