@@ -24,6 +24,7 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
+import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 
 //TODO Rename?
@@ -58,6 +59,11 @@ public class BigQueryToHivePartitionConverter {
     serDeParameters.put("field.delim", ",");
     serDeInfo.setParameters(serDeParameters);
     sd.setSerdeInfo(serDeInfo);
+    SkewedInfo si = new SkewedInfo();
+    si.setSkewedColNames(new ArrayList<String>());
+    si.setSkewedColValueLocationMaps(new HashMap<List<String>, String>());
+    si.setSkewedColValues(new ArrayList<List<String>>());
+    sd.setSkewedInfo(new SkewedInfo());
     partition.setSd(sd);
   }
 

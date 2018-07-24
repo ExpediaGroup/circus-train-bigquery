@@ -15,10 +15,10 @@
  */
 package com.hotels.bdp.circustrain.bigquery.metastore;
 
-import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
+import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -129,29 +130,17 @@ import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionMana
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryExtractionData;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
-class BigQueryMetastoreClient implements CloseableMetaStoreClient {
+class BigQuerySourceMetastoreClient implements CloseableMetaStoreClient {
 
-  private static final Logger log = LoggerFactory.getLogger(BigQueryMetastoreClient.class);
-  private static final String PART_KEY = "part";
-  private static final String BOOLEAN_COL = "boolCol";
+  private static final Logger log = LoggerFactory.getLogger(BigQuerySourceMetastoreClient.class);
   private static final String BOOLEAN_TYPE = "boolean";
-  private static final String BOOLEAN_VAL = "true";
-  private static final String LONG_COL = "longCol";
   private static final String LONG_TYPE = "long";
-  private static final String INT_TYPE = "int";
-  private static final String INT_VAL = "1234";
-  private static final String DOUBLE_COL = "doubleCol";
+  private static final String INT_TYPE = "bigint";
+  private static final String BIG_INT_TYPE = "int";
   private static final String DOUBLE_TYPE = "double";
-  private static final String DOUBLE_VAL = "3.1415";
-  private static final String STRING_COL = "stringCol";
   private static final String STRING_TYPE = "string";
-  private static final String STRING_VAL = "stringval";
-  private static final String BINARY_COL = "binaryCol";
   private static final String BINARY_TYPE = "binary";
-  private static final String BINARY_VAL = "1";
-  private static final String DECIMAL_COL = "decimalCol";
   private static final String DECIMAL_TYPE = "decimal(5,3)";
-  private static final String DECIMAL_VAL = "12.123";
 
   private final CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration;
   private final BigQuery bigQuery;
@@ -159,7 +148,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   private final Map<String, Table> tableCache = new HashMap<>();
   private final Map<String, List<Partition>> partitionCache = new HashMap<>();
 
-  BigQueryMetastoreClient(
+  BigQuerySourceMetastoreClient(
       CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration,
       BigQuery bigQuery,
       BigQueryDataExtractionManager dataExtractionManager) {
@@ -272,7 +261,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     final String tableName = table.getTableId().getTable();
     final String tableLocation = dataExtractionManager.getExtractedDataBaseLocation(table);
     final Schema schema = table.getDefinition().getSchema();
-    final List<FieldSchema> cols = Collections.unmodifiableList(getCols(table));
+    final List<FieldSchema> cols = Collections.unmodifiableList(new ArrayList<>(getCols(table)));
     return new BigQueryToHiveTableConverter()
         .withDatabaseName(databaseName)
         .withTableName(tableName)
@@ -331,7 +320,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       return;
     }
 
-    String partitionKey = sanitisePartitionKey(schema);
+    final String partitionKey = sanitisePartitionKey(schema);
     log.info("Getting values for partition key '{}'", partitionKey);
     Set<String> values = new LinkedHashSet<>();
 
@@ -371,25 +360,26 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     for (Map.Entry<com.google.cloud.bigquery.Table, String> entry : partitionMap.entrySet()) {
       com.google.cloud.bigquery.Table part = entry.getKey();
       String value = entry.getValue();
+      // TODO Revisit for Partition location
+      String location = dataExtractionManager.getExtractedDataBaseLocation(part);
       Partition partition = new BigQueryToHivePartitionConverter()
           .withDatabaseName(hiveTable.getDbName())
           .withTableName(hiveTable.getTableName())
           .withValue(value)
           .withCols(cols)
-          .withLocation(dataExtractionManager.getExtractedDataBaseLocation(part))
+          .withLocation(location)
           .convert();
       log.info("Generated partition {}", partition);
       cachePartition(partition);
-      // cachePartition(partitionName, partition);
     }
   }
 
-  private List<FieldSchema> getCols(com.google.cloud.bigquery.Table table) {
+  private Set<FieldSchema> getCols(com.google.cloud.bigquery.Table table) {
     BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
-    List<FieldSchema> partitionKeys = new ArrayList<>();
+    Set<FieldSchema> partitionKeys = new LinkedHashSet<>();
 
     for (Field field : table.getDefinition().getSchema().getFields()) {
-      String fieldName = field.getName().toLowerCase();
+      String fieldName = field.getName().toLowerCase().trim();
       FieldSchema fieldSchema = new FieldSchema();
       fieldSchema.setName(fieldName);
       fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
@@ -403,20 +393,18 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       return;
     }
     BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
-    List<FieldSchema> partitionKeys = new ArrayList<>();
-    String partitionKey = getPartitionBy().toLowerCase();
+    String partitionKey = Objects.requireNonNull(getPartitionBy()).toLowerCase();
     for (Field field : filteredTableSchema.getFields()) {
-      String fieldName = field.getName().toLowerCase();
+      String fieldName = field.getName().toLowerCase().trim();
       if (partitionKey.equals(fieldName)) {
         FieldSchema fieldSchema = new FieldSchema();
         fieldSchema.setName(fieldName);
         fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
-        partitionKeys.add(fieldSchema);
+        table.addToPartitionKeys(fieldSchema);
+        log.info("Adding partition key: {} to replication table object {}.{}", partitionKey, table.getDbName(),
+            table.getTableName());
       }
     }
-    table.setPartitionKeys(partitionKeys);
-    log.info("Added partition keys: {} to replication table object {}.{}", table.getPartitionKeys(), table.getDbName(),
-        table.getTableName());
   }
 
   private TableResult selectQueryIntoBigQueryTable(String databaseName, String tableName, String partitionFilter) {
@@ -460,10 +448,6 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return partitions;
   }
 
-  private boolean validFieldSchema(FieldSchema fieldSchema) {
-    return isNotEmpty(fieldSchema.getName().trim()) && isNotEmpty(fieldSchema.getType().trim());
-  }
-
   @Override
   public Map<String, List<ColumnStatisticsObj>> getPartitionColumnStatistics(
       String dbName,
@@ -475,58 +459,42 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     // TODO: Use cached table
     // TODO: Get working
 
-    Map<String, List<ColumnStatisticsObj>> map = new HashMap<>();
-    List<ColumnStatisticsObj> statObjects = getTableColumnStatistics(dbName, tableName, colNames);
-    for (String partName : partNames) {
-      log.info("Setting statistics objects for partition {}", partName);
-      map.put(partName, statObjects);
-    }
-    return map;
-
+    /*
+     * Map<String, List<ColumnStatisticsObj>> map = new LinkedHashMap<>(); List<ColumnStatisticsObj> statObjects =
+     * getTableColumnStatistics(dbName, tableName, colNames); for (String partName : partNames) {
+     * log.info("Setting statistics objects for partition {}", partName); map.put(partName, statObjects); } return map;
+     */
+    return new HashMap<>();
   }
 
   @Override
   public List<ColumnStatisticsObj> getTableColumnStatistics(String dbName, String tableName, List<String> colNames)
     throws NoSuchObjectException, MetaException, TException {
-    com.google.cloud.bigquery.Table table = getBigQueryTable(dbName, tableName);
-    List<FieldSchema> cols = getCols(table);
-    List<ColumnStatisticsObj> statObjects = new ArrayList<>();
-    for (FieldSchema fieldSchema : cols) {
-      String type = fieldSchema.getType();
-      switch (type) {
-        case BOOLEAN_TYPE :
-          statObjects.add(mockBooleanStats(10));
-          break;
-        case LONG_TYPE :
-          statObjects.add(mockLongStats(10));
-          break;
-        case STRING_TYPE:
-          statObjects.add(mockStringStats(10));
-          break;
-        case DOUBLE_TYPE:
-          statObjects.add(mockDoubleStats(10));
-          break;
-        case BINARY_TYPE:
-          statObjects.add(mockBinaryStats(10));
-          break;
-        case DECIMAL_TYPE:
-          statObjects.add(mockDecimalStats(10));
-          break;
-        default:
-          break;
-      }
-    }
-    return statObjects;
+
+    /*
+     * com.google.cloud.bigquery.Table table = getBigQueryTable(dbName, tableName); Set<FieldSchema> cols =
+     * getCols(table); Set<String> set = new HashSet<>(colNames); List<ColumnStatisticsObj> statObjects = new
+     * ArrayList<>(); StringBuilder sb = new StringBuilder(); log.info("Getting table column statistics"); for
+     * (FieldSchema fieldSchema : cols) { String name = fieldSchema.getName().toLowerCase().trim(); // TODO: Delete
+     * sb.append("Name: ").append(name).append(" Type: ").append(fieldSchema.getType().toLowerCase().trim()).append(
+     * "\t"); if (set.contains(name)) { String type = fieldSchema.getType().toLowerCase().trim(); switch (type) { case
+     * BOOLEAN_TYPE: statObjects.add(mockBooleanStats(name, 10)); break; case LONG_TYPE:
+     * statObjects.add(mockLongStats(name, 10)); break; case INT_TYPE: statObjects.add(mockLongStats(name, 10)); break;
+     * case BIG_INT_TYPE: statObjects.add(mockLongStats(name, 10)); break; case STRING_TYPE:
+     * statObjects.add(mockStringStats(name, 10)); break; case DOUBLE_TYPE: statObjects.add(mockDoubleStats(name, 10));
+     * break; case BINARY_TYPE: statObjects.add(mockBinaryStats(name, 10)); break; case DECIMAL_TYPE:
+     * statObjects.add(mockDecimalStats(name, 10)); break; default: break; } } } // TODO: Delete
+     * log.info(sb.toString()); return statObjects;
+     */
+    return new ArrayList<>();
   }
 
-
-
-  private ColumnStatisticsObj mockBooleanStats(int i) {
-    long trues = 37 + 100*i;
-    long falses = 12 + 50*i;
-    long nulls = 2 + i;
+  private ColumnStatisticsObj mockBooleanStats(String name, int i) {
+    long trues = 0;
+    long falses = 0;
+    long nulls = 0;
     ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
-    colStatsObj.setColName(BOOLEAN_COL);
+    colStatsObj.setColName(name);
     colStatsObj.setColType(BOOLEAN_TYPE);
     ColumnStatisticsData data = new ColumnStatisticsData();
     BooleanColumnStatsData boolData = new BooleanColumnStatsData();
@@ -538,13 +506,13 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return colStatsObj;
   }
 
-  private ColumnStatisticsObj mockLongStats(int i) {
-    long high = 120938479124L + 100*i;
-    long low = -12341243213412124L - 50*i;
-    long nulls = 23 + i;
-    long dVs = 213L + 10*i;
+  private ColumnStatisticsObj mockLongStats(String name, int i) {
+    long high = 0;
+    long low = 0;
+    long nulls = 0;
+    long dVs = 0;
     ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
-    colStatsObj.setColName(LONG_COL);
+    colStatsObj.setColName(name);
     colStatsObj.setColType(LONG_TYPE);
     ColumnStatisticsData data = new ColumnStatisticsData();
     LongColumnStatsData longData = new LongColumnStatsData();
@@ -557,13 +525,13 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return colStatsObj;
   }
 
-  private ColumnStatisticsObj mockDoubleStats(int i) {
-    double high = 123423.23423 + 100*i;
-    double low = 0.00001234233 - 50*i;
-    long nulls = 92 + i;
-    long dVs = 1234123421L + 10*i;
+  private ColumnStatisticsObj mockDoubleStats(String name, int i) {
+    double high = 0;
+    double low = 0;
+    long nulls = 0;
+    long dVs = 0;
     ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
-    colStatsObj.setColName(DOUBLE_COL);
+    colStatsObj.setColName(name);
     colStatsObj.setColType(DOUBLE_TYPE);
     ColumnStatisticsData data = new ColumnStatisticsData();
     DoubleColumnStatsData doubleData = new DoubleColumnStatsData();
@@ -576,13 +544,13 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return colStatsObj;
   }
 
-  private ColumnStatisticsObj mockStringStats(int i) {
-    long maxLen = 1234 + 10*i;
-    double avgLen = 32.3 + i;
-    long nulls = 987 + 10*i;
-    long dVs = 906 + i;
+  private ColumnStatisticsObj mockStringStats(String name, int i) {
+    long maxLen = 0;
+    double avgLen = 0;
+    long nulls = 0;
+    long dVs = 0;
     ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
-    colStatsObj.setColName(STRING_COL);
+    colStatsObj.setColName(name);
     colStatsObj.setColType(STRING_TYPE);
     ColumnStatisticsData data = new ColumnStatisticsData();
     StringColumnStatsData stringData = new StringColumnStatsData();
@@ -595,12 +563,12 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return colStatsObj;
   }
 
-  private ColumnStatisticsObj mockBinaryStats(int i) {;
-    long maxLen = 123412987L + 10*i;
-    double avgLen = 76.98 + i;
-    long nulls = 976998797L + 10*i;
+  private ColumnStatisticsObj mockBinaryStats(String name, int i) {
+    long maxLen = 0;
+    double avgLen = 0;
+    long nulls = 0;
     ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
-    colStatsObj.setColName(BINARY_COL);
+    colStatsObj.setColName(name);
     colStatsObj.setColType(BINARY_TYPE);
     ColumnStatisticsData data = new ColumnStatisticsData();
     BinaryColumnStatsData binaryData = new BinaryColumnStatsData();
@@ -612,19 +580,19 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     return colStatsObj;
   }
 
-  private ColumnStatisticsObj mockDecimalStats(int i) {
+  private ColumnStatisticsObj mockDecimalStats(String name, int i) {
     Decimal high = new Decimal();
-    high.setScale((short)3);
-    String strHigh = String.valueOf(3876 + 100*i);
+    high.setScale((short) 0);
+    String strHigh = String.valueOf(0);
     high.setUnscaled(strHigh.getBytes());
     Decimal low = new Decimal();
-    low.setScale((short)3);
-    String strLow = String.valueOf(38 + i);
+    low.setScale((short) 0);
+    String strLow = String.valueOf(0);
     low.setUnscaled(strLow.getBytes());
-    long nulls = 13 + i;
-    long dVs = 923947293L + 100*i;
+    long nulls = 0;
+    long dVs = 0;
     ColumnStatisticsObj colStatsObj = new ColumnStatisticsObj();
-    colStatsObj.setColName(DECIMAL_COL);
+    colStatsObj.setColName(name);
     colStatsObj.setColType(DECIMAL_TYPE);
     ColumnStatisticsData data = new ColumnStatisticsData();
     DecimalColumnStatsData decimalData = new DecimalColumnStatsData();
@@ -650,7 +618,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   @Override
   public void alter_table(String s, String s1, Table table)
     throws InvalidOperationException, MetaException, TException {
-    // Ignore
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -787,7 +755,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   @Override
   public int add_partitions_pspec(PartitionSpecProxy partitionSpecProxy)
     throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
-    return 0;
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -851,7 +819,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   @Override
   public int getNumPartitionsByFilter(String s, String s1, String s2)
     throws MetaException, NoSuchObjectException, TException {
-    return 0;
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -1203,7 +1171,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public long renewDelegationToken(String s) throws MetaException, TException {
-    return 0;
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -1238,7 +1206,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public int addMasterKey(String s) throws MetaException, TException {
-    return 0;
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -1253,7 +1221,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public String[] getMasterKeys() throws TException {
-    return new String[0];
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -1300,7 +1268,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public long openTxn(String s) throws TException {
-    return 0;
+    throw new UnsupportedOperationException();
   }
 
   @Override

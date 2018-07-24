@@ -21,7 +21,7 @@ import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.env.PropertyResolver;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
-import com.hotels.bdp.circustrain.bigquery.metastore.BigQueryMetastoreClientFactory;
+import com.hotels.bdp.circustrain.bigquery.metastore.BigQuerySourceMetastoreClientFactory;
 
 public class CircusTrainBigQueryCondition implements Condition {
 
@@ -31,7 +31,7 @@ public class CircusTrainBigQueryCondition implements Condition {
   public boolean matches(ConditionContext context, AnnotatedTypeMetadata annotatedTypeMetadata) {
     PropertyResolver resolver = new RelaxedPropertyResolver(context.getEnvironment());
     String hiveMetastoreUris = resolver.getProperty(SOURCE_CATALOG_HIVE_METASTORE_URIS);
-    if (hiveMetastoreUris != null && hiveMetastoreUris.startsWith(BigQueryMetastoreClientFactory.ACCEPT_PREFIX)) {
+    if (hiveMetastoreUris != null && hiveMetastoreUris.startsWith(BigQuerySourceMetastoreClientFactory.ACCEPT_PREFIX)) {
       return true;
     }
     return false;

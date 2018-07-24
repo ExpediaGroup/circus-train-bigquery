@@ -39,7 +39,7 @@ import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionService;
 import com.hotels.bdp.circustrain.bigquery.listener.BigQueryReplicationListener;
-import com.hotels.bdp.circustrain.bigquery.metastore.BigQueryMetastoreClientFactory;
+import com.hotels.bdp.circustrain.bigquery.metastore.BigQuerySourceMetastoreClientFactory;
 import com.hotels.bdp.circustrain.gcp.context.GCPSecurity;
 
 @Profile({ Modules.REPLICATION })
@@ -68,11 +68,11 @@ class CircusTrainBigQueryCommonBeans {
   }
 
   @Bean
-  BigQueryMetastoreClientFactory bigQueryMetastoreClientFactory(
+  BigQuerySourceMetastoreClientFactory bigQueryMetastoreClientFactory(
       CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration,
       BigQuery bigQuery,
       BigQueryDataExtractionManager bigQueryDataExtractionManager) {
-    return new BigQueryMetastoreClientFactory(circusTrainBigQueryConfiguration, bigQuery,
+    return new BigQuerySourceMetastoreClientFactory(circusTrainBigQueryConfiguration, bigQuery,
         bigQueryDataExtractionManager);
   }
 

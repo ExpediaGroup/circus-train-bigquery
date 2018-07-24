@@ -48,9 +48,10 @@ public class BigQueryDataExtractionService {
     deleteBucketAndContents(extractionData.getBucket());
   }
 
-  private void deleteBucketAndContents(String dataBucket) {
+  void deleteBucketAndContents(String dataBucket) {
     deleteObjectsInBucket(dataBucket);
     deleteBucket(dataBucket);
+    log.info("Deleted temporary bucket {} and its contents", dataBucket);
   }
 
   private void deleteObjectsInBucket(String dataBucket) {
@@ -58,11 +59,13 @@ public class BigQueryDataExtractionService {
       Iterable<Blob> blobs = storage.list(dataBucket).iterateAll();
       for (Blob blob : blobs) {
         try {
-          boolean suceeded = storage.delete(blob.getBlobId());
-          if (suceeded) {
-            log.info("Deleted object {}", blob);
-          } else {
-            log.warn("Could not delete object {}", blob);
+          if (blob.exists()) {
+            boolean suceeded = storage.delete(blob.getBlobId());
+            if (suceeded) {
+              log.debug("Deleted object {}", blob);
+            } else {
+              log.warn("Could not delete object {}", blob);
+            }
           }
         } catch (StorageException e) {
           log.warn("Error deleting object {} in bucket {}", blob, dataBucket, e);
@@ -78,7 +81,7 @@ public class BigQueryDataExtractionService {
       Bucket bucket = storage.get(dataBucket);
       boolean suceeded = bucket.delete();
       if (suceeded) {
-        log.info("Deleted bucket {}", dataBucket);
+        log.debug("Deleted bucket {}", dataBucket);
       } else {
         log.warn("Could not delete bucket {}", dataBucket);
       }
@@ -90,10 +93,10 @@ public class BigQueryDataExtractionService {
   private void createBucket(BigQueryExtractionData extractionData) {
     String dataBucket = extractionData.getBucket();
     if (bucketExists(dataBucket)) {
-      log.info("Bucket {} already exists. Skipped creation", dataBucket);
+      log.debug("Bucket {} already exists. Skipped creation", dataBucket);
       return;
     }
-    log.info("Creating bucket {}", dataBucket);
+    log.debug("Creating bucket {}", dataBucket);
     BucketInfo bucketInfo = BucketInfo.of(dataBucket);
     storage.create(bucketInfo);
   }
@@ -108,7 +111,7 @@ public class BigQueryDataExtractionService {
     String format = extractionData.getFormat();
     String dataUri = extractionData.getUri();
 
-    log.info("Extracting {}.{} to temporary location {}", dataset, tableName, dataUri);
+    log.debug("Extracting {}.{} to temporary location {}", dataset, tableName, dataUri);
     try {
       Job job = table.extract(format, dataUri);
       Job completedJob = job.waitFor();
@@ -123,7 +126,7 @@ public class BigQueryDataExtractionService {
             + ", location="
             + error.getLocation());
       } else {
-        log.info("Job completed successfully");
+        log.debug("Job completed successfully");
       }
     } catch (InterruptedException e) {
       throw new CircusTrainException(e);

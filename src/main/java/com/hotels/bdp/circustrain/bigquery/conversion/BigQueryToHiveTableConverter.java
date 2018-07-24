@@ -23,11 +23,11 @@ import java.util.Map;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
+import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Schema;
 
 //TODO Rename?
@@ -66,6 +66,11 @@ public class BigQueryToHiveTableConverter {
     serDeParameters.put("field.delim", ",");
     serDeParameters.put("skip.header.line.count", "1");
     serDeInfo.setParameters(serDeParameters);
+    SkewedInfo si = new SkewedInfo();
+    si.setSkewedColNames(new ArrayList<String>());
+    si.setSkewedColValueLocationMaps(new HashMap<List<String>, String>());
+    si.setSkewedColValues(new ArrayList<List<String>>());
+    sd.setSkewedInfo(new SkewedInfo());
     sd.setSerdeInfo(serDeInfo);
     table.setSd(sd);
   }
@@ -103,33 +108,6 @@ public class BigQueryToHiveTableConverter {
       table.getSd().addToCols(fieldSchema);
     }
     this.schema = schema;
-    return this;
-  }
-
-  public BigQueryToHiveTableConverter withValues(Iterable<FieldValueList> fieldValues) {
-    if (schema == null) {
-      return this;
-    }
-
-    BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
-    List<FieldSchema> partitionKeys = new ArrayList<>();
-    for (Field field : schema.getFields()) {
-      String key = field.getName().toLowerCase();
-      for (FieldValueList row : fieldValues) {
-        try {
-          // Verify key exists if exception isnt thrown
-          row.get(key);
-          FieldSchema fieldSchema = new FieldSchema();
-          fieldSchema.setName(row.get(key).toString());
-          fieldSchema.setType(typeConverter.convert(field.getType().toString()));
-          partitionKeys.add(fieldSchema);
-        } catch (IllegalArgumentException e) {
-          // Do nothing
-        }
-
-      }
-    }
-    table.setPartitionKeys(partitionKeys);
     return this;
   }
 

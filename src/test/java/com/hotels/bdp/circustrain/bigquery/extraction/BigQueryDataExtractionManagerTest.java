@@ -25,11 +25,10 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,7 +43,7 @@ public class BigQueryDataExtractionManagerTest {
 
   private @Mock BigQueryDataExtractionService service;
   private List<Table> tables = new ArrayList<>();
-  private Map<Table, Pair<BigQueryExtractionData, Boolean>> map = new HashMap<>();
+  private Map<Table, ExtractionContainer> map = new LinkedHashMap<>();
   private BigQueryDataExtractionManager manager;
 
   @Before
@@ -74,7 +73,7 @@ public class BigQueryDataExtractionManagerTest {
     registerTables();
     manager.extractAll();
     for (Table table : tables) {
-      verify(service).extract(eq(table), eq(map.get(table).getKey()));
+      verify(service).extract(eq(table), eq(map.get(table).getExtractionData()));
     }
   }
 
@@ -84,7 +83,7 @@ public class BigQueryDataExtractionManagerTest {
     manager.extractAll();
     manager.cleanupAll();
     for (Table table : tables) {
-      verify(service).cleanup(eq(map.get(table).getKey()));
+      verify(service).deleteBucketAndContents(eq(map.get(table).getExtractionData().getBucket()));
     }
   }
 
@@ -104,7 +103,7 @@ public class BigQueryDataExtractionManagerTest {
   public void locationTest() {
     Table table = tables.get(0);
     manager.register(table);
-    String location = "gs://" + map.get(table).getKey().getBucket() + "/" + map.get(table).getKey().getFolder() + "/";
+    String location = "gs://" + map.get(table).getExtractionData().getBucket() + "/" + map.get(table).getExtractionData().getFolder() + "/";
     assertThat(location, is(manager.getExtractedDataBaseLocation(table)));
   }
 

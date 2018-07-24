@@ -20,17 +20,17 @@ import static junit.framework.TestCase.assertTrue;
 
 import org.junit.Test;
 
-public class BigQueryMetastoreClientFactoryTest {
+public class BigQuerySourceMetastoreClientFactoryTest {
 
   @Test
   public void acceptsBigQueryUri() {
-    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
+    BigQuerySourceMetastoreClientFactory factory = new BigQuerySourceMetastoreClientFactory(null, null, null);
     assertTrue(factory.accepts("bigquery://my-project-id"));
   }
 
   @Test
   public void rejectsThriftUri() {
-    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
+    BigQuerySourceMetastoreClientFactory factory = new BigQuerySourceMetastoreClientFactory(null, null, null);
     assertFalse(factory.accepts("thrift://my-thrift-uri"));
   }
 }

@@ -21,8 +21,9 @@ public class BigQueryToHiveTypeConverter {
     if ("STRING".equals(type)) {
       return "STRING";
     }
+    // BigQuery ints are 8 bytes
     if ("INTEGER".equals(type)) {
-      return "INT";
+      return "BIGINT";
     }
     if ("INT64".equals(type)) {
       return "BIGINT";

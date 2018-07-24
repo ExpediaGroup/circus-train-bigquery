@@ -25,17 +25,17 @@ import com.hotels.bdp.circustrain.core.metastore.ConditionalMetaStoreClientFacto
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 import com.hotels.hcommon.hive.metastore.exception.MetaStoreClientException;
 
-public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClientFactory {
+public class BigQuerySourceMetastoreClientFactory implements ConditionalMetaStoreClientFactory {
 
   public static final String ACCEPT_PREFIX = "bigquery://";
 
-  private final BigQueryMetastoreClient metastoreClient;
+  private final BigQuerySourceMetastoreClient metastoreClient;
 
-  public BigQueryMetastoreClientFactory(
+  public BigQuerySourceMetastoreClientFactory(
       CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration,
       BigQuery bigQuery,
       BigQueryDataExtractionManager dataExtractionManager) {
-    this.metastoreClient = new BigQueryMetastoreClient(circusTrainBigQueryConfiguration, bigQuery,
+    this.metastoreClient = new BigQuerySourceMetastoreClient(circusTrainBigQueryConfiguration, bigQuery,
         dataExtractionManager);
   }
 

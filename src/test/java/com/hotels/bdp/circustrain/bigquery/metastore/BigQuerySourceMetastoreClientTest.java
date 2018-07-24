@@ -51,31 +51,31 @@ import com.google.cloud.bigquery.TableId;
 import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
 
 @RunWith(MockitoJUnitRunner.class)
-public class BigQueryMetastoreClientTest {
+public class BigQuerySourceMetastoreClientTest {
 
   private @Mock BigQuery bigQuery;
   private @Mock BigQueryDataExtractionManager dataExtractionManager;
   private @Mock Job job;
   private @Mock JobStatus jobStatus;
 
-  private BigQueryMetastoreClient bigQueryMetastoreClient;
+  private BigQuerySourceMetastoreClient bigQuerySourceMetastoreClient;
 
   @Before
   public void init() {
-    bigQueryMetastoreClient = new BigQueryMetastoreClient(null, bigQuery, dataExtractionManager);
+    bigQuerySourceMetastoreClient = new BigQuerySourceMetastoreClient(null, bigQuery, dataExtractionManager);
   }
 
   @Test
   public void getDatabaseTest() throws TException {
     when(bigQuery.getDataset(anyString())).thenReturn(mock(Dataset.class));
-    Database database = bigQueryMetastoreClient.getDatabase("test");
+    Database database = bigQuerySourceMetastoreClient.getDatabase("test");
     assertEquals("test", database.getName());
   }
 
   @Test(expected = UnknownDBException.class)
   public void getDatabaseWhenDatabaseDoesntExistThrowsExceptionTest() throws TException {
     when(bigQuery.getDataset(anyString())).thenReturn(null);
-    bigQueryMetastoreClient.getDatabase("test");
+    bigQuerySourceMetastoreClient.getDatabase("test");
   }
 
   @Test
@@ -84,7 +84,7 @@ public class BigQueryMetastoreClientTest {
     Table table = mock(Table.class);
     when(bigQuery.getDataset(anyString())).thenReturn(dataset);
     when(dataset.get(anyString())).thenReturn(table);
-    bigQueryMetastoreClient.tableExists("database", "table");
+    bigQuerySourceMetastoreClient.tableExists("database", "table");
     verify(bigQuery, times(2)).getDataset(anyString());
     verify(dataset).get(anyString());
   }
@@ -92,7 +92,7 @@ public class BigQueryMetastoreClientTest {
   @Test(expected = UnknownDBException.class)
   public void tableExistsWhenDatabaseDoesntExistThrowsExceptionTest() throws TException {
     when(bigQuery.getDataset(anyString())).thenReturn(null);
-    bigQueryMetastoreClient.tableExists("database", "table");
+    bigQuerySourceMetastoreClient.tableExists("database", "table");
   }
 
   @Test
@@ -100,7 +100,7 @@ public class BigQueryMetastoreClientTest {
     Dataset dataset = mock(Dataset.class);
     when(bigQuery.getDataset(anyString())).thenReturn(dataset);
     when(dataset.get(anyString())).thenReturn(null);
-    assertFalse(bigQueryMetastoreClient.tableExists("database", "table"));
+    assertFalse(bigQuerySourceMetastoreClient.tableExists("database", "table"));
   }
 
   @Test
@@ -125,14 +125,14 @@ public class BigQueryMetastoreClientTest {
     when(job.getStatus()).thenReturn(jobStatus);
     when(jobStatus.getError()).thenReturn(null);
 
-    org.apache.hadoop.hive.metastore.api.Table hiveTable = bigQueryMetastoreClient.getTable("database", "table");
+    org.apache.hadoop.hive.metastore.api.Table hiveTable = bigQuerySourceMetastoreClient.getTable("database", "table");
 
     assertEquals(dbName, hiveTable.getDbName());
     assertEquals(tableName, hiveTable.getTableName());
     assertEquals(location, hiveTable.getSd().getLocation());
     List<FieldSchema> fields = hiveTable.getSd().getCols();
     assertEquals("id", fields.get(0).getName());
-    assertEquals("int", fields.get(0).getType());
+    assertEquals("bigint", fields.get(0).getType());
     assertEquals("name", fields.get(1).getName());
     assertEquals("string", fields.get(1).getType());
 

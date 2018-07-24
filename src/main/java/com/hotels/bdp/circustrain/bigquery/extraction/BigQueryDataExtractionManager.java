@@ -27,23 +27,20 @@ import org.slf4j.LoggerFactory;
 import com.google.cloud.bigquery.Table;
 import com.google.common.annotations.VisibleForTesting;
 
+//TODO: Refactor classes in this package
 public class BigQueryDataExtractionManager {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryDataExtractionManager.class);
 
   private final BigQueryDataExtractionService service;
-  private final Map<Table, Pair<BigQueryExtractionData, Boolean>> locationMap;
-  private final Set<BigQueryExtractionData> extracted = new HashSet<>();
+  private final Map<Table, ExtractionContainer> locationMap;
 
   public BigQueryDataExtractionManager(BigQueryDataExtractionService service) {
-    this.service = service;
-    this.locationMap = new LinkedHashMap<>();
+    this(service, new LinkedHashMap<Table, ExtractionContainer>());
   }
 
   @VisibleForTesting
-  BigQueryDataExtractionManager(
-      BigQueryDataExtractionService service,
-      Map<Table, Pair<BigQueryExtractionData, Boolean>> locationMap) {
+  BigQueryDataExtractionManager(BigQueryDataExtractionService service, Map<Table, ExtractionContainer> locationMap) {
     this.service = service;
     this.locationMap = locationMap;
   }
@@ -63,39 +60,45 @@ public class BigQueryDataExtractionManager {
 
   public void register(Table table, BigQueryExtractionData extractionData, boolean deleteTable) {
     if (locationMap.containsKey(table)) {
-      log.info("Table {}.{} already registered for extraction. Skipping registration", table.getTableId().getDataset(),
+      log.debug("Table {}.{} already registered for extraction. Skipping registration", table.getTableId().getDataset(),
           table.getTableId().getTable());
     }
-    Pair<BigQueryExtractionData, Boolean> deleteInfo = Pair.of(extractionData, deleteTable);
-    log.info("Registering table {}.{} for extraction to {}", table.getTableId().getDataset(),
+    ExtractionContainer deleteInfo = new ExtractionContainer(extractionData, deleteTable, false);
+    log.debug("Registering table {}.{} for extraction to {}", table.getTableId().getDataset(),
         table.getTableId().getTable(), extractionData.getUri());
     locationMap.put(table, deleteInfo);
   }
 
   public void extractAll() {
-    for (Map.Entry<Table, Pair<BigQueryExtractionData, Boolean>> entry : locationMap.entrySet()) {
+    for (Map.Entry<Table, ExtractionContainer> entry : locationMap.entrySet()) {
       Table table = entry.getKey();
-      BigQueryExtractionData extractionData = entry.getValue().getKey();
-      if (!extracted.contains(extractionData)) {
-        log.info("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+      ExtractionContainer extractionContainer = entry.getValue();
+      BigQueryExtractionData extractionData = extractionContainer.getExtractionData();
+      Boolean extracted = extractionContainer.getExtracted();
+      if (!extracted) {
+        log.debug("Extracting table: {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
         service.extract(table, extractionData);
-        extracted.add(extractionData);
+        extractionContainer.setExtracted(true);
       }
     }
   }
 
   public void cleanupAll() {
-    for (Map.Entry<Table, Pair<BigQueryExtractionData, Boolean>> entry : locationMap.entrySet()) {
+    Set<String> bucketsToDelete = new HashSet<>();
+    for (Map.Entry<Table, ExtractionContainer> entry : locationMap.entrySet()) {
       Table table = entry.getKey();
-      Pair<BigQueryExtractionData, Boolean> deleteInfo = entry.getValue();
-      BigQueryExtractionData extractionData = entry.getValue().getKey();
-      Boolean deleteTable = deleteInfo.getValue();
-      log.info("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
-      service.cleanup(extractionData);
+      ExtractionContainer extractionContainer = entry.getValue();
+      BigQueryExtractionData extractionData = extractionContainer.getExtractionData();
+      Boolean deleteTable = extractionContainer.getDeleteTable();
+      log.debug("Cleaning data from table:  {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+      bucketsToDelete.add(extractionData.getBucket().toLowerCase().trim());
       if (deleteTable) {
-        log.info("Deleting table {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
+        log.debug("Deleting table {}.{}", table.getTableId().getDataset(), table.getTableId().getTable());
         table.delete();
       }
+    }
+    for (String bucket : bucketsToDelete) {
+      service.deleteBucketAndContents(bucket);
     }
   }
 
@@ -104,9 +107,9 @@ public class BigQueryDataExtractionManager {
       return null;
     }
     return "gs://"
-        + locationMap.get(table).getKey().getBucket()
+        + locationMap.get(table).getExtractionData().getBucket()
         + "/"
-        + locationMap.get(table).getKey().getFolder()
+        + locationMap.get(table).getExtractionData().getFolder()
         + "/";
   }
 
@@ -114,27 +117,27 @@ public class BigQueryDataExtractionManager {
     if (!locationMap.containsKey(table)) {
       return null;
     }
-    return locationMap.get(table).getKey().getUri();
+    return locationMap.get(table).getExtractionData().getUri();
   }
 
   public String getExtractedDataBucket(Table table) {
     if (!locationMap.containsKey(table)) {
       return null;
     }
-    return locationMap.get(table).getKey().getBucket();
+    return locationMap.get(table).getExtractionData().getBucket();
   }
 
   public String getExtractedDataFolder(Table table) {
     if (!locationMap.containsKey(table)) {
       return null;
     }
-    return locationMap.get(table).getKey().getFolder();
+    return locationMap.get(table).getExtractionData().getFolder();
   }
 
   public String getExtractedDataKey(Table table) {
     if (!locationMap.containsKey(table)) {
       return null;
     }
-    return locationMap.get(table).getKey().getKey();
+    return locationMap.get(table).getExtractionData().getKey();
   }
 }
