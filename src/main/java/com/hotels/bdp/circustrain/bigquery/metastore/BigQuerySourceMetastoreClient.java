@@ -22,10 +22,11 @@ import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtract
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -200,7 +201,10 @@ class BigQuerySourceMetastoreClient implements CloseableMetaStoreClient {
     log.info("Getting table {}.{} from BigQuery", databaseName, tableName);
     checkDbExists(databaseName);
     com.google.cloud.bigquery.Table bigQueryTable = getBigQueryTable(databaseName, tableName);
+
+    // TODO Decouple location and registry so you can be designated a location without extracting
     dataExtractionManager.register(bigQueryTable);
+
     Table hiveTable = convertBigQueryTableToHiveTable(bigQueryTable);
     addPartitionIfFiltered(hiveTable);
     cacheTable(hiveTable);
@@ -278,8 +282,8 @@ class BigQuerySourceMetastoreClient implements CloseableMetaStoreClient {
       return String.format("select * from %s.%s where %s", hiveTable.getDbName(), hiveTable.getTableName(),
           getPartitionFilter());
     } else if (isNotBlank(partitionBy) && isBlank(partitionFilter)) {
-      return String.format("select %s from %s.%s group by %s", partitionBy, hiveTable.getDbName(),
-          hiveTable.getTableName(), partitionBy);
+      return String.format("select %s from %s.%s group by %s order by %s", partitionBy, hiveTable.getDbName(),
+          hiveTable.getTableName(), partitionBy, partitionBy);
     } else {
       throw new IllegalStateException();
     }
@@ -328,10 +332,8 @@ class BigQuerySourceMetastoreClient implements CloseableMetaStoreClient {
     final String partitionKey = sanitisePartitionKey(schema);
     log.info("Getting values for partition key '{}'", partitionKey);
 
-    Map<com.google.cloud.bigquery.Table, String> partitionMap = new LinkedHashMap<>();
-    final String sourceDBName = filteredTable.getTableId().getDataset();
-    final String sourceTableName = filteredTable.getTableId().getTable();
-    final String destinationDBName = hiveTable.getDbName();
+    final String sourceTableName = hiveTable.getTableName();
+    final String sourceDBName = hiveTable.getDbName();
 
     // TODO: Cache BQ tables
     com.google.cloud.bigquery.Table bigQueryRepresentation = getBigQueryTable(hiveTable.getDbName(),
@@ -340,53 +342,52 @@ class BigQuerySourceMetastoreClient implements CloseableMetaStoreClient {
     final String tableBucket = dataExtractionManager.getExtractedDataBucket(bigQueryRepresentation);
     final String tableFolder = dataExtractionManager.getExtractedDataFolder(bigQueryRepresentation);
 
+    List<FieldSchema> cols = Collections.unmodifiableList(hiveTable.getSd().getCols());
     for (FieldValueList row : result.iterateAll()) {
       Object o = row.get(partitionKey).getValue();
       if (o != null) {
         String value = o.toString();
-        if (isNotBlank(value)) {
-          value = value.trim();
-          if (value.contains(" ")) {
-            // Value is string with spaces
-            value = "\"" + value + "\"";
-          }
-          log.info("Generated partition value '{}' for key '{}'", value, partitionKey);
-          String statement = String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName,
-              partitionKey, value);
-          // TODO: log DEBUG
-
-          log.info("Executing {}", statement);
-          String destinationTableName = randomTableName();
-          selectQueryIntoBigQueryTable(destinationDBName, destinationTableName, statement);
-          com.google.cloud.bigquery.Table part = getBigQueryTable(destinationDBName, destinationTableName);
-          String partitionBucket = tableBucket;
-          String partitionFolder = tableFolder + "/" + BigQueryExtractionData.randomUri();
-          String fileName = partitionKey + "=" + value;
-          BigQueryExtractionData extractionData = new BigQueryExtractionData(partitionBucket, partitionFolder,
-              fileName);
-          dataExtractionManager.register(part, extractionData, true);
-          partitionMap.put(part, value);
-          log.info("Retrieved partition {}={}", partitionKey, value);
+        // if (isNotBlank(value)) {
+        String valForQuery = null;
+        if (isBlank(value) || value.contains(" ")) {
+          // Value is empty string or string with spaces
+          valForQuery = "\"" + value + "\"";
+        } else {
+          valForQuery = value;
         }
+        final String statement = String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName,
+            partitionKey, valForQuery);
+
+        String destinationTableName = randomTableName();
+        selectQueryIntoBigQueryTable(sourceDBName, destinationTableName, statement);
+        com.google.cloud.bigquery.Table part = getBigQueryTable(sourceDBName, destinationTableName);
+        String partitionBucket = tableBucket;
+        String partitionFolder = tableFolder + "/" + BigQueryExtractionData.randomUri();
+        ;
+        String fileId = value.replaceAll("[^A-Za-z0-9]", "")
+            + new SimpleDateFormat("ddMMyyyyHHmmssSSSSSSS").format(new Date());
+        String fileName = fileId + "-*";
+        BigQueryExtractionData extractionData = new BigQueryExtractionData(partitionBucket, partitionFolder, fileName);
+        dataExtractionManager.register(part, extractionData, true);
+
+        // TODO Revisit for Partition location
+
+        String location = dataExtractionManager.getExtractedDataBaseLocation(part);
+        log.info("Generated partition {}=\"{}\" with location {} using query {}", partitionKey, value, location,
+            statement);
+
+        Partition partition = new BigQueryToHivePartitionConverter()
+            .withDatabaseName(hiveTable.getDbName())
+            .withTableName(hiveTable.getTableName())
+            .withValue(value)
+            .withCols(cols)
+            .withLocation(location)
+            .convert();
+        cachePartition(partition);
       }
+      // }
     }
 
-    List<FieldSchema> cols = Collections.unmodifiableList(hiveTable.getSd().getCols());
-    for (Map.Entry<com.google.cloud.bigquery.Table, String> entry : partitionMap.entrySet()) {
-      com.google.cloud.bigquery.Table part = entry.getKey();
-      String value = entry.getValue();
-      // TODO Revisit for Partition location
-      String location = dataExtractionManager.getExtractedDataBaseLocation(part);
-      Partition partition = new BigQueryToHivePartitionConverter()
-          .withDatabaseName(hiveTable.getDbName())
-          .withTableName(hiveTable.getTableName())
-          .withValue(value)
-          .withCols(cols)
-          .withLocation(location)
-          .convert();
-      log.info("Generated partition {}", partition);
-      cachePartition(partition);
-    }
   }
 
   private Set<FieldSchema> getCols(com.google.cloud.bigquery.Table table) {

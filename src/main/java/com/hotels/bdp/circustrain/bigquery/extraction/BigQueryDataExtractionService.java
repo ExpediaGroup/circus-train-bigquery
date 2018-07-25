@@ -62,7 +62,7 @@ public class BigQueryDataExtractionService {
           if (blob.exists()) {
             boolean suceeded = storage.delete(blob.getBlobId());
             if (suceeded) {
-              log.debug("Deleted object {}", blob);
+              log.info("Deleted object {}", blob);
             } else {
               log.warn("Could not delete object {}", blob);
             }
@@ -81,7 +81,7 @@ public class BigQueryDataExtractionService {
       Bucket bucket = storage.get(dataBucket);
       boolean suceeded = bucket.delete();
       if (suceeded) {
-        log.debug("Deleted bucket {}", dataBucket);
+        log.info("Deleted bucket {}", dataBucket);
       } else {
         log.warn("Could not delete bucket {}", dataBucket);
       }
@@ -96,7 +96,7 @@ public class BigQueryDataExtractionService {
       log.debug("Bucket {} already exists. Skipped creation", dataBucket);
       return;
     }
-    log.debug("Creating bucket {}", dataBucket);
+    log.info("Creating bucket {}", dataBucket);
     BucketInfo bucketInfo = BucketInfo.of(dataBucket);
     storage.create(bucketInfo);
   }
@@ -106,12 +106,11 @@ public class BigQueryDataExtractionService {
   }
 
   private void extractDataFromBigQuery(BigQueryExtractionData extractionData, Table table) {
-    String dataset = table.getTableId().getDataset();
-    String tableName = table.getTableId().getTable();
     String format = extractionData.getFormat();
     String dataUri = extractionData.getUri();
+    String baseLocation = extractionData.getBucket() + "/" + extractionData.getFolder();
 
-    log.debug("Extracting {}.{} to temporary location {}", dataset, tableName, dataUri);
+    log.info("Extracting table data to temporary location gs://{}/", baseLocation);
     try {
       Job job = table.extract(format, dataUri);
       Job completedJob = job.waitFor();
@@ -126,7 +125,7 @@ public class BigQueryDataExtractionService {
             + ", location="
             + error.getLocation());
       } else {
-        log.debug("Job completed successfully");
+        log.info("Job completed successfully");
       }
     } catch (InterruptedException e) {
       throw new CircusTrainException(e);

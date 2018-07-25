@@ -18,6 +18,7 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 import java.util.UUID;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class BigQueryExtractionData {
 
@@ -78,6 +79,11 @@ public class BigQueryExtractionData {
 
   String getBucket() {
     return dataBucket;
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
   }
 
   @Override
