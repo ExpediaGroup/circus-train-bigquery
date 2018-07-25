@@ -13,35 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.metastore;
+package com.hotels.bdp.circustrain.bigquery.client;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 
-import com.google.cloud.bigquery.BigQuery;
-
+import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConstants;
+import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.bdp.circustrain.core.metastore.ConditionalMetaStoreClientFactory;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 import com.hotels.hcommon.hive.metastore.exception.MetaStoreClientException;
 
-public class BigQuerySourceMetastoreClientFactory implements ConditionalMetaStoreClientFactory {
+public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClientFactory {
 
-  public static final String ACCEPT_PREFIX = "bigquery://";
+  private final BigQueryMetastoreClient metastoreClient;
 
-  private final BigQuerySourceMetastoreClient metastoreClient;
-
-  public BigQuerySourceMetastoreClientFactory(
-      CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration,
-      BigQuery bigQuery,
-      BigQueryDataExtractionManager dataExtractionManager) {
-    this.metastoreClient = new BigQuerySourceMetastoreClient(circusTrainBigQueryConfiguration, bigQuery,
-        dataExtractionManager);
+  public BigQueryMetastoreClientFactory(
+      CircusTrainBigQueryConfiguration configuration,
+      BigQueryMetastore bigQueryMetastore,
+      ExtractionService service) {
+    this.metastoreClient = new BigQueryMetastoreClient(configuration, bigQueryMetastore, service,
+        new MetastoreClientCache());
   }
 
   @Override
   public boolean accepts(String uri) {
-    return uri.startsWith(ACCEPT_PREFIX);
+    return uri.startsWith(CircusTrainBigQueryConstants.ACCEPT_PREFIX);
   }
 
   @Override

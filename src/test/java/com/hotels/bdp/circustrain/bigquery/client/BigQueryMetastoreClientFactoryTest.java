@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.metastore;
+package com.hotels.bdp.circustrain.bigquery.client;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import org.junit.Test;
 
-public class BigQuerySourceMetastoreClientFactoryTest {
+public class BigQueryMetastoreClientFactoryTest {
 
   @Test
   public void acceptsBigQueryUri() {
-    BigQuerySourceMetastoreClientFactory factory = new BigQuerySourceMetastoreClientFactory(null, null, null);
+    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
     assertTrue(factory.accepts("bigquery://my-project-id"));
   }
 
   @Test
   public void rejectsThriftUri() {
-    BigQuerySourceMetastoreClientFactory factory = new BigQuerySourceMetastoreClientFactory(null, null, null);
+    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
     assertFalse(factory.accepts("thrift://my-thrift-uri"));
   }
 }

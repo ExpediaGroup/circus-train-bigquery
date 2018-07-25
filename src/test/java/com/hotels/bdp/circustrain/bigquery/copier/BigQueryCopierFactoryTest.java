@@ -29,7 +29,7 @@ import java.util.List;
 import org.junit.Test;
 
 import com.hotels.bdp.circustrain.api.copier.CopierFactory;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 
 public class BigQueryCopierFactoryTest {
 
@@ -40,8 +40,8 @@ public class BigQueryCopierFactoryTest {
     when(unsupported.supportsSchemes(anyString(), anyString())).thenReturn(false);
     when(supported.supportsSchemes(anyString(), anyString())).thenReturn(true);
     List<CopierFactory> copierFactories = Arrays.asList(unsupported, supported);
-    BigQueryDataExtractionManager dataExtractionManager = mock(BigQueryDataExtractionManager.class);
-    BigQueryCopierFactory factory = new BigQueryCopierFactory(copierFactories, dataExtractionManager);
+    ExtractionService service = mock(ExtractionService.class);
+    BigQueryCopierFactory factory = new BigQueryCopierFactory(copierFactories, service);
     assertTrue(factory.supportsSchemes("gs://", "s3://"));
     assertEquals(supported, factory.getSupportedFactory());
   }
@@ -53,8 +53,8 @@ public class BigQueryCopierFactoryTest {
     when(unsupported.supportsSchemes(anyString(), anyString())).thenReturn(false);
     when(alsoUnsupported.supportsSchemes(anyString(), anyString())).thenReturn(false);
     List<CopierFactory> copierFactories = Arrays.asList(unsupported, alsoUnsupported);
-    BigQueryDataExtractionManager dataExtractionManager = mock(BigQueryDataExtractionManager.class);
-    BigQueryCopierFactory factory = new BigQueryCopierFactory(copierFactories, dataExtractionManager);
+    ExtractionService service = mock(ExtractionService.class);
+    BigQueryCopierFactory factory = new BigQueryCopierFactory(copierFactories, service);
     assertFalse(factory.supportsSchemes("gs://", "s3://"));
     assertNull(factory.getSupportedFactory());
   }

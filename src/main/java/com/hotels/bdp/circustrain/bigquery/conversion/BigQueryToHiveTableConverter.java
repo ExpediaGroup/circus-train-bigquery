@@ -94,6 +94,10 @@ public class BigQueryToHiveTableConverter {
     return this;
   }
 
+  public BigQueryToHiveTableConverter withCols(Schema schema) {
+    return this.withCols(BigQueryToHiveConversionUtils.getCols(schema));
+  }
+
   public BigQueryToHiveTableConverter withLocation(String location) {
     table.getSd().setLocation(location);
     return this;

@@ -13,11 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.extraction;
+package com.hotels.bdp.circustrain.bigquery.cache;
 
-public class BigQueryDataExtractionKey {
 
-  public static String makeKey(String databaseName, String tableName) {
-    return databaseName + "." + tableName;
+import static com.hotels.bdp.circustrain.bigquery.util.BigQueryKey.makeKey;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.hadoop.hive.metastore.api.Table;
+
+class TableCache {
+
+  private final Map<String, Table> tableCache = new HashMap<>();
+
+  boolean contains(String key) {
+    return tableCache.containsKey(key);
+  }
+
+  Table get(String key) {
+    return tableCache.get(key);
+  }
+
+  void add(Table table) {
+    tableCache.put(makeKey(table.getDbName(), table.getTableName()), table);
+  }
+
+  void clear() {
+    tableCache.clear();
   }
 }

@@ -17,7 +17,6 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -28,65 +27,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.api.gax.paging.Page;
-import com.google.cloud.RetryOption;
-import com.google.cloud.bigquery.BigQueryError;
-import com.google.cloud.bigquery.Job;
-import com.google.cloud.bigquery.JobStatus;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Bucket;
-import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
 import com.google.common.collect.ImmutableList;
 
-import com.hotels.bdp.circustrain.api.CircusTrainException;
-
 @RunWith(MockitoJUnitRunner.class)
-public class BigQueryDataExtractionServiceTest {
+public class DataCleanerTest {
 
-  public @Rule ExpectedException expectedException = ExpectedException.none();
-
+  private DataCleaner cleaner;
   private @Mock Storage storage;
   private @Mock Table table;
-  private @Mock Job job;
-  private @Mock JobStatus jobStatus;
-
-  private BigQueryDataExtractionService service;
 
   @Before
   public void init() {
-    service = new BigQueryDataExtractionService(storage);
-  }
-
-  @Test
-  public void extract() throws InterruptedException {
-    BigQueryExtractionData data = new BigQueryExtractionData();
-    TableId tableId = TableId.of("dataset", "table");
-    when(table.extract(anyString(), anyString())).thenReturn(job);
-    when(table.getTableId()).thenReturn(tableId);
-    when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(job);
-    when(job.getStatus()).thenReturn(jobStatus);
-    when(jobStatus.getError()).thenReturn(null);
-    service.extract(table, data);
-    verify(storage).create(any(BucketInfo.class));
-    verify(table).extract(eq("csv"), eq(data.getUri()));
+    cleaner = new DataCleaner(storage);
   }
 
   @Test
   public void cleanup() {
-    BigQueryExtractionData data = new BigQueryExtractionData();
+    ExtractionUri data = new ExtractionUri();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
     when(storage.delete(any(BlobId.class))).thenReturn(true);
@@ -98,6 +68,7 @@ public class BigQueryDataExtractionServiceTest {
     final int numBlobs = 10;
     for (int i = 0; i < numBlobs; ++i) {
       Blob blob = mock(Blob.class);
+      when(blob.exists()).thenReturn(true);
       BlobId blobId = BlobId.of(data.getBucket(), data.getKey() + i);
       when(blob.getBlobId()).thenReturn(blobId);
       blobs.add(blob);
@@ -107,7 +78,8 @@ public class BigQueryDataExtractionServiceTest {
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(blobs);
 
-    service.cleanup(data);
+    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.cleanup();
 
     for (int i = 0; i < numBlobs; ++i) {
       verify(storage).delete(blobs.get(i).getBlobId());
@@ -118,7 +90,7 @@ public class BigQueryDataExtractionServiceTest {
 
   @Test
   public void cleanupWhenDeletionFailsOnBlobDoesntThrowException() {
-    BigQueryExtractionData data = new BigQueryExtractionData();
+    ExtractionUri data = new ExtractionUri();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
     when(storage.delete(any(BlobId.class))).thenReturn(false);
@@ -126,19 +98,22 @@ public class BigQueryDataExtractionServiceTest {
     when(bucket.delete()).thenReturn(true);
     when(storage.get(anyString())).thenReturn(bucket);
     Blob blob = mock(Blob.class);
+    when(blob.exists()).thenReturn(true);
     List<Blob> blobs = ImmutableList.of(blob);
     Page pages = mock(Page.class);
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(blobs);
 
-    service.cleanup(data);
+    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.cleanup();
+
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
   }
 
   @Test
   public void cleanupWhenDeletionThrowsExceptionOnBlobDoesntThrowException() {
-    BigQueryExtractionData data = new BigQueryExtractionData();
+    ExtractionUri data = new ExtractionUri();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
     when(storage.delete(any(BlobId.class))).thenThrow(new StorageException(new IOException()));
@@ -146,19 +121,22 @@ public class BigQueryDataExtractionServiceTest {
     when(bucket.delete()).thenReturn(true);
     when(storage.get(anyString())).thenReturn(bucket);
     Blob blob = mock(Blob.class);
+    when(blob.exists()).thenReturn(true);
     List<Blob> blobs = ImmutableList.of(blob);
     Page pages = mock(Page.class);
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(blobs);
 
-    service.cleanup(data);
+    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.cleanup();
+
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
   }
 
   @Test
   public void cleanupWhenDeletionThrowsExceptionOnBlobDoesntStillCleansRemainingBlobs() {
-    BigQueryExtractionData data = new BigQueryExtractionData();
+    ExtractionUri data = new ExtractionUri();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
     when(storage.delete(any(BlobId.class))).thenReturn(true);
@@ -170,6 +148,7 @@ public class BigQueryDataExtractionServiceTest {
     BlobId thirdCall = BlobId.of(data.getBucket(), data.getKey() + 3);
 
     Blob blob = mock(Blob.class);
+    when(blob.exists()).thenReturn(true);
     when(blob.getBlobId()).thenReturn(firstCall).thenThrow(new StorageException(new IOException())).thenReturn(
         thirdCall);
 
@@ -177,7 +156,8 @@ public class BigQueryDataExtractionServiceTest {
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(ImmutableList.of(blob, blob, blob));
 
-    service.cleanup(data);
+    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.cleanup();
 
     verify(storage).delete(firstCall);
     verify(storage).delete(thirdCall);
@@ -187,7 +167,7 @@ public class BigQueryDataExtractionServiceTest {
 
   @Test
   public void cleanupWhenBucketDeletionThrowExceptionDoesntFailJob() {
-    BigQueryExtractionData data = new BigQueryExtractionData();
+    ExtractionUri data = new ExtractionUri();
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
     when(storage.delete(any(BlobId.class))).thenReturn(true);
@@ -195,58 +175,33 @@ public class BigQueryDataExtractionServiceTest {
     when(bucket.delete()).thenReturn(true);
     when(storage.get(anyString())).thenReturn(bucket);
     Blob blob = mock(Blob.class);
+    when(blob.exists()).thenReturn(true);
     List<Blob> blobs = ImmutableList.of(blob);
     Page pages = mock(Page.class);
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(blobs);
     when(storage.delete(any(BlobId.class))).thenThrow(new StorageException(new IOException()));
 
-    service.cleanup(data);
+    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.cleanup();
+
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
   }
 
   @Test
   public void exceptionNotThrownWhenListFails() {
-    BigQueryExtractionData data = new BigQueryExtractionData();
+    ExtractionUri data = new ExtractionUri();
     when(storage.list(anyString())).thenThrow(new StorageException(new IOException()));
     TableId tableId = TableId.of("dataset", "table");
     when(table.getTableId()).thenReturn(tableId);
     Bucket bucket = mock(Bucket.class);
     when(bucket.delete()).thenThrow(new StorageException(new IOException()));
     when(storage.get(anyString())).thenReturn(bucket);
-    service.cleanup(data);
+
+    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.cleanup();
+
     verify(storage, times(0)).delete(any(BlobId.class));
-  }
-
-  @Test
-  public void jobNoLongerExists() throws InterruptedException {
-    expectedException.expect(CircusTrainException.class);
-    expectedException.expectMessage("job no longer exists");
-
-    BigQueryExtractionData data = new BigQueryExtractionData();
-    TableId tableId = TableId.of("dataset", "table");
-    when(table.getTableId()).thenReturn(tableId);
-    when(table.extract(anyString(), anyString())).thenReturn(job);
-    when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(null);
-    service.extract(table, data);
-  }
-
-  @Test
-  public void jobError() throws InterruptedException {
-    BigQueryError bigQueryError = new BigQueryError("reason", "getExtractedDataBaseLocation", "message");
-    expectedException.expect(CircusTrainException.class);
-    expectedException.expectMessage(bigQueryError.getReason());
-    expectedException.expectMessage(bigQueryError.getLocation());
-    expectedException.expectMessage(bigQueryError.getMessage());
-
-    BigQueryExtractionData data = new BigQueryExtractionData();
-    TableId tableId = TableId.of("dataset", "table");
-    when(table.getTableId()).thenReturn(tableId);
-    when(table.extract(anyString(), anyString())).thenReturn(job);
-    when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(job);
-    when(job.getStatus()).thenReturn(jobStatus);
-    when(jobStatus.getError()).thenReturn(new BigQueryError("reason", "getExtractedDataBaseLocation", "message"));
-    service.extract(table, data);
   }
 }

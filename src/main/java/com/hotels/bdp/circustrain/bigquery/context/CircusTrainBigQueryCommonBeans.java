@@ -36,10 +36,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hotels.bdp.circustrain.api.Modules;
 import com.hotels.bdp.circustrain.api.conf.SourceCatalog;
 import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionService;
+import com.hotels.bdp.circustrain.bigquery.client.BigQueryMetastoreClientFactory;
+import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.listener.BigQueryReplicationListener;
-import com.hotels.bdp.circustrain.bigquery.metastore.BigQuerySourceMetastoreClientFactory;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.bdp.circustrain.gcp.context.GCPSecurity;
 
 @Profile({ Modules.REPLICATION })
@@ -68,30 +68,26 @@ class CircusTrainBigQueryCommonBeans {
   }
 
   @Bean
-  BigQuerySourceMetastoreClientFactory bigQueryMetastoreClientFactory(
-      CircusTrainBigQueryConfiguration circusTrainBigQueryConfiguration,
-      BigQuery bigQuery,
-      BigQueryDataExtractionManager bigQueryDataExtractionManager) {
-    return new BigQuerySourceMetastoreClientFactory(circusTrainBigQueryConfiguration, bigQuery,
-        bigQueryDataExtractionManager);
+  ExtractionService extractionService(Storage googleStorage) {
+    return new ExtractionService(googleStorage);
   }
 
   @Bean
-  BigQueryDataExtractionService bigQueryDataExtractionService(Storage googleStorage) {
-    return new BigQueryDataExtractionService(googleStorage);
+  TableReplicationListener bigQueryReplicationListener(ExtractionService service) {
+    return new BigQueryReplicationListener(service);
   }
 
   @Bean
-  BigQueryDataExtractionManager bigQueryDataExtractionManager(
-      BigQueryDataExtractionService bigQueryDataExtractionService) {
-    return new BigQueryDataExtractionManager(bigQueryDataExtractionService);
+  BigQueryMetastore bigQueryMetastore(BigQuery bigQuery) {
+    return new BigQueryMetastore(bigQuery);
   }
 
   @Bean
-  TableReplicationListener bigQueryReplicationListener(
-      BigQueryDataExtractionManager bigQueryDataExtractionManager,
-      BigQuery bigQuery) {
-    return new BigQueryReplicationListener(bigQueryDataExtractionManager, bigQuery);
+  BigQueryMetastoreClientFactory bigQueryMetastoreClientFactory(
+      CircusTrainBigQueryConfiguration configuration,
+      BigQueryMetastore bigQueryMetastore,
+      ExtractionService service) {
+    return new BigQueryMetastoreClientFactory(configuration, bigQueryMetastore, service);
   }
 
   private GoogleCredentials getCredential(GCPSecurity gcpSecurity) throws IOException {

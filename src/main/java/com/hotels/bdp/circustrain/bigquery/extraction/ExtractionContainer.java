@@ -15,39 +15,30 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-final class ExtractionContainer {
+import com.google.cloud.bigquery.Table;
 
-  private BigQueryExtractionData extractionData;
-  private Boolean deleteTable;
-  private Boolean extracted;
+public class ExtractionContainer {
 
-  ExtractionContainer(BigQueryExtractionData extractionData, Boolean deleteTable, Boolean extracted) {
-    this.extractionData = extractionData;
+  private final Table table;
+  private final ExtractionUri extractionUri;
+  private final Boolean deleteTable;
+
+  public ExtractionContainer(Table table, ExtractionUri extractionUri, Boolean deleteTable) {
+    this.table = table;
+    this.extractionUri = extractionUri;
     this.deleteTable = deleteTable;
-    this.extracted = extracted;
   }
 
-  BigQueryExtractionData getExtractionData() {
-    return extractionData;
+  public Table getTable() {
+    return table;
   }
 
-  void setExtractionData(BigQueryExtractionData extractionData) {
-    this.extractionData = extractionData;
+  public ExtractionUri getExtractionUri() {
+    return extractionUri;
   }
 
-  Boolean getDeleteTable() {
+  public Boolean getDeleteTable() {
     return deleteTable;
   }
 
-  void setDeleteTable(Boolean deleteTable) {
-    this.deleteTable = deleteTable;
-  }
-
-  Boolean getExtracted() {
-    return extracted;
-  }
-
-  void setExtracted(Boolean extracted) {
-    this.extracted = extracted;
-  }
 }

@@ -18,22 +18,18 @@ package com.hotels.bdp.circustrain.bigquery.listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.cloud.bigquery.BigQuery;
-
 import com.hotels.bdp.circustrain.api.event.EventTableReplication;
 import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 
 public class BigQueryReplicationListener implements TableReplicationListener {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryReplicationListener.class);
 
-  private final BigQueryDataExtractionManager dataExtractionManager;
-  private final BigQuery bigQuery;
+  private final ExtractionService service;
 
-  public BigQueryReplicationListener(BigQueryDataExtractionManager dataExtractionManager, BigQuery bigQuery) {
-    this.dataExtractionManager = dataExtractionManager;
-    this.bigQuery = bigQuery;
+  public BigQueryReplicationListener(ExtractionService service) {
+    this.service = service;
   }
 
   @Override
@@ -50,7 +46,7 @@ public class BigQueryReplicationListener implements TableReplicationListener {
         eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
-    dataExtractionManager.cleanupAll();
+    service.cleanup();
   }
 
   @Override
@@ -59,6 +55,6 @@ public class BigQueryReplicationListener implements TableReplicationListener {
         eventTableReplication.getSourceTable().getDatabaseName(), eventTableReplication.getSourceTable().getTableName(),
         eventTableReplication.getReplicaTable().getDatabaseName(),
         eventTableReplication.getReplicaTable().getTableName());
-    dataExtractionManager.cleanupAll();
+    service.cleanup();
   }
 }

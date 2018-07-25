@@ -17,14 +17,18 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 
 import static org.junit.Assert.assertEquals;
 
-import static com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionKey.makeKey;
-
 import org.junit.Test;
 
-public class BigQueryDataExtractionKeyTest {
+public class ExtractionUriTest {
 
   @Test
-  public void makeKeyTest() {
-    assertEquals("database.table", makeKey("database", "table"));
+  public void constructionTest() {
+    ExtractionUri data = new ExtractionUri("bucket", "folder", "file", "csv");
+    assertEquals("bucket", data.getBucket());
+    assertEquals("folder", data.getFolder());
+    assertEquals("csv", data.getFormat());
+    assertEquals("folder/file.csv", data.getKey());
+    assertEquals("gs://bucket/folder/file.csv", data.getUri());
   }
+
 }

@@ -36,13 +36,13 @@ import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.api.event.EventReplicaTable;
 import com.hotels.bdp.circustrain.api.event.EventSourceTable;
 import com.hotels.bdp.circustrain.api.event.EventTableReplication;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryReplicationListenerTest {
 
   private @Mock EventTableReplication eventTableReplication;
-  private @Mock BigQueryDataExtractionManager dataExtractionManager;
+  private @Mock ExtractionService service;
   private @Mock BigQuery bigQuery;
   private @Mock Storage storage;
 
@@ -50,7 +50,7 @@ public class BigQueryReplicationListenerTest {
 
   @Before
   public void init() {
-    listener = new BigQueryReplicationListener(dataExtractionManager, bigQuery);
+    listener = new BigQueryReplicationListener(service);
     when(eventTableReplication.getSourceTable()).thenReturn(mock(EventSourceTable.class));
     when(eventTableReplication.getReplicaTable()).thenReturn(mock(EventReplicaTable.class));
   }
@@ -69,23 +69,23 @@ public class BigQueryReplicationListenerTest {
 
   @Test
   public void tableReplicationSuccess() {
-    BigQueryReplicationListener listener = new BigQueryReplicationListener(dataExtractionManager, bigQuery);
+    BigQueryReplicationListener listener = new BigQueryReplicationListener(service);
     Dataset dataset = mock(Dataset.class);
     when(bigQuery.getDataset(anyString())).thenReturn(dataset);
     Table table = mock(Table.class);
     when(dataset.get(anyString())).thenReturn(table);
     listener.tableReplicationSuccess(eventTableReplication, "eventId");
-    verify(dataExtractionManager).cleanupAll();
+    verify(service).cleanup();
   }
 
   @Test
   public void tableReplicationFailure() {
-    BigQueryReplicationListener listener = new BigQueryReplicationListener(dataExtractionManager, bigQuery);
+    BigQueryReplicationListener listener = new BigQueryReplicationListener(service);
     Dataset dataset = mock(Dataset.class);
     when(bigQuery.getDataset(anyString())).thenReturn(dataset);
     Table table = mock(Table.class);
     when(dataset.get(anyString())).thenReturn(table);
     listener.tableReplicationFailure(eventTableReplication, "eventId", mock(CircusTrainException.class));
-    verify(dataExtractionManager).cleanupAll();
+    verify(service).cleanup();
   }
 }

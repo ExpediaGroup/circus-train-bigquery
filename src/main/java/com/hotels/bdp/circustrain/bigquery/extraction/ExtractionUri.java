@@ -15,12 +15,11 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import java.util.UUID;
+import static com.hotels.bdp.circustrain.bigquery.util.BigQueryUriUtils.randomUri;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
-public class BigQueryExtractionData {
+public class ExtractionUri {
 
   private static final String DEFAULT_BUCKET_PREFIX = "circus-train-bigquery-tmp-";
   // Wildcard key enables sharding of exported data > 1GB - https://cloud.google.com/bigquery/docs/exporting-data
@@ -33,23 +32,23 @@ public class BigQueryExtractionData {
   private final String dataFolder;
   private final String dataUri;
 
-  public BigQueryExtractionData() {
+  public ExtractionUri() {
     this(DEFAULT_BUCKET_PREFIX + randomUri());
   }
 
-  public BigQueryExtractionData(String bucket) {
+  public ExtractionUri(String bucket) {
     this(bucket, randomUri());
   }
 
-  public BigQueryExtractionData(String bucket, String folder) {
+  public ExtractionUri(String bucket, String folder) {
     this(bucket, folder, randomUri() + SHARD_DATA_POSTFIX, DEFAULT_FORMAT);
   }
 
-  public BigQueryExtractionData(String bucket, String folder, String fileName) {
+  public ExtractionUri(String bucket, String folder, String fileName) {
     this(bucket, folder, fileName, DEFAULT_FORMAT);
   }
 
-  public BigQueryExtractionData(String bucket, String folder, String fileName, String fileFormat) {
+  public ExtractionUri(String bucket, String folder, String fileName, String fileFormat) {
     this.dataBucket = bucket;
     this.dataFolder = folder;
     this.dataFormat = fileFormat;
@@ -57,33 +56,24 @@ public class BigQueryExtractionData {
     this.dataUri = "gs://" + dataBucket + "/" + dataKey;
   }
 
-  public static String randomUri() {
-    return UUID.randomUUID().toString().toLowerCase();
-  }
-
-  String getFolder() {
+  public String getFolder() {
     return dataFolder;
   }
 
-  String getKey() {
+  public String getKey() {
     return dataKey;
   }
 
-  String getUri() {
+  public String getUri() {
     return dataUri;
   }
 
-  String getFormat() {
+  public String getFormat() {
     return dataFormat;
   }
 
-  String getBucket() {
+  public String getBucket() {
     return dataBucket;
-  }
-
-  @Override
-  public String toString() {
-    return ToStringBuilder.reflectionToString(this);
   }
 
   @Override
@@ -93,8 +83,8 @@ public class BigQueryExtractionData {
 
   @Override
   public boolean equals(Object o) {
-    if (o instanceof BigQueryExtractionData) {
-      BigQueryExtractionData other = (BigQueryExtractionData) o;
+    if (o instanceof ExtractionUri) {
+      ExtractionUri other = (ExtractionUri) o;
       if (!other.dataBucket.equals(this.dataBucket)) {
         return false;
       }

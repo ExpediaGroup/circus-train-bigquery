@@ -13,22 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.extraction;
+package com.hotels.bdp.circustrain.bigquery.util;
 
-import static org.junit.Assert.assertEquals;
+public class BigQueryKey {
 
-import org.junit.Test;
-
-public class BigQueryExtractionDataTest {
-
-  @Test
-  public void constructionTest() {
-    BigQueryExtractionData data = new BigQueryExtractionData("bucket", "folder", "file", "csv");
-    assertEquals("bucket", data.getBucket());
-    assertEquals("folder", data.getFolder());
-    assertEquals("csv", data.getFormat());
-    assertEquals("folder/file.csv", data.getKey());
-    assertEquals("gs://bucket/folder/file.csv", data.getUri());
+  public static String makeKey(String databaseName, String tableName) {
+    return databaseName + "." + tableName;
   }
-
 }

@@ -27,6 +27,8 @@ import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 
+import com.google.cloud.bigquery.Schema;
+
 //TODO Rename?
 public class BigQueryToHivePartitionConverter {
 
@@ -89,6 +91,10 @@ public class BigQueryToHivePartitionConverter {
   public BigQueryToHivePartitionConverter withValues(List<String> values) {
     partition.setValues(values);
     return this;
+  }
+
+  public BigQueryToHivePartitionConverter withCols(Schema schema) {
+    return this.withCols(BigQueryToHiveConversionUtils.getCols(schema));
   }
 
   public BigQueryToHivePartitionConverter withCols(List<FieldSchema> cols) {
