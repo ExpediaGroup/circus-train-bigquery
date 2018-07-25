@@ -75,10 +75,7 @@ public class BigQueryMetastore {
     }
   }
 
-  private com.google.cloud.bigquery.Table getBigQueryTableHelper(
-      BigQuery client,
-      String databaseName,
-      String tableName)
+  private com.google.cloud.bigquery.Table getBigQueryTableHelper(BigQuery client, String databaseName, String tableName)
     throws NoSuchObjectException {
     com.google.cloud.bigquery.Table table = client.getDataset(databaseName).get(tableName);
     if (table == null) {

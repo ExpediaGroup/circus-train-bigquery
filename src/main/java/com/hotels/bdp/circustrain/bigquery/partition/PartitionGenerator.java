@@ -45,8 +45,8 @@ import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfigurat
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHivePartitionConverter;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTypeConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 //TODO: Refactor for test

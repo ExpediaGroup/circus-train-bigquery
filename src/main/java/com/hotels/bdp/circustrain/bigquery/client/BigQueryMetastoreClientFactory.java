@@ -16,20 +16,24 @@
 package com.hotels.bdp.circustrain.bigquery.client;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants;
 import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
-import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConstants;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.bdp.circustrain.core.metastore.ConditionalMetaStoreClientFactory;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 import com.hotels.hcommon.hive.metastore.exception.MetaStoreClientException;
 
+@Component
 public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClientFactory {
 
   private final BigQueryMetastoreClient metastoreClient;
 
+  @Autowired
   public BigQueryMetastoreClientFactory(
       CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,

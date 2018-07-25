@@ -15,9 +15,9 @@
  */
 package com.hotels.bdp.circustrain.bigquery.util;
 
-import static com.hotels.bdp.circustrain.bigquery.util.BigQueryKey.makeKey;
 import static org.junit.Assert.assertEquals;
 
+import static com.hotels.bdp.circustrain.bigquery.util.BigQueryKey.makeKey;
 
 import org.junit.Test;
 

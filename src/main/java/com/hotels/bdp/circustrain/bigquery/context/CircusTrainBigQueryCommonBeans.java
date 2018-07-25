@@ -36,7 +36,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hotels.bdp.circustrain.api.Modules;
 import com.hotels.bdp.circustrain.api.conf.SourceCatalog;
 import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
-import com.hotels.bdp.circustrain.bigquery.client.BigQueryMetastoreClientFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.listener.BigQueryReplicationListener;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
@@ -80,14 +79,6 @@ class CircusTrainBigQueryCommonBeans {
   @Bean
   BigQueryMetastore bigQueryMetastore(BigQuery bigQuery) {
     return new BigQueryMetastore(bigQuery);
-  }
-
-  @Bean
-  BigQueryMetastoreClientFactory bigQueryMetastoreClientFactory(
-      CircusTrainBigQueryConfiguration configuration,
-      BigQueryMetastore bigQueryMetastore,
-      ExtractionService service) {
-    return new BigQueryMetastoreClientFactory(configuration, bigQueryMetastore, service);
   }
 
   private GoogleCredentials getCredential(GCPSecurity gcpSecurity) throws IOException {

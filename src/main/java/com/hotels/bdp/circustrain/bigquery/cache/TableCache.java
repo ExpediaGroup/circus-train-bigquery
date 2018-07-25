@@ -15,7 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.cache;
 
-
 import static com.hotels.bdp.circustrain.bigquery.util.BigQueryKey.makeKey;
 
 import java.util.HashMap;
