@@ -131,9 +131,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public void close() {
-
-  }
+  public void close() {}
 
   @Override
   public Database getDatabase(String databaseName) throws TException {
