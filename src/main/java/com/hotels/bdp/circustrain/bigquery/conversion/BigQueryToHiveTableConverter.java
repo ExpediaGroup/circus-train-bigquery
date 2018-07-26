@@ -35,8 +35,6 @@ public class BigQueryToHiveTableConverter {
 
   private Table table = new Table();
 
-  private Schema schema = null;
-
   public BigQueryToHiveTableConverter() {
     table.setDbName("default");
     table.setTableName("default");
@@ -111,7 +109,6 @@ public class BigQueryToHiveTableConverter {
       fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
       table.getSd().addToCols(fieldSchema);
     }
-    this.schema = schema;
     return this;
   }
 

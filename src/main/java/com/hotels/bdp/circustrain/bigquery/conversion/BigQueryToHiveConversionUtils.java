@@ -26,14 +26,14 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 
 class BigQueryToHiveConversionUtils {
+
   static List<FieldSchema> getCols(Schema schema) {
     BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
     Set<FieldSchema> partitionKeys = new LinkedHashSet<>();
 
     for (Field field : schema.getFields()) {
-      String fieldName = field.getName().toLowerCase().trim();
       FieldSchema fieldSchema = new FieldSchema();
-      fieldSchema.setName(fieldName);
+      fieldSchema.setName(field.getName().toLowerCase().trim());
       fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
       partitionKeys.add(fieldSchema);
     }

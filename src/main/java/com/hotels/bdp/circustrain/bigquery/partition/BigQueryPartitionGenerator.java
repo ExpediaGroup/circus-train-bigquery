@@ -21,12 +21,17 @@ import static com.hotels.bdp.circustrain.bigquery.util.BigQueryUriUtils.randomUr
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 public class BigQueryPartitionGenerator {
+
+  private static final Logger log = LoggerFactory.getLogger(BigQueryPartitionGenerator.class);
 
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
@@ -68,7 +73,6 @@ public class BigQueryPartitionGenerator {
 
   }
 
-
   private String getQueryStatement(String sourceDBName, String sourceTableName, String partitionKey, String value) {
     return String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey, value);
   }
@@ -77,6 +81,7 @@ public class BigQueryPartitionGenerator {
       String destinationDBName,
       String destinationTableName,
       String queryStatement) {
+    log.info("Generating BigQuery partition using query {}", queryStatement);
     bigQueryMetastore.executeIntoDestinationTable(destinationDBName, destinationTableName, queryStatement);
     com.google.cloud.bigquery.Table part = bigQueryMetastore.getTable(destinationDBName, destinationTableName);
     return part;
