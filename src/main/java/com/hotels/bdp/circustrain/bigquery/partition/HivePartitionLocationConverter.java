@@ -13,14 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.util;
+package com.hotels.bdp.circustrain.bigquery.partition;
 
-import java.util.UUID;
+import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
 
-public final class BigQueryUriUtils {
+class HivePartitionLocationConverter {
 
-  public static String randomUri() {
-    return UUID.randomUUID().toString().toLowerCase();
+  private final String extractionLocation;
+
+  HivePartitionLocationConverter(ExtractionUri extractionUri) {
+    this.extractionLocation = "gs://" + extractionUri.getBucket() + "/" + extractionUri.getFolder() + "/";
+
   }
 
+  String get() {
+    return extractionLocation;
+  }
 }

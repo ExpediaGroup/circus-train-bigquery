@@ -29,7 +29,6 @@ import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 
 import com.google.cloud.bigquery.Schema;
 
-//TODO Rename?
 public class BigQueryToHivePartitionConverter {
 
   private Partition partition = new Partition();

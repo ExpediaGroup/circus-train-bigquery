@@ -34,11 +34,11 @@ public class DataCleaner {
   private final Storage storage;
   private final Queue<ExtractionContainer> cleanupQueue;
 
-  public DataCleaner(Storage storage) {
+  DataCleaner(Storage storage) {
     this(storage, new LinkedList<ExtractionContainer>());
   }
 
-  public DataCleaner(Storage storage, Queue<ExtractionContainer> cleanupQueue) {
+  DataCleaner(Storage storage, Queue<ExtractionContainer> cleanupQueue) {
     this.storage = storage;
     this.cleanupQueue = cleanupQueue;
   }
@@ -47,7 +47,7 @@ public class DataCleaner {
     cleanupQueue.add(container);
   }
 
-  public void cleanup() {
+  void cleanup() {
     while (!cleanupQueue.isEmpty()) {
       ExtractionContainer container = cleanupQueue.poll();
       Table table = container.getTable();
@@ -61,9 +61,11 @@ public class DataCleaner {
   }
 
   private void deleteBucketAndContents(String dataBucket) {
-    deleteObjectsInBucket(dataBucket);
-    deleteBucket(dataBucket);
-    log.info("Deleted temporary bucket {} and its contents", dataBucket);
+    if (bucketExists(dataBucket)) {
+      deleteObjectsInBucket(dataBucket);
+      deleteBucket(dataBucket);
+      log.info("Deleted temporary bucket {} and its contents", dataBucket);
+    }
   }
 
   private void deleteObjectsInBucket(String dataBucket) {
@@ -99,6 +101,15 @@ public class DataCleaner {
       }
     } catch (StorageException e) {
       log.warn("Error deleting bucket {}", dataBucket, e);
+    }
+  }
+
+  private boolean bucketExists(String bucketName) {
+    try {
+      return storage.get(bucketName) != null;
+    } catch (StorageException e) {
+      log.warn("Cannot verify whether bucket {} exists.", bucketName, e);
+      return false;
     }
   }
 }

@@ -26,6 +26,7 @@ import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 
@@ -36,11 +37,11 @@ public class DataExtractor {
   private final Storage storage;
   private final Queue<ExtractionContainer> extractionQueue;
 
-  public DataExtractor(Storage storage) {
+  DataExtractor(Storage storage) {
     this(storage, new LinkedList<ExtractionContainer>());
   }
 
-  public DataExtractor(Storage storage, Queue<ExtractionContainer> extractionQueue) {
+  DataExtractor(Storage storage, Queue<ExtractionContainer> extractionQueue) {
     this.storage = storage;
     this.extractionQueue = extractionQueue;
   }
@@ -49,7 +50,7 @@ public class DataExtractor {
     extractionQueue.add(container);
   }
 
-  public void extract() {
+  void extract() {
     while (!extractionQueue.isEmpty()) {
       ExtractionContainer container = extractionQueue.poll();
       Table table = container.getTable();
@@ -71,7 +72,12 @@ public class DataExtractor {
   }
 
   private boolean bucketExists(String bucketName) {
-    return storage.get(bucketName, Storage.BucketGetOption.fields()) != null;
+    try {
+      return storage.get(bucketName) != null;
+    } catch (StorageException e) {
+      log.warn("Cannot verify whether bucket {} exists.", bucketName, e);
+      return false;
+    }
   }
 
   private void extractDataFromBigQuery(ExtractionUri extractionUri, Table table) {

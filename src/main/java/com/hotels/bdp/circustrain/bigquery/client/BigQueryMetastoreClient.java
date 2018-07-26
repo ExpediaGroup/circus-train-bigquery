@@ -96,12 +96,12 @@ import org.slf4j.LoggerFactory;
 import com.google.cloud.bigquery.Schema;
 
 import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
-import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerator;
+import com.hotels.bdp.circustrain.bigquery.partition.PartitionService;
+import com.hotels.bdp.circustrain.bigquery.partition.PartitionServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
@@ -110,19 +110,19 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   private static final Logger log = LoggerFactory.getLogger(BigQueryMetastoreClient.class);
 
   private final BigQueryMetastore bigQueryMetastore;
-  private final ExtractionService service;
-  private final PartitionGenerator partitionGenerator;
+  private final ExtractionService extractionService;
+  private final PartitionServiceFactory partitionServiceFactory;
   private final MetastoreClientCache cache;
 
   BigQueryMetastoreClient(
-      CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
-      MetastoreClientCache metastoreClientCache) {
+      MetastoreClientCache metastoreClientCache,
+      PartitionServiceFactory partitionServiceFactory) {
     this.bigQueryMetastore = bigQueryMetastore;
-    this.service = extractionService;
+    this.extractionService = extractionService;
+    this.partitionServiceFactory = partitionServiceFactory;
     this.cache = metastoreClientCache;
-    this.partitionGenerator = new PartitionGenerator(bigQueryMetastore, configuration, extractionService);
   }
 
   @Override
@@ -132,12 +132,12 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public void close() {
-    cache.clear();
+
   }
 
   @Override
   public Database getDatabase(String databaseName) throws TException {
-    log.info("Getting database {} from BigQuery", databaseName);
+    log.info("Getting database '{}' from BigQuery", databaseName);
     bigQueryMetastore.checkDbExists(databaseName);
     return new Database(databaseName, null, null, null);
   }
@@ -149,19 +149,18 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public Table getTable(final String databaseName, final String tableName) throws TException {
-    log.info("Getting table {}.{} from BigQuery", databaseName, tableName);
+    log.info("Getting table '{}.{}' from BigQuery", databaseName, tableName);
     String tableKey = makeKey(databaseName, tableName);
     if (cache.containsTable(tableKey)) {
-      log.debug("Loading table {}.{} from tableCache", databaseName, tableName);
+      log.debug("Loading table '{}.{}' from tableCache", databaseName, tableName);
       return cache.getTable(tableKey);
     }
 
     com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
 
-    // TODO Decouple location and registry so you can be designated a location without extracting
     ExtractionUri extractionUri = new ExtractionUri();
     ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, false);
-    service.register(container);
+    extractionService.register(container);
 
     final String location = "gs://" + extractionUri.getBucket() + "/" + extractionUri.getFolder() + "/";
     final Schema schema = bigQueryTable.getDefinition().getSchema();
@@ -173,7 +172,8 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
         .withLocation(location)
         .convert();
 
-    for (Partition partition : partitionGenerator.generate(hiveTable)) {
+    PartitionService partitionService = partitionServiceFactory.newInstance(hiveTable);
+    for (Partition partition : partitionService.execute()) {
       cache.cachePartition(partition);
     }
     cache.cacheTable(hiveTable);

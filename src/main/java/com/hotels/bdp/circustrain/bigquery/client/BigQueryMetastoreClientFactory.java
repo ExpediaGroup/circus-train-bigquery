@@ -23,6 +23,7 @@ import com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants;
 import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.partition.PartitionServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.bdp.circustrain.core.metastore.ConditionalMetaStoreClientFactory;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
@@ -38,8 +39,8 @@ public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClien
       CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,
       ExtractionService service) {
-    this.metastoreClient = new BigQueryMetastoreClient(configuration, bigQueryMetastore, service,
-        new MetastoreClientCache());
+    this.metastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, service, new MetastoreClientCache(),
+        new PartitionServiceFactory(configuration, bigQueryMetastore, service));
   }
 
   @Override

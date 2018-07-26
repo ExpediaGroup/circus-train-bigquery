@@ -35,10 +35,6 @@ import com.google.common.annotations.VisibleForTesting;
 
 import com.hotels.bdp.circustrain.api.Modules;
 import com.hotels.bdp.circustrain.api.conf.SourceCatalog;
-import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.listener.BigQueryReplicationListener;
-import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.bdp.circustrain.gcp.context.GCPSecurity;
 
 @Profile({ Modules.REPLICATION })
@@ -64,21 +60,6 @@ class CircusTrainBigQueryCommonBeans {
         .setProjectId(getProjectId(sourceCatalog))
         .build()
         .getService();
-  }
-
-  @Bean
-  ExtractionService extractionService(Storage googleStorage) {
-    return new ExtractionService(googleStorage);
-  }
-
-  @Bean
-  TableReplicationListener bigQueryReplicationListener(ExtractionService service) {
-    return new BigQueryReplicationListener(service);
-  }
-
-  @Bean
-  BigQueryMetastore bigQueryMetastore(BigQuery bigQuery) {
-    return new BigQueryMetastore(bigQuery);
   }
 
   private GoogleCredentials getCredential(GCPSecurity gcpSecurity) throws IOException {

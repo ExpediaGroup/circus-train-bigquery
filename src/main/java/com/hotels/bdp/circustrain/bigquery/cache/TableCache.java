@@ -21,8 +21,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class TableCache {
+
+  private static final Logger log = LoggerFactory.getLogger(TableCache.class);
 
   private final Map<String, Table> tableCache = new HashMap<>();
 
@@ -31,11 +35,14 @@ class TableCache {
   }
 
   Table get(String key) {
+    log.info("Getting table {} from cache", key);
     return tableCache.get(key);
   }
 
   void add(Table table) {
-    tableCache.put(makeKey(table.getDbName(), table.getTableName()), table);
+    String key = makeKey(table.getDbName(), table.getTableName());
+    log.info("Adding table {} to cache", key);
+    tableCache.put(key, table);
   }
 
   void clear() {

@@ -18,16 +18,19 @@ package com.hotels.bdp.circustrain.bigquery.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.thrift.TException;
 import org.junit.Before;
@@ -52,6 +55,8 @@ import com.google.cloud.bigquery.TableId;
 import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.partition.PartitionService;
+import com.hotels.bdp.circustrain.bigquery.partition.PartitionServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -59,6 +64,9 @@ public class BigQueryMetastoreClientTest {
 
   private @Mock BigQuery bigQuery;
   private @Mock ExtractionService extractionService;
+  private @Mock PartitionServiceFactory factory;
+  private @Mock PartitionService partitionService;
+  private @Mock MetastoreClientCache cache;
   private @Mock Job job;
   private @Mock JobStatus jobStatus;
 
@@ -66,8 +74,8 @@ public class BigQueryMetastoreClientTest {
 
   @Before
   public void init() {
-    bigQueryMetastoreClient = new BigQueryMetastoreClient(null, new BigQueryMetastore(bigQuery), extractionService,
-        new MetastoreClientCache());
+    bigQueryMetastoreClient = new BigQueryMetastoreClient(new BigQueryMetastore(bigQuery), extractionService, cache,
+        factory);
   }
 
   @Test
@@ -109,7 +117,7 @@ public class BigQueryMetastoreClientTest {
   }
 
   @Test
-  public void getTableTest() throws TException, InterruptedException {
+  public void getTableTestPartitioningNotConfigured() throws TException, InterruptedException {
     Dataset dataset = mock(Dataset.class);
     Schema schema = Schema.of(Field.of("id", LegacySQLTypeName.INTEGER), Field.of("name", LegacySQLTypeName.STRING));
     Table table = mock(Table.class);
@@ -131,6 +139,8 @@ public class BigQueryMetastoreClientTest {
     when(table.getTableId()).thenReturn(tableId);
     when(job.getStatus()).thenReturn(jobStatus);
     when(jobStatus.getError()).thenReturn(null);
+    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class))).thenReturn(partitionService);
+    when(partitionService.execute()).thenReturn(new ArrayList<Partition>());
 
     org.apache.hadoop.hive.metastore.api.Table hiveTable = bigQueryMetastoreClient.getTable("database", "table");
 
@@ -142,6 +152,7 @@ public class BigQueryMetastoreClientTest {
     assertEquals("name", fields.get(1).getName());
     assertEquals("string", fields.get(1).getType());
     assertNotNull(location, hiveTable.getSd().getLocation());
+    verify(cache, times(0)).cachePartition(any(Partition.class));
   }
 
 }

@@ -18,17 +18,22 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.storage.Storage;
 import com.google.common.annotations.VisibleForTesting;
 
+@Component
 public class ExtractionService {
 
   private final DataExtractor extractor;
   private final DataCleaner cleaner;
   private final Map<Table, ExtractionContainer> registry;
 
-  public ExtractionService(Storage storage) {
+  @Autowired
+  ExtractionService(Storage storage) {
     this(new DataExtractor(storage), new DataCleaner(storage), new HashMap<Table, ExtractionContainer>());
   }
 

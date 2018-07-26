@@ -20,6 +20,8 @@ import java.util.UUID;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.thrift.TException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Job;
@@ -27,14 +29,17 @@ import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 
+@Component
 public class BigQueryMetastore {
 
   private final BigQuery client;
 
+  @Autowired
   public BigQueryMetastore(BigQuery client) {
     this.client = client;
   }
@@ -82,5 +87,18 @@ public class BigQueryMetastore {
       throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");
     }
     return table;
+  }
+
+  public TableResult executeIntoDestinationTable(String destinationDBName, String destinationTableName, String query) {
+    return this.runJob(configureFilterJob(destinationDBName, destinationTableName, query));
+  }
+
+  private QueryJobConfiguration configureFilterJob(String databaseName, String tableName, String partitionFilter) {
+    return QueryJobConfiguration
+        .newBuilder(partitionFilter)
+        .setDestinationTable(TableId.of(databaseName, tableName))
+        .setUseLegacySql(true)
+        .setAllowLargeResults(true)
+        .build();
   }
 }
