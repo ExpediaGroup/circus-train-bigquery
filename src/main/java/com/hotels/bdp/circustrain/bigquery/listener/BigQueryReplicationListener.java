@@ -17,7 +17,6 @@ package com.hotels.bdp.circustrain.bigquery.listener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hotels.bdp.circustrain.api.event.EventTableReplication;
 import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
@@ -29,8 +28,7 @@ public class BigQueryReplicationListener implements TableReplicationListener {
 
   private final ExtractionService service;
 
-  @Autowired
-  BigQueryReplicationListener(ExtractionService service) {
+  public BigQueryReplicationListener(ExtractionService service) {
     this.service = service;
   }
 

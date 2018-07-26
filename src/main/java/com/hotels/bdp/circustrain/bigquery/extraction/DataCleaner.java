@@ -50,13 +50,13 @@ public class DataCleaner {
   void cleanup() {
     while (!cleanupQueue.isEmpty()) {
       ExtractionContainer container = cleanupQueue.poll();
-      log.info("Cleaning {} at location {}. Delete table set to {}", container.getTable().getTableId(),
-          container.getExtractionUri(), container.getDeleteTable());
+      log.info("Cleaning data at location {}", container.getExtractionUri());
 
       Table table = container.getTable();
       ExtractionUri extractionUri = container.getExtractionUri();
       boolean deleteTable = container.getDeleteTable();
       if (deleteTable) {
+        log.debug("Deleted table. {}", container.getTable().getTableId());
         table.delete();
       }
       deleteBucketAndContents(extractionUri.getBucket());

@@ -56,7 +56,7 @@ public class BigQueryToHivePartitionConverter {
     SerDeInfo serDeInfo = new SerDeInfo();
     serDeInfo.setSerializationLib("org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe");
     Map<String, String> serDeParameters = new HashMap<>();
-    serDeParameters.put("serialization.format", ",");
+    serDeParameters.put("serialization.format", "1");
     serDeParameters.put("field.delim", ",");
     serDeInfo.setParameters(serDeParameters);
     sd.setSerdeInfo(serDeInfo);
