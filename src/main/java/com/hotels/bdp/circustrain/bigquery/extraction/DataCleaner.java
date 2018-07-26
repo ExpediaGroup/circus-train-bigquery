@@ -50,6 +50,9 @@ public class DataCleaner {
   void cleanup() {
     while (!cleanupQueue.isEmpty()) {
       ExtractionContainer container = cleanupQueue.poll();
+      log.info("Cleaning {} at location {}. Delete table set to {}", container.getTable().getTableId(),
+          container.getExtractionUri(), container.getDeleteTable());
+
       Table table = container.getTable();
       ExtractionUri extractionUri = container.getExtractionUri();
       boolean deleteTable = container.getDeleteTable();

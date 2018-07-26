@@ -51,7 +51,7 @@ class BigQueryTableFilterer {
     com.google.cloud.bigquery.Table filteredTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();
-    ExtractionContainer container = new ExtractionContainer(filteredTable, extractionUri, false);
+    ExtractionContainer container = new ExtractionContainer(filteredTable, extractionUri, true);
     service.register(container);
     return filteredTable;
   }

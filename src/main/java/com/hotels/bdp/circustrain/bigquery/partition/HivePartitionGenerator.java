@@ -70,7 +70,7 @@ class HivePartitionGenerator {
         Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
             originalValue, cols, new HivePartitionLocationConverter(extractionUri).get()).get();
         generatedPartitions.add(partition);
-        log.info("Generated partition {}={}.", partitionKey, formattedValue);
+        log.info("Generated partition {}={}", partitionKey, formattedValue);
         log.debug("{}", partition);
       }
     }

@@ -53,6 +53,7 @@ public class DataExtractor {
   void extract() {
     while (!extractionQueue.isEmpty()) {
       ExtractionContainer container = extractionQueue.poll();
+      log.info("Extracting {} to {}", container.getTable().getTableId(), container.getExtractionUri());
       Table table = container.getTable();
       ExtractionUri extractionUri = container.getExtractionUri();
       createBucket(extractionUri);
