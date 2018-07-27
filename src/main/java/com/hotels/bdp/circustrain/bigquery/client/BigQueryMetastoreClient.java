@@ -93,14 +93,11 @@ import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-
 import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.partition.TableService;
 import com.hotels.bdp.circustrain.bigquery.partition.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
@@ -181,9 +178,12 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   public List<Partition> listPartitions(String dbName, String tblName, short max)
     throws NoSuchObjectException, MetaException, TException {
     log.info("Listing partitions for table {}.{}", dbName, tblName);
-    Table hiveTable = cache.getTable(makeKey(dbName, tblName));
-    TableService tableService = tableServiceFactory.newInstance(hiveTable);
-    return Lists.newArrayList(tableService.getPartitions());
+    String key = makeKey(dbName, tblName);
+    Table hiveTable = cache.getTable(key);
+    if (hiveTable == null) {
+      hiveTable = getTable(dbName, tblName);
+    }
+    return tableServiceFactory.newInstance(hiveTable).getPartitions();
   }
 
   @Override
