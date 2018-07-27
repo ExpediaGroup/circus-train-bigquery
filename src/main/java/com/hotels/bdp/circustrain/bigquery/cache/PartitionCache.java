@@ -35,13 +35,13 @@ class PartitionCache {
 
   void add(Partition partition) {
     String partitionKey = makeKey(partition.getDbName(), partition.getTableName());
-    log.info("Adding partition with key {} to cache", partitionKey);
+    log.debug("Adding partition with key {} to cache", partitionKey);
 
     if (partitionCache.containsKey(partitionKey)) {
-      log.info("Cache contains key {}. appending to list of Partitions", partitionKey);
+      log.debug("Cache contains key {}. appending to list of Partitions", partitionKey);
       partitionCache.get(partitionKey).add(partition);
     } else {
-      log.info("Cache does not contain key {}. creating new list of Partitions", partitionKey);
+      log.debug("Cache does not contain key {}. creating new list of Partitions", partitionKey);
 
       List<Partition> partitions = new ArrayList<>();
       partitions.add(partition);

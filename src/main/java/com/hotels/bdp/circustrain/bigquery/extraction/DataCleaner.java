@@ -67,7 +67,7 @@ public class DataCleaner {
     if (bucketExists(dataBucket)) {
       deleteObjectsInBucket(dataBucket);
       deleteBucket(dataBucket);
-      log.info("Deleted temporary bucket {} and its contents", dataBucket);
+      log.debug("Deleted temporary bucket {} and its contents", dataBucket);
     }
   }
 
@@ -79,7 +79,7 @@ public class DataCleaner {
           if (blob.exists()) {
             boolean suceeded = storage.delete(blob.getBlobId());
             if (suceeded) {
-              log.info("Deleted object {}", blob);
+              log.debug("Deleted object {}", blob);
             } else {
               log.warn("Could not delete object {}", blob);
             }

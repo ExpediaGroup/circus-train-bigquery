@@ -16,15 +16,12 @@
 package com.hotels.bdp.circustrain.bigquery.partition;
 
 import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationUtils.getPartitionBy;
-import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationUtils.shouldPartition;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import org.apache.hadoop.hive.metastore.api.Partition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
@@ -32,47 +29,32 @@ import com.google.cloud.bigquery.TableResult;
 
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 
-//TODO: Refactor for test
-public class PartitionService {
-
-  private static final Logger log = LoggerFactory.getLogger(PartitionService.class);
+public class TableService {
 
   private final CircusTrainBigQueryConfiguration configuration;
-  private final BigQueryTableFilterer filterer;
   private final HiveParitionKeyAdder adder;
   private final HivePartitionGenerator factory;
+  private final TableResult result;
+  private final com.google.cloud.bigquery.Table filteredTable;
 
-  PartitionService(
+  TableService(
       CircusTrainBigQueryConfiguration configuration,
       BigQueryTableFilterer filterer,
       HiveParitionKeyAdder adder,
       HivePartitionGenerator factory) {
     this.configuration = configuration;
-    this.filterer = filterer;
     this.adder = adder;
     this.factory = factory;
+    this.result = filterer.filterTable();
+    this.filteredTable = filterer.getFilteredTable();
   }
 
-  public List<Partition> execute() {
-    if (shouldPartition(configuration)) {
-      log.info("Partitioning configured");
-      return generatePartitions();
-    } else {
-      log.info("Partitioning not configured. No filter applied");
-      return new ArrayList<>();
-    }
-  }
-
-  private List<Partition> generatePartitions() {
-    log.info("Filtering source table");
-    TableResult result = filterer.filterTable();
-    com.google.cloud.bigquery.Table filteredTable = filterer.getFilteredTable();
-
-    log.info("Generating partition keys for source table metadata");
-    adder.add(Objects.requireNonNull(getPartitionBy(configuration)).toLowerCase(),
+  public Table getTable() {
+    return adder.add(Objects.requireNonNull(getPartitionBy(configuration)).toLowerCase(),
         filteredTable.getDefinition().getSchema());
+  }
 
-    log.info("Generating Hive Partitions for source table");
+  public List<Partition> getPartitions() {
     return factory.generate(getPartitionKey(filteredTable), result.iterateAll());
   }
 

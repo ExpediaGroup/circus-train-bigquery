@@ -31,10 +31,12 @@ class HiveParitionKeyAdder {
     this.table = table;
   }
 
-  void add(String partitionKey, Schema filteredTableSchema) {
+  Table add(String partitionKey, Schema filteredTableSchema) {
     if (filteredTableSchema == null) {
-      return;
+      return new Table(table);
     }
+
+    Table newTable = new Table(table);
 
     BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
     for (Field field : filteredTableSchema.getFields()) {
@@ -43,8 +45,9 @@ class HiveParitionKeyAdder {
         FieldSchema fieldSchema = new FieldSchema();
         fieldSchema.setName(fieldName);
         fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
-        table.addToPartitionKeys(fieldSchema);
+        newTable.addToPartitionKeys(fieldSchema);
       }
     }
+    return newTable;
   }
 }

@@ -35,13 +35,13 @@ class TableCache {
   }
 
   Table get(String key) {
-    log.info("Getting table {} from cache", key);
+    log.debug("Getting table {} from cache", key);
     return tableCache.get(key);
   }
 
   void add(Table table) {
     String key = makeKey(table.getDbName(), table.getTableName());
-    log.info("Adding table {} to cache", key);
+    log.debug("Adding table {} to cache", key);
     tableCache.put(key, table);
   }
 

@@ -67,7 +67,7 @@ public class DataExtractor {
       log.debug("Bucket {} already exists. Skipped creation", dataBucket);
       return;
     }
-    log.info("Creating bucket {}", dataBucket);
+    log.debug("Creating bucket {}", dataBucket);
     BucketInfo bucketInfo = BucketInfo.of(dataBucket);
     storage.create(bucketInfo);
   }
@@ -86,7 +86,6 @@ public class DataExtractor {
     String dataUri = extractionUri.getUri();
     String baseLocation = extractionUri.getBucket() + "/" + extractionUri.getFolder();
 
-    log.info("Extracting table data to temporary location gs://{}/", baseLocation);
     try {
       Job job = table.extract(format, dataUri);
       Job completedJob = job.waitFor();

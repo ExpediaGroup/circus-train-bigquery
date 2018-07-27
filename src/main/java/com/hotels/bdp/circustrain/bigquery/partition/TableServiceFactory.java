@@ -22,19 +22,24 @@ import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationU
 import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationUtils.getPartitionFilter;
 import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationUtils.randomTableName;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
-public class PartitionServiceFactory {
+public class TableServiceFactory {
 
   private final CircusTrainBigQueryConfiguration configuration;
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService service;
 
-  public PartitionServiceFactory(
+  private final Map<Table, TableService> cache = new HashMap<>();
+
+  public TableServiceFactory(
       CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,
       ExtractionService service) {
@@ -43,7 +48,11 @@ public class PartitionServiceFactory {
     this.service = service;
   }
 
-  public PartitionService newInstance(Table hiveTable) {
+  public TableService newInstance(Table hiveTable) {
+    if (cache.containsKey(hiveTable)) {
+      return cache.get(hiveTable);
+    }
+
     final String sqlFilterQuery = getSelectStatment(hiveTable);
     final String datasetName = hiveTable.getDbName();
     final String tableName = randomTableName();
@@ -51,7 +60,9 @@ public class PartitionServiceFactory {
     BigQueryTableFilterer filterer = new BigQueryTableFilterer(bigQueryMetastore, service, datasetName, tableName, sqlFilterQuery);
     HiveParitionKeyAdder adder = new HiveParitionKeyAdder(hiveTable);
     HivePartitionGenerator hivePartitionGenerator = new HivePartitionGenerator(hiveTable, bigQueryMetastore, service);
-    return new PartitionService(configuration, filterer, adder, hivePartitionGenerator);
+    TableService service = new TableService(configuration, filterer, adder, hivePartitionGenerator);
+    cache.put(hiveTable, service);
+    return service;
   }
 
   private String getSelectStatment(Table hiveTable) {

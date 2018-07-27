@@ -17,46 +17,36 @@ package com.hotels.bdp.circustrain.bigquery.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.List;
+import static com.hotels.bdp.circustrain.bigquery.util.BigQueryKey.makeKey;
 
 import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.thrift.TException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.google.cloud.RetryOption;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Dataset;
-import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobStatus;
-import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableDefinition;
-import com.google.cloud.bigquery.TableId;
 
 import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.partition.PartitionService;
-import com.hotels.bdp.circustrain.bigquery.partition.PartitionServiceFactory;
+import com.hotels.bdp.circustrain.bigquery.partition.TableService;
+import com.hotels.bdp.circustrain.bigquery.partition.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -64,18 +54,18 @@ public class BigQueryMetastoreClientTest {
 
   private @Mock BigQuery bigQuery;
   private @Mock ExtractionService extractionService;
-  private @Mock PartitionServiceFactory factory;
-  private @Mock PartitionService partitionService;
+  private @Mock TableServiceFactory factory;
+  private @Mock TableService tableService;
   private @Mock MetastoreClientCache cache;
   private @Mock Job job;
+  private @Mock BigQueryMetastore bigQueryMetastore;
   private @Mock JobStatus jobStatus;
 
   private BigQueryMetastoreClient bigQueryMetastoreClient;
 
   @Before
   public void init() {
-    bigQueryMetastoreClient = new BigQueryMetastoreClient(new BigQueryMetastore(bigQuery), extractionService, cache,
-        factory);
+    bigQueryMetastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, extractionService, cache, factory);
   }
 
   @Test
@@ -87,8 +77,9 @@ public class BigQueryMetastoreClientTest {
 
   @Test(expected = UnknownDBException.class)
   public void getDatabaseWhenDatabaseDoesntExistThrowsExceptionTest() throws TException {
-    when(bigQuery.getDataset(anyString())).thenReturn(null);
-    bigQueryMetastoreClient.getDatabase("test");
+    String dbName = "database";
+    doThrow(new UnknownDBException()).when(bigQueryMetastore).checkDbExists(dbName);
+    bigQueryMetastoreClient.getDatabase(dbName);
   }
 
   @Test
@@ -97,62 +88,51 @@ public class BigQueryMetastoreClientTest {
     Table table = mock(Table.class);
     when(bigQuery.getDataset(anyString())).thenReturn(dataset);
     when(dataset.get(anyString())).thenReturn(table);
-    bigQueryMetastoreClient.tableExists("database", "table");
-    verify(bigQuery, times(2)).getDataset(anyString());
-    verify(dataset).get(anyString());
+    String dbName = "database";
+    String tblName = "table";
+    bigQueryMetastoreClient.tableExists(dbName, tblName);
+    verify(bigQueryMetastore).tableExists(dbName, tblName);
   }
 
   @Test(expected = UnknownDBException.class)
   public void tableExistsWhenDatabaseDoesntExistThrowsExceptionTest() throws TException {
-    when(bigQuery.getDataset(anyString())).thenReturn(null);
-    bigQueryMetastoreClient.tableExists("database", "table");
+    String dbName = "database";
+    String tblName = "table";
+    doThrow(new UnknownDBException()).when(bigQueryMetastore).tableExists(dbName, tblName);
+    bigQueryMetastoreClient.tableExists(dbName, tblName);
   }
 
   @Test
   public void tableExistsReturnsFalseWhenTableDoesntExist() throws TException {
-    Dataset dataset = mock(Dataset.class);
-    when(bigQuery.getDataset(anyString())).thenReturn(dataset);
-    when(dataset.get(anyString())).thenReturn(null);
+    String dbName = "database";
+    String tblName = "table";
+    when(bigQueryMetastore.tableExists(dbName, tblName)).thenReturn(false);
     assertFalse(bigQueryMetastoreClient.tableExists("database", "table"));
   }
 
   @Test
   public void getTableTestPartitioningNotConfigured() throws TException, InterruptedException {
-    Dataset dataset = mock(Dataset.class);
-    Schema schema = Schema.of(Field.of("id", LegacySQLTypeName.INTEGER), Field.of("name", LegacySQLTypeName.STRING));
-    Table table = mock(Table.class);
     String dbName = "database";
     String tableName = "table";
-    TableId tableId = TableId.of(dbName, tableName);
-    String location = "gs://foo/baz";
 
-    ExtractionContainer container = mock(ExtractionContainer.class);
-    when(extractionService.retrieve(table)).thenReturn(container);
-    when(bigQuery.getDataset(anyString())).thenReturn(dataset);
-    when(dataset.get(anyString())).thenReturn(table);
-    TableDefinition tableDefinition = mock(TableDefinition.class);
-    when(table.getDefinition()).thenReturn(tableDefinition);
-    when(table.getTableId()).thenReturn(tableId);
-    when(tableDefinition.getSchema()).thenReturn(schema);
-    when(table.extract(anyString(), anyString())).thenReturn(job);
-    when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(job);
-    when(table.getTableId()).thenReturn(tableId);
-    when(job.getStatus()).thenReturn(jobStatus);
-    when(jobStatus.getError()).thenReturn(null);
-    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class))).thenReturn(partitionService);
-    when(partitionService.execute()).thenReturn(new ArrayList<Partition>());
+    Table mockTable = mock(Table.class);
+    TableDefinition mockTableDefinition = mock(TableDefinition.class);
+    when(mockTable.getDefinition()).thenReturn(mockTableDefinition);
+    when(mockTableDefinition.getSchema()).thenReturn(Schema.of());
+    when(bigQueryMetastore.getTable(dbName, tableName)).thenReturn(mockTable);
 
-    org.apache.hadoop.hive.metastore.api.Table hiveTable = bigQueryMetastoreClient.getTable("database", "table");
+    org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
+    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class))).thenReturn(tableService);
+    when(tableService.getTable()).thenReturn(hiveTable);
 
-    assertEquals(dbName, hiveTable.getDbName());
-    assertEquals(tableName, hiveTable.getTableName());
-    List<FieldSchema> fields = hiveTable.getSd().getCols();
-    assertEquals("id", fields.get(0).getName());
-    assertEquals("bigint", fields.get(0).getType());
-    assertEquals("name", fields.get(1).getName());
-    assertEquals("string", fields.get(1).getType());
-    assertNotNull(location, hiveTable.getSd().getLocation());
-    verify(cache, times(0)).cachePartition(any(Partition.class));
+    bigQueryMetastoreClient.getTable(dbName, tableName);
+
+    verify(cache).containsTable(makeKey(dbName, tableName));
+    verify(bigQueryMetastore).getTable(dbName, tableName);
+    verify(cache).cacheTable(any(org.apache.hadoop.hive.metastore.api.Table.class));
+    verify(factory).newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class));
+    verify(tableService).getTable();
+
   }
 
 }

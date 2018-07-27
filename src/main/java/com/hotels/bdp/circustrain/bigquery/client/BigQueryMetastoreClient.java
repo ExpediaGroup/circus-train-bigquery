@@ -93,15 +93,15 @@ import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.cloud.bigquery.Schema;
+import com.google.common.collect.Lists;
 
 import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.partition.PartitionService;
-import com.hotels.bdp.circustrain.bigquery.partition.PartitionServiceFactory;
+import com.hotels.bdp.circustrain.bigquery.partition.TableService;
+import com.hotels.bdp.circustrain.bigquery.partition.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
@@ -111,17 +111,17 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
-  private final PartitionServiceFactory partitionServiceFactory;
+  private final TableServiceFactory tableServiceFactory;
   private final MetastoreClientCache cache;
 
   BigQueryMetastoreClient(
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       MetastoreClientCache metastoreClientCache,
-      PartitionServiceFactory partitionServiceFactory) {
+      TableServiceFactory tableServiceFactory) {
     this.bigQueryMetastore = bigQueryMetastore;
     this.extractionService = extractionService;
-    this.partitionServiceFactory = partitionServiceFactory;
+    this.tableServiceFactory = tableServiceFactory;
     this.cache = metastoreClientCache;
   }
 
@@ -150,7 +150,6 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     log.info("Getting table '{}.{}' from BigQuery", databaseName, tableName);
     String tableKey = makeKey(databaseName, tableName);
     if (cache.containsTable(tableKey)) {
-      log.debug("Loading table '{}.{}' from tableCache", databaseName, tableName);
       return cache.getTable(tableKey);
     }
 
@@ -160,31 +159,31 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, false);
     extractionService.register(container);
 
-    final String location = "gs://" + extractionUri.getBucket() + "/" + extractionUri.getFolder() + "/";
-    final Schema schema = bigQueryTable.getDefinition().getSchema();
-    Table hiveTable = new BigQueryToHiveTableConverter()
-        .withDatabaseName(databaseName)
-        .withTableName(tableName)
-        .withSchema(schema)
-        .withCols(schema)
-        .withLocation(location)
-        .convert();
+    Table hiveTable = tableServiceFactory
+        .newInstance(new BigQueryToHiveTableConverter()
+            .withDatabaseName(databaseName)
+            .withTableName(tableName)
+            .withSchema(bigQueryTable.getDefinition().getSchema())
+            .withCols(bigQueryTable.getDefinition().getSchema())
+            .withLocation(hiveTableLocationFromExtractionUri(extractionUri))
+            .convert())
+        .getTable();
 
-    PartitionService partitionService = partitionServiceFactory.newInstance(hiveTable);
-    for (Partition partition : partitionService.execute()) {
-      cache.cachePartition(partition);
-    }
     cache.cacheTable(hiveTable);
     return hiveTable;
+  }
+
+  private String hiveTableLocationFromExtractionUri(ExtractionUri extractionUri) {
+    return "gs://" + extractionUri.getBucket() + "/" + extractionUri.getFolder() + "/";
   }
 
   @Override
   public List<Partition> listPartitions(String dbName, String tblName, short max)
     throws NoSuchObjectException, MetaException, TException {
-    String key = makeKey(dbName, tblName);
-    List<Partition> partitions = cache.getPartitions(key);
-    log.info("Fetched {} partition(s)", partitions.size());
-    return partitions;
+    log.info("Listing partitions for table {}.{}", dbName, tblName);
+    Table hiveTable = cache.getTable(makeKey(dbName, tblName));
+    TableService tableService = tableServiceFactory.newInstance(hiveTable);
+    return Lists.newArrayList(tableService.getPartitions());
   }
 
   @Override

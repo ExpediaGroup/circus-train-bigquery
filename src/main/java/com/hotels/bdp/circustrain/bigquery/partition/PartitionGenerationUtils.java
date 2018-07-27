@@ -15,8 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-
 import java.util.UUID;
 
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
@@ -25,10 +23,6 @@ final class PartitionGenerationUtils {
 
   static String randomTableName() {
     return UUID.randomUUID().toString().replaceAll("-", "_");
-  }
-
-  static boolean shouldPartition(CircusTrainBigQueryConfiguration configuration) {
-    return isNotBlank(getPartitionBy(configuration));
   }
 
   static String getPartitionFilter(CircusTrainBigQueryConfiguration configuration) {

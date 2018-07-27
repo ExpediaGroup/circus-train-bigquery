@@ -30,7 +30,6 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 
-//TODO Rename?
 public class BigQueryToHiveTableConverter {
 
   private Table table = new Table();
