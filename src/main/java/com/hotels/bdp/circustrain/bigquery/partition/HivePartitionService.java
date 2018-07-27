@@ -28,31 +28,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.FieldValueList;
+import com.google.common.annotations.VisibleForTesting;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
-class HivePartitionGenerator {
+class HivePartitionService {
 
-  private static final Logger log = LoggerFactory.getLogger(HivePartitionGenerator.class);
+  private static final Logger log = LoggerFactory.getLogger(HivePartitionService.class);
 
   private final Table sourceTableAsHive;
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService service;
+  private final ExtractionContainerFactory extractionContainerFactory;
 
-  HivePartitionGenerator(Table sourceTableAsHive, BigQueryMetastore bigQueryMetastore, ExtractionService service) {
+  HivePartitionService(Table sourceTableAsHive, BigQueryMetastore bigQueryMetastore, ExtractionService service) {
+    this(sourceTableAsHive, bigQueryMetastore, service, new ExtractionContainerFactory(service, bigQueryMetastore, sourceTableAsHive));
+  }
+
+  @VisibleForTesting
+  HivePartitionService(
+      Table sourceTableAsHive,
+      BigQueryMetastore bigQueryMetastore,
+      ExtractionService service,
+      ExtractionContainerFactory extractionContainerFactory) {
     this.sourceTableAsHive = sourceTableAsHive;
     this.bigQueryMetastore = bigQueryMetastore;
     this.service = service;
+    this.extractionContainerFactory = extractionContainerFactory;
   }
 
   List<Partition> generate(final String partitionKey, Iterable<FieldValueList> results) {
     final String sourceTableName = sourceTableAsHive.getTableName();
     final String sourceDBName = sourceTableAsHive.getDbName();
 
-    ExtractionContainer container = retrieveExtractionContainerForSourceTable();
+    ExtractionContainer container = extractionContainerFactory.get();
     final String tableBucket = container.getExtractionUri().getBucket();
     final String tableFolder = container.getExtractionUri().getFolder();
 
@@ -63,12 +75,12 @@ class HivePartitionGenerator {
       Object o = row.get(partitionKey).getValue();
       if (o != null) {
         final String originalValue = o.toString();
-        final String formattedValue = formatter.format(o.toString());
-        ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, service, sourceDBName,
+        final String formattedValue = formatter.format(objectToHiveString(o));
+        ExtractionUri extractionUri = new BigQueryPartitionService(bigQueryMetastore, service, sourceDBName,
             sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder).generatePart();
 
         Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
-            originalValue, cols, new HivePartitionLocationConverter(extractionUri).get()).get();
+            new HivePartitionLocationConverter(extractionUri).get(), cols, originalValue).get();
         generatedPartitions.add(partition);
         log.info("Generated partition {}={}", partitionKey, formattedValue);
         log.debug("{}", partition);
@@ -77,22 +89,12 @@ class HivePartitionGenerator {
     return generatedPartitions;
   }
 
-  private ExtractionContainer retrieveExtractionContainerForSourceTable() {
-    com.google.cloud.bigquery.Table bigQueryRepresentation = bigQueryMetastore.getTable(sourceTableAsHive.getDbName(),
-        sourceTableAsHive.getTableName());
-
-    ExtractionContainer container = service.retrieve(bigQueryRepresentation);
-    return container;
-  }
-
-  private String getPartitionValue(Object o) {
-    String value = o.toString();
-    if (isBlank(value) || value.contains(" ")) {
-      // Value is empty string or string with spaces
-      return "\"" + value + "\"";
-    } else {
-      return value;
+  private String objectToHiveString(Object o) {
+    final String originalValue = o.toString();
+    if (isBlank(originalValue)) {
+      return "__HIVE_DEFAULT_PARTITION__";
     }
+    return originalValue;
   }
 
 }

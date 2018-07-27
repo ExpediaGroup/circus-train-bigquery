@@ -35,7 +35,7 @@ public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClien
   private final BigQueryMetastoreClient metastoreClient;
 
   @Autowired
-  public BigQueryMetastoreClientFactory(
+  BigQueryMetastoreClientFactory(
       CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,
       ExtractionService service) {

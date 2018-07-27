@@ -26,7 +26,11 @@ import static org.mockito.Mockito.when;
 
 import static com.hotels.bdp.circustrain.bigquery.util.BigQueryKey.makeKey;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.thrift.TException;
 import org.junit.Before;
@@ -132,7 +136,143 @@ public class BigQueryMetastoreClientTest {
     verify(cache).cacheTable(any(org.apache.hadoop.hive.metastore.api.Table.class));
     verify(factory).newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class));
     verify(tableService).getTable();
-
   }
 
+  @Test
+  public void listPartitionsWithTableCachedTest() throws TException {
+    String dbName = "db";
+    String tblName = "tbl";
+    org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
+    when(cache.getTable(makeKey(dbName, tblName))).thenReturn(hiveTable);
+    when(factory.newInstance(hiveTable)).thenReturn(tableService);
+    List<Partition> partitions = new ArrayList<>();
+    Partition partition = new Partition();
+    partitions.add(partition);
+    when(tableService.getPartitions()).thenReturn(partitions);
+    List<Partition> results = bigQueryMetastoreClient.listPartitions(dbName, tblName, (short) 10);
+    assertEquals(results.get(0), partition);
+    assertEquals(1, results.size());
+  }
+
+  @Test
+  public void listPartitionsWithTableCachedAndLimitedSizeTest() throws TException {
+    String dbName = "db";
+    String tblName = "tbl";
+    org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
+    when(cache.getTable(makeKey(dbName, tblName))).thenReturn(hiveTable);
+    when(factory.newInstance(hiveTable)).thenReturn(tableService);
+    List<Partition> partitions = new ArrayList<>();
+    for (int i = 0; i < 10; ++i) {
+      partitions.add(new Partition());
+    }
+
+    when(tableService.getPartitions()).thenReturn(partitions);
+    List<Partition> results = bigQueryMetastoreClient.listPartitions(dbName, tblName, (short) 5);
+    assertEquals(5, results.size());
+    assertEquals(10, partitions.size());
+  }
+
+  @Test
+  public void listPartitionsWithoutTableCachedTest() throws TException {
+    String dbName = "db";
+    String tblName = "tbl";
+    String key = makeKey(dbName, tblName);
+    org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
+    when(cache.getTable(key)).thenReturn(null).thenReturn(hiveTable);
+
+    Table mockTable = mock(Table.class);
+    TableDefinition mockTableDefinition = mock(TableDefinition.class);
+    when(mockTable.getDefinition()).thenReturn(mockTableDefinition);
+    when(mockTableDefinition.getSchema()).thenReturn(Schema.of());
+    when(bigQueryMetastore.getTable(dbName, tblName)).thenReturn(mockTable);
+
+    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class))).thenReturn(tableService);
+    when(tableService.getTable()).thenReturn(hiveTable);
+
+    when(factory.newInstance(hiveTable)).thenReturn(tableService);
+    List<Partition> partitions = new ArrayList<>();
+    Partition partition = new Partition();
+    partitions.add(partition);
+    when(tableService.getPartitions()).thenReturn(partitions);
+    List<Partition> results = bigQueryMetastoreClient.listPartitions(dbName, tblName, (short) 10);
+    assertEquals(results.get(0), partition);
+    assertEquals(1, results.size());
+    verify(cache).getTable(key);
+  }
+
+  @Test
+  public void listPartitionsWithoutTableCachedAndPartitionsSizeLimitedTest() throws TException {
+    String dbName = "db";
+    String tblName = "tbl";
+    String key = makeKey(dbName, tblName);
+    org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
+    when(cache.getTable(key)).thenReturn(null).thenReturn(hiveTable);
+
+    Table mockTable = mock(Table.class);
+    TableDefinition mockTableDefinition = mock(TableDefinition.class);
+    when(mockTable.getDefinition()).thenReturn(mockTableDefinition);
+    when(mockTableDefinition.getSchema()).thenReturn(Schema.of());
+    when(bigQueryMetastore.getTable(dbName, tblName)).thenReturn(mockTable);
+
+    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class))).thenReturn(tableService);
+    when(tableService.getTable()).thenReturn(hiveTable);
+
+    when(factory.newInstance(hiveTable)).thenReturn(tableService);
+    List<Partition> partitions = new ArrayList<>();
+    for (int i = 0; i < 10; ++i) {
+      partitions.add(new Partition());
+    }
+
+    when(tableService.getPartitions()).thenReturn(partitions);
+    List<Partition> results = bigQueryMetastoreClient.listPartitions(dbName, tblName, (short) 5);
+    assertEquals(5, results.size());
+    assertEquals(10, partitions.size());
+    verify(cache).getTable(key);
+  }
+
+  @Test
+  public void listPartitionsWithTableCachedAndPartitionsSizeNegativeReturnsAllPartitionsTest() throws TException {
+    String dbName = "db";
+    String tblName = "tbl";
+    org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
+    when(cache.getTable(makeKey(dbName, tblName))).thenReturn(hiveTable);
+    when(factory.newInstance(hiveTable)).thenReturn(tableService);
+    List<Partition> partitions = new ArrayList<>();
+    for (int i = 0; i < 10; ++i) {
+      partitions.add(new Partition());
+    }
+
+    when(tableService.getPartitions()).thenReturn(partitions);
+    List<Partition> results = bigQueryMetastoreClient.listPartitions(dbName, tblName, (short) -1);
+    assertEquals(10, results.size());
+  }
+
+  @Test
+  public void listPartitionsWithoutTableCachedAndPartitionsSizeNegativeReturnsAllPartitionsTest() throws TException {
+    String dbName = "db";
+    String tblName = "tbl";
+    String key = makeKey(dbName, tblName);
+    org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
+    when(cache.getTable(key)).thenReturn(null).thenReturn(hiveTable);
+
+    Table mockTable = mock(Table.class);
+    TableDefinition mockTableDefinition = mock(TableDefinition.class);
+    when(mockTable.getDefinition()).thenReturn(mockTableDefinition);
+    when(mockTableDefinition.getSchema()).thenReturn(Schema.of());
+    when(bigQueryMetastore.getTable(dbName, tblName)).thenReturn(mockTable);
+
+    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class))).thenReturn(tableService);
+    when(tableService.getTable()).thenReturn(hiveTable);
+
+    when(factory.newInstance(hiveTable)).thenReturn(tableService);
+    List<Partition> partitions = new ArrayList<>();
+    for (int i = 0; i < 10; ++i) {
+      partitions.add(new Partition());
+    }
+
+    when(tableService.getPartitions()).thenReturn(partitions);
+    List<Partition> results = bigQueryMetastoreClient.listPartitions(dbName, tblName, (short) -1);
+    assertEquals(10, results.size());
+    verify(cache).getTable(key);
+  }
 }

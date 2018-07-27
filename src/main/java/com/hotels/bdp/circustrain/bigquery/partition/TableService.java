@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.TableResult;
+import com.google.common.annotations.VisibleForTesting;
 
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 
@@ -33,7 +34,7 @@ public class TableService {
 
   private final CircusTrainBigQueryConfiguration configuration;
   private final HiveParitionKeyAdder adder;
-  private final HivePartitionGenerator factory;
+  private final HivePartitionService factory;
   private final TableResult result;
   private final com.google.cloud.bigquery.Table filteredTable;
 
@@ -41,12 +42,22 @@ public class TableService {
       CircusTrainBigQueryConfiguration configuration,
       BigQueryTableFilterer filterer,
       HiveParitionKeyAdder adder,
-      HivePartitionGenerator factory) {
+      HivePartitionService factory) {
+    this(configuration, adder, factory, filterer.filterTable(), filterer.getFilteredTable());
+  }
+
+  @VisibleForTesting
+  TableService(
+      CircusTrainBigQueryConfiguration configuration,
+      HiveParitionKeyAdder adder,
+      HivePartitionService factory,
+      TableResult result,
+      com.google.cloud.bigquery.Table filteredTable) {
     this.configuration = configuration;
     this.adder = adder;
     this.factory = factory;
-    this.result = filterer.filterTable();
-    this.filteredTable = filterer.getFilteredTable();
+    this.result = result;
+    this.filteredTable = filteredTable;
   }
 
   public Table getTable() {

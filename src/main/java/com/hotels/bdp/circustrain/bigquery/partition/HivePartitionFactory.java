@@ -15,6 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -29,13 +30,22 @@ public class HivePartitionFactory {
   HivePartitionFactory(
       String databaseName,
       String tableName,
-      String partitionValue,
+      String location,
       List<FieldSchema> cols,
-      String location) {
+      String... partitionValues) {
+    this(databaseName, tableName, location, cols, Arrays.asList(partitionValues));
+  }
+
+  HivePartitionFactory(
+      String databaseName,
+      String tableName,
+      String location,
+      List<FieldSchema> cols,
+      List<String> partitionValues) {
     this.partition = new BigQueryToHivePartitionConverter()
         .withDatabaseName(databaseName)
         .withTableName(tableName)
-        .withValue(partitionValue)
+        .withValues(partitionValues)
         .withCols(cols)
         .withLocation(location)
         .convert();

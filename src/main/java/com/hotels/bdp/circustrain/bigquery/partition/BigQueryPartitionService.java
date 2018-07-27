@@ -18,9 +18,7 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationUtils.randomTableName;
 import static com.hotels.bdp.circustrain.bigquery.util.BigQueryUriUtils.randomUri;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,20 +27,20 @@ import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
-public class BigQueryPartitionGenerator {
+class BigQueryPartitionService {
 
-  private static final Logger log = LoggerFactory.getLogger(BigQueryPartitionGenerator.class);
+  private static final Logger log = LoggerFactory.getLogger(BigQueryPartitionService.class);
 
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
-  private final String partitionValue;
   private final String sourceDBName;
   private final String sourceTableName;
   private final String partitionKey;
+  private final String partitionValue;
   private final String destinationBucket;
   private final String destinationFolder;
 
-  BigQueryPartitionGenerator(
+  BigQueryPartitionService(
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       String sourceDBName,
@@ -68,13 +66,14 @@ public class BigQueryPartitionGenerator {
     com.google.cloud.bigquery.Table part = createPartitionInBigQuery(sourceDBName, destinationTableName, statement);
 
     ExtractionUri extractionUri = scheduleForExtraction(part, destinationBucket, destinationFolder,
-        generateFileName(partitionValue));
+        generateFileName(partitionKey, partitionValue));
     return extractionUri;
 
   }
 
   private String getQueryStatement(String sourceDBName, String sourceTableName, String partitionKey, String value) {
-    return String.format("select * from %s.%s where %s = %s ignore case", sourceDBName, sourceTableName, partitionKey, value);
+    return String.format("select * from %s.%s where %s = %s ignore case", sourceDBName, sourceTableName, partitionKey,
+        value);
   }
 
   private com.google.cloud.bigquery.Table createPartitionInBigQuery(
@@ -101,10 +100,14 @@ public class BigQueryPartitionGenerator {
     return extractionUri;
   }
 
-  private String generateFileName(String value) {
-    String fileId = value.replaceAll("[^A-Za-z0-9]", "")
-        + new SimpleDateFormat("ddMMyyyyHHmmssSSSSSSS").format(new Date());
-    String fileName = fileId + "-*";
-    return fileName;
+  private String generateFileName(String partitionKey, String partitionValue) {
+    return partitionKey + "=" + pruneQuotes(partitionValue.replaceAll("\\s", "_"));
+  }
+
+  private String pruneQuotes(String partitionValue) {
+    if (partitionValue.startsWith("\"") && partitionValue.endsWith("\"")) {
+      return StringUtils.removeStart(StringUtils.removeEnd(partitionValue, "\""), "\"");
+    }
+    return partitionValue;
   }
 }

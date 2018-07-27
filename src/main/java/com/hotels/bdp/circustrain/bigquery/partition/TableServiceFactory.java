@@ -15,17 +15,14 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-
-import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationUtils.getPartitionBy;
-import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationUtils.getPartitionFilter;
 import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationUtils.randomTableName;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.Table;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
@@ -36,16 +33,37 @@ public class TableServiceFactory {
   private final CircusTrainBigQueryConfiguration configuration;
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService service;
-
-  private final Map<Table, TableService> cache = new HashMap<>();
+  private final Map<Table, TableService> cache;
+  private final PartitionQueryFactory partitionQueryFactory;
 
   public TableServiceFactory(
       CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,
       ExtractionService service) {
+    this(configuration, bigQueryMetastore, service, new HashMap<Table, TableService>());
+  }
+
+  @VisibleForTesting
+  TableServiceFactory(
+      CircusTrainBigQueryConfiguration configuration,
+      BigQueryMetastore bigQueryMetastore,
+      ExtractionService service,
+      Map<Table, TableService> cache) {
+    this(configuration, bigQueryMetastore, service, cache, new PartitionQueryFactory(configuration));
+  }
+
+  @VisibleForTesting
+  TableServiceFactory(
+      CircusTrainBigQueryConfiguration configuration,
+      BigQueryMetastore bigQueryMetastore,
+      ExtractionService service,
+      Map<Table, TableService> cache,
+      PartitionQueryFactory partitionQueryFactory) {
     this.configuration = configuration;
     this.bigQueryMetastore = bigQueryMetastore;
     this.service = service;
+    this.cache = cache;
+    this.partitionQueryFactory = partitionQueryFactory;
   }
 
   public TableService newInstance(Table hiveTable) {
@@ -53,29 +71,17 @@ public class TableServiceFactory {
       return cache.get(hiveTable);
     }
 
-    final String sqlFilterQuery = getSelectStatment(hiveTable);
+    final String sqlFilterQuery = partitionQueryFactory.get(hiveTable);
     final String datasetName = hiveTable.getDbName();
     final String tableName = randomTableName();
 
-    BigQueryTableFilterer filterer = new BigQueryTableFilterer(bigQueryMetastore, service, datasetName, tableName, sqlFilterQuery);
+    BigQueryTableFilterer filterer = new BigQueryTableFilterer(bigQueryMetastore, service, datasetName, tableName,
+        sqlFilterQuery);
     HiveParitionKeyAdder adder = new HiveParitionKeyAdder(hiveTable);
-    HivePartitionGenerator hivePartitionGenerator = new HivePartitionGenerator(hiveTable, bigQueryMetastore, service);
-    TableService service = new TableService(configuration, filterer, adder, hivePartitionGenerator);
+    HivePartitionService hivePartitionService = new HivePartitionService(hiveTable, bigQueryMetastore, service);
+    TableService service = new TableService(configuration, filterer, adder, hivePartitionService);
     cache.put(hiveTable, service);
     return service;
   }
 
-  private String getSelectStatment(Table hiveTable) {
-    final String partitionBy = getPartitionBy(configuration);
-    final String partitionFilter = getPartitionFilter(configuration);
-    if (isNotBlank(partitionBy) && isNotBlank(partitionFilter)) {
-      return String.format("select * from %s.%s where %s", hiveTable.getDbName(), hiveTable.getTableName(),
-          getPartitionFilter(configuration));
-    } else if (isNotBlank(partitionBy) && isBlank(partitionFilter)) {
-      return String.format("select %s from %s.%s group by %s order by %s", partitionBy, hiveTable.getDbName(),
-          hiveTable.getTableName(), partitionBy, partitionBy);
-    } else {
-      throw new IllegalStateException();
-    }
-  }
 }

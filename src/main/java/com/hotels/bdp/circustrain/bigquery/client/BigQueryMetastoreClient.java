@@ -183,7 +183,12 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     if (hiveTable == null) {
       hiveTable = getTable(dbName, tblName);
     }
-    return tableServiceFactory.newInstance(hiveTable).getPartitions();
+    List<Partition> partitions = tableServiceFactory.newInstance(hiveTable).getPartitions();
+    if (max < 0) {
+      return partitions;
+    }
+    int s = Math.min(max, partitions.size());
+    return partitions.subList(0, s);
   }
 
   @Override

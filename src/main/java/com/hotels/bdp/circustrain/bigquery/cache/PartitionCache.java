@@ -30,7 +30,6 @@ class PartitionCache {
 
   private static final Logger log = LoggerFactory.getLogger(PartitionCache.class);
 
-  // TODO: Test whether this can just be list of Partitions when running with multiple replications
   private final Map<String, List<Partition>> partitionCache = new HashMap<>();
 
   void add(Partition partition) {

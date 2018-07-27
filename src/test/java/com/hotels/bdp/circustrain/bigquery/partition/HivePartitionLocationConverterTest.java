@@ -15,20 +15,22 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import static com.google.api.client.repackaged.com.google.common.base.Preconditions.checkNotNull;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
 
-class HivePartitionLocationConverter {
+public class HivePartitionLocationConverterTest {
 
-  private final String extractionLocation;
-
-  HivePartitionLocationConverter(ExtractionUri extractionUri) {
-    checkNotNull(extractionUri, "extractionUri must not be null");
-    this.extractionLocation = "gs://" + extractionUri.getBucket() + "/" + extractionUri.getFolder() + "/";
+  @Test
+  public void get() {
+    ExtractionUri uri = new ExtractionUri("bucket", "folder");
+    assertEquals("gs://bucket/folder/", new HivePartitionLocationConverter(uri).get());
   }
 
-  String get() {
-    return extractionLocation;
+  @Test(expected = NullPointerException.class)
+  public void getThrowsNullPointerException() {
+    new HivePartitionLocationConverter(null);
   }
 }
