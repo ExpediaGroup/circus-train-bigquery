@@ -17,7 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 
-import static com.hotels.bdp.circustrain.bigquery.RuntimeConstants.NUM_THREADS;
+import static com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_NUM_THREADS;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,7 +74,7 @@ class HivePartitionService {
   }
 
   List<Partition> generate(final String partitionKey, Iterable<FieldValueList> results) {
-    ExecutorService executorService = Executors.newFixedThreadPool(NUM_THREADS);
+    ExecutorService executorService = Executors.newFixedThreadPool(DEFAULT_NUM_THREADS);
     List<Partition> partitions = generate(executorService, partitionKey, results);
     executorService.shutdownNow();
     return partitions;

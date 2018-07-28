@@ -15,7 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import static com.hotels.bdp.circustrain.bigquery.RuntimeConstants.NUM_THREADS;
+import static com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_NUM_THREADS;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -77,7 +77,7 @@ public class DataExtractor {
   }
 
   void extract() {
-    ExecutorService executorService = Executors.newFixedThreadPool(NUM_THREADS);
+    ExecutorService executorService = Executors.newFixedThreadPool(DEFAULT_NUM_THREADS);
     extract(executorService);
     executorService.shutdownNow();
   }
