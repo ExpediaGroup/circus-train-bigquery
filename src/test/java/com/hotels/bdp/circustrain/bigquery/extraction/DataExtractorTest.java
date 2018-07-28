@@ -18,16 +18,26 @@ package com.hotels.bdp.circustrain.bigquery.extraction;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.Queue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.cloud.RetryOption;
@@ -51,10 +61,37 @@ public class DataExtractorTest {
   private @Mock Table table;
   private @Mock Job job;
   private @Mock JobStatus jobStatus;
+  private @Mock Future future;
+  private @Mock ExecutorService executorService;
+  private Queue<ExtractionContainer> queue = new ConcurrentLinkedQueue<>();
 
   @Before
-  public void init() {
-    extractor = new DataExtractor(storage);
+  public void init() throws ExecutionException, InterruptedException {
+    initExecutor();
+    extractor = new DataExtractor(storage, queue);
+  }
+
+  private void initExecutor() {
+    Future future = mock(Future.class);
+    try {
+      when(future.get()).thenReturn(null);
+    } catch (InterruptedException | ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+    when(executorService.submit(any(Callable.class))).thenReturn(future);
+    Mockito.when(executorService.submit(Mockito.argThat(new ArgumentMatcher<Callable>() {
+      @Override
+      public boolean matches(Object argument) {
+        Callable callable = (Callable) argument;
+        try {
+          callable.call();
+        } catch (Exception e) {
+          throw new CircusTrainException(e);
+        }
+        return true;
+      }
+
+    }))).thenReturn(future);
   }
 
   @Test
@@ -68,7 +105,7 @@ public class DataExtractorTest {
     when(jobStatus.getError()).thenReturn(null);
 
     extractor.add(new ExtractionContainer(table, data, false));
-    extractor.extract();
+    extractor.extract(executorService);
 
     verify(storage).create(any(BucketInfo.class));
     verify(table).extract(eq("csv"), eq(data.getUri()));
@@ -86,7 +123,7 @@ public class DataExtractorTest {
     when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(null);
 
     extractor.add(new ExtractionContainer(table, data, false));
-    extractor.extract();
+    extractor.extract(executorService);
   }
 
   @Test
@@ -106,7 +143,7 @@ public class DataExtractorTest {
     when(jobStatus.getError()).thenReturn(new BigQueryError("reason", "getExtractedDataBaseLocation", "message"));
 
     extractor.add(new ExtractionContainer(table, data, false));
-    extractor.extract();
+    extractor.extract(executorService);
   }
 
 }

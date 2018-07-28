@@ -80,7 +80,7 @@ class BigQueryPartitionService {
       String destinationDBName,
       String destinationTableName,
       String queryStatement) {
-    log.info("Generating BigQuery partition using query {}", queryStatement);
+    log.debug("Generating BigQuery partition using query {}", queryStatement);
     bigQueryMetastore.executeIntoDestinationTable(destinationDBName, destinationTableName, queryStatement);
     com.google.cloud.bigquery.Table part = bigQueryMetastore.getTable(destinationDBName, destinationTableName);
     return part;
