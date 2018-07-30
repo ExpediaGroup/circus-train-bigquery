@@ -20,15 +20,15 @@ import org.slf4j.LoggerFactory;
 
 public final class RuntimeConstants {
 
-  public static int DEFAULT_NUM_THREADS;
+  public static final int DEFAULT_THREADPOOL_SIZE;
 
   private static final Logger log = LoggerFactory.getLogger(RuntimeConstants.class);
 
   static {
-    DEFAULT_NUM_THREADS = Runtime.getRuntime().availableProcessors() <= 0 ? 2
+    DEFAULT_THREADPOOL_SIZE = Runtime.getRuntime().availableProcessors() <= 0 ? 2
         : Runtime.getRuntime().availableProcessors() + 1;
-    log.debug("com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_NUM_THREADS set to {}",
-        DEFAULT_NUM_THREADS);
+    log.debug("com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_THREADPOOL_SIZE set to {}",
+        DEFAULT_THREADPOOL_SIZE);
   }
 
 }

@@ -15,8 +15,17 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
+import static com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_THREADPOOL_SIZE;
+
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +35,8 @@ import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
+
+import com.hotels.bdp.circustrain.api.CircusTrainException;
 
 public class DataCleaner {
 
@@ -47,71 +58,98 @@ public class DataCleaner {
     cleanupQueue.add(container);
   }
 
-  void cleanup() {
+  List<ExtractionContainer> cleanup() {
+    ExecutorService executorService = Executors.newFixedThreadPool(DEFAULT_THREADPOOL_SIZE);
+    List<ExtractionContainer> deleted = cleanup(executorService);
+    executorService.shutdown();
+    return deleted;
+  }
+
+  List<ExtractionContainer> cleanup(ExecutorService executorService) {
+    List<ExtractionContainer> deleted = new ArrayList<>(cleanupQueue);
     while (!cleanupQueue.isEmpty()) {
       ExtractionContainer container = cleanupQueue.poll();
       log.info("Cleaning data at location {}", container.getExtractionUri());
 
       Table table = container.getTable();
-      ExtractionUri extractionUri = container.getExtractionUri();
       boolean deleteTable = container.getDeleteTable();
       if (deleteTable) {
         log.debug("Deleted table. {}", container.getTable().getTableId());
         table.delete();
       }
-      deleteBucketAndContents(extractionUri.getBucket());
+      deleteBucketAndContents(executorService, container);
+    }
+    return deleted;
+  }
+
+  private void deleteBucketAndContents(ExecutorService executorService, ExtractionContainer container) {
+    if (bucketExists(container)) {
+      deleteObjectsInBucket(executorService, container);
+      deleteBucket(container);
+      log.debug("Deleted temporary bucket {} and its contents", container.getExtractionUri().getBucket());
     }
   }
 
-  private void deleteBucketAndContents(String dataBucket) {
-    if (bucketExists(dataBucket)) {
-      deleteObjectsInBucket(dataBucket);
-      deleteBucket(dataBucket);
-      log.debug("Deleted temporary bucket {} and its contents", dataBucket);
-    }
-  }
-
-  private void deleteObjectsInBucket(String dataBucket) {
+  private void deleteObjectsInBucket(ExecutorService exec, final ExtractionContainer container) {
     try {
-      Iterable<Blob> blobs = storage.list(dataBucket).iterateAll();
-      for (Blob blob : blobs) {
-        try {
-          if (blob.exists()) {
-            boolean suceeded = storage.delete(blob.getBlobId());
-            if (suceeded) {
-              log.debug("Deleted object {}", blob);
-            } else {
-              log.warn("Could not delete object {}", blob);
+      Iterable<Blob> blobs = storage.list(container.getExtractionUri().getBucket()).iterateAll();
+      List<Future<Void>> futures = new ArrayList<>();
+      try {
+        for (final Blob blob : blobs) {
+          Future<Void> future = exec.submit(new Callable<Void>() {
+            @Override
+            public Void call() {
+              deleteObject(blob);
+              return null;
             }
-          }
-        } catch (StorageException e) {
-          log.warn("Error deleting object {} in bucket {}", blob, dataBucket, e);
+          });
+          futures.add(future);
+        }
+        for (Future future : futures) {
+          future.get();
+        }
+      } catch (InterruptedException | ExecutionException e) {
+        throw new CircusTrainException(e);
+      }
+    } catch (StorageException e) {
+      log.warn("Error fetching objects in bucket {} for deletion", container.getExtractionUri().getBucket(), e);
+    }
+  }
+
+  private void deleteObject(Blob blob) {
+    try {
+      if (blob.exists()) {
+        boolean suceeded = storage.delete(blob.getBlobId());
+        if (suceeded) {
+          log.debug("Deleted object {}", blob);
+        } else {
+          log.warn("Could not delete object {}", blob);
         }
       }
     } catch (StorageException e) {
-      log.warn("Error fetching objects in bucket {} for deletion", dataBucket, e);
+      log.warn("Error deleting object {}", blob, e);
     }
   }
 
-  private void deleteBucket(String dataBucket) {
+  private void deleteBucket(ExtractionContainer container) {
     try {
-      Bucket bucket = storage.get(dataBucket);
+      Bucket bucket = storage.get(container.getExtractionUri().getBucket());
       boolean suceeded = bucket.delete();
       if (suceeded) {
-        log.info("Deleted bucket {}", dataBucket);
+        log.info("Deleted bucket {}", container.getExtractionUri().getBucket());
       } else {
-        log.warn("Could not delete bucket {}", dataBucket);
+        log.warn("Could not delete bucket {}", container.getExtractionUri().getBucket());
       }
     } catch (StorageException e) {
-      log.warn("Error deleting bucket {}", dataBucket, e);
+      log.warn("Error deleting bucket {}", container.getExtractionUri().getBucket(), e);
     }
   }
 
-  private boolean bucketExists(String bucketName) {
+  private boolean bucketExists(ExtractionContainer container) {
     try {
-      return storage.get(bucketName) != null;
+      return storage.get(container.getExtractionUri().getBucket()) != null;
     } catch (StorageException e) {
-      log.warn("Cannot verify whether bucket {} exists.", bucketName, e);
+      log.warn("Cannot verify whether bucket {} exists.", container.getExtractionUri().getBucket(), e);
       return false;
     }
   }

@@ -15,7 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction;
 
-import static com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_NUM_THREADS;
+import static com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_THREADPOOL_SIZE;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -61,25 +61,28 @@ public class DataExtractor {
     extractionQueue.add(container);
   }
 
-  void extract(ExecutorService executorService) {
+  List<ExtractionContainer> extract(ExecutorService executorService) {
     List<Future<ExtractionContainer>> futures = new ArrayList<>();
     while (!extractionQueue.isEmpty()) {
       futures.add(executorService.submit(new ExtractionTask(extractionQueue.poll())));
     }
 
-    for (Future future : futures) {
+    List<ExtractionContainer> extracted = new ArrayList<>();
+    for (Future<ExtractionContainer> future : futures) {
       try {
-        future.get();
+        extracted.add(future.get());
       } catch (InterruptedException | ExecutionException e) {
         throw new CircusTrainException("Couldn't extract table data", e);
       }
     }
+    return extracted;
   }
 
-  void extract() {
-    ExecutorService executorService = Executors.newFixedThreadPool(DEFAULT_NUM_THREADS);
-    extract(executorService);
+  List<ExtractionContainer> extract() {
+    ExecutorService executorService = Executors.newFixedThreadPool(DEFAULT_THREADPOOL_SIZE);
+    List<ExtractionContainer> extracted = extract(executorService);
     executorService.shutdownNow();
+    return extracted;
   }
 
   private synchronized void createBucket(ExtractionUri extractionUri) {
@@ -140,7 +143,7 @@ public class DataExtractor {
     }
 
     private ExtractionContainer extract() {
-      log.info("Extracting {} to {}", container.getTable().getTableId(), container.getExtractionUri());
+      log.info("Extracting table data to {}", container.getExtractionUri());
       Table table = container.getTable();
       ExtractionUri extractionUri = container.getExtractionUri();
       createBucket(extractionUri);
