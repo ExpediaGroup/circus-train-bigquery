@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -38,6 +39,8 @@ public class BigQueryToHivePartitionConverter {
     partition.setTableName("default");
     partition.setValues(new ArrayList<String>());
     partition.setLastAccessTime(0);
+    partition.setParameters(new HashMap<String, String>());
+    mockStats();
     StorageDescriptor sd = new StorageDescriptor();
     sd.setLocation("");
     sd.setParameters(new HashMap<String, String>());
@@ -104,5 +107,15 @@ public class BigQueryToHivePartitionConverter {
   public BigQueryToHivePartitionConverter withValue(String value) {
     partition.addToValues(value);
     return this;
+  }
+
+  // Work around for issue: https://issues.apache.org/jira/browse/HIVE-18767
+  // Delete this code once the fix
+  // (https://github.com/apache/hive/commit/2fe5186a337141b6fd80b40abbc8bc4226bee962#diff-2a1b7c6ec7a77f1ca9ad84225d192e36)
+  // has been released in Hive 2.3.x
+  private void mockStats() {
+    for (String key : StatsSetupConst.fastStats) {
+      partition.getParameters().put(key, "1");
+    }
   }
 }
