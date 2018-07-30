@@ -37,9 +37,9 @@ class PartitionQueryFactory {
     final String partitionBy = getPartitionBy(configuration);
     final String partitionFilter = getPartitionFilter(configuration);
     if (isNotBlank(partitionBy) && isNotBlank(partitionFilter)) {
-      //Might need to revisit this once Hive 2.3.3 issue is resolved
+      // Might need to revisit this once Hive 2.3.3 issue is resolved
       return String.format("select * from %s.%s where %s", hiveTable.getDbName(), hiveTable.getTableName(),
-          getPartitionFilter(configuration));
+          partitionFilter);
     } else if (isNotBlank(partitionBy) && isBlank(partitionFilter)) {
       return String.format("select %s from %s.%s group by %s order by %s", partitionBy, hiveTable.getDbName(),
           hiveTable.getTableName(), partitionBy, partitionBy);
