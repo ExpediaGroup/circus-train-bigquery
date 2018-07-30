@@ -15,6 +15,8 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import java.util.UUID;
 
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
@@ -37,6 +39,10 @@ final class PartitionGenerationUtils {
       return null;
     }
     return configuration.getPartitionBy().trim().toLowerCase();
+  }
+
+  static boolean partitioningIsConfigured(CircusTrainBigQueryConfiguration configuration) {
+    return isNotBlank(getPartitionBy(configuration));
   }
 
 }

@@ -15,6 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationUtils.partitioningIsConfigured;
 import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationUtils.randomTableName;
 
 import java.util.HashMap;
@@ -32,36 +33,36 @@ public class TableServiceFactory {
 
   private final CircusTrainBigQueryConfiguration configuration;
   private final BigQueryMetastore bigQueryMetastore;
-  private final ExtractionService service;
+  private final ExtractionService extractionService;
   private final Map<Table, TableService> cache;
   private final PartitionQueryFactory partitionQueryFactory;
 
   public TableServiceFactory(
       CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,
-      ExtractionService service) {
-    this(configuration, bigQueryMetastore, service, new HashMap<Table, TableService>());
+      ExtractionService extractionService) {
+    this(configuration, bigQueryMetastore, extractionService, new HashMap<Table, TableService>());
   }
 
   @VisibleForTesting
   TableServiceFactory(
       CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,
-      ExtractionService service,
+      ExtractionService extractionService,
       Map<Table, TableService> cache) {
-    this(configuration, bigQueryMetastore, service, cache, new PartitionQueryFactory(configuration));
+    this(configuration, bigQueryMetastore, extractionService, cache, new PartitionQueryFactory(configuration));
   }
 
   @VisibleForTesting
   TableServiceFactory(
       CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,
-      ExtractionService service,
+      ExtractionService extractionService,
       Map<Table, TableService> cache,
       PartitionQueryFactory partitionQueryFactory) {
     this.configuration = configuration;
     this.bigQueryMetastore = bigQueryMetastore;
-    this.service = service;
+    this.extractionService = extractionService;
     this.cache = cache;
     this.partitionQueryFactory = partitionQueryFactory;
   }
@@ -71,17 +72,23 @@ public class TableServiceFactory {
       return cache.get(hiveTable);
     }
 
-    final String sqlFilterQuery = partitionQueryFactory.get(hiveTable);
-    final String datasetName = hiveTable.getDbName();
-    final String tableName = randomTableName();
+    TableService tableService = null;
+    if (partitioningIsConfigured(configuration)) {
+      final String sqlFilterQuery = partitionQueryFactory.get(hiveTable);
+      final String datasetName = hiveTable.getDbName();
+      final String tableName = randomTableName();
 
-    BigQueryTableFilterer filterer = new BigQueryTableFilterer(bigQueryMetastore, service, datasetName, tableName,
-        sqlFilterQuery);
-    HiveParitionKeyAdder adder = new HiveParitionKeyAdder(hiveTable);
-    HivePartitionService hivePartitionService = new HivePartitionService(hiveTable, bigQueryMetastore, service);
-    TableService service = new TableService(configuration, filterer, adder, hivePartitionService);
-    cache.put(hiveTable, service);
-    return service;
+      BigQueryTableFilterer filterer = new BigQueryTableFilterer(bigQueryMetastore, extractionService, datasetName,
+          tableName, sqlFilterQuery);
+      HiveParitionKeyAdder adder = new HiveParitionKeyAdder(hiveTable);
+      HivePartitionService hivePartitionService = new HivePartitionService(hiveTable, bigQueryMetastore,
+          extractionService);
+      tableService = new PartitionedTableService(configuration, filterer, adder, hivePartitionService);
+    } else {
+      tableService = new UnpartitionedTableService(hiveTable);
+    }
+    cache.put(hiveTable, tableService);
+    return tableService;
   }
 
 }

@@ -39,7 +39,7 @@ import com.google.cloud.bigquery.TableResult;
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 
 @RunWith(MockitoJUnitRunner.class)
-public class TableServiceTest {
+public class PartitionedTableServiceTest {
 
   private CircusTrainBigQueryConfiguration configuration = new CircusTrainBigQueryConfiguration();
   private @Mock HiveParitionKeyAdder adder;
@@ -48,11 +48,11 @@ public class TableServiceTest {
   private @Mock TableResult result;
   private @Mock com.google.cloud.bigquery.Table filteredTable;
 
-  private TableService tableService;
+  private PartitionedTableService partitionedTableService;
 
   @Before
   public void init() {
-    tableService = new TableService(configuration, adder, factory, result, filteredTable);
+    partitionedTableService = new PartitionedTableService(configuration, adder, factory, result, filteredTable);
   }
 
   @Test
@@ -63,7 +63,7 @@ public class TableServiceTest {
     when(filteredTable.getDefinition()).thenReturn(definition);
     Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
     when(definition.getSchema()).thenReturn(schema);
-    tableService.getTable();
+    partitionedTableService.getTable();
     Mockito.verify(adder).add(eq(partitionBy), eq(schema));
   }
 
@@ -78,7 +78,7 @@ public class TableServiceTest {
     List<FieldValueList> rows = new ArrayList<>();
     when(result.iterateAll()).thenReturn(rows);
 
-    tableService.getPartitions();
+    partitionedTableService.getPartitions();
 
     Mockito.verify(factory).generate(eq(partitionBy), eq(rows));
   }

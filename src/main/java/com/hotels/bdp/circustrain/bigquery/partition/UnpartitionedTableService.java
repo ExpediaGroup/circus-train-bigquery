@@ -15,13 +15,27 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 
-public interface TableService {
-  public Table getTable();
+class UnpartitionedTableService implements TableService {
 
-  public List<Partition> getPartitions();
+  private final Table table;
+
+  UnpartitionedTableService(Table table) {
+    this.table = table;
+  }
+
+  @Override
+  public Table getTable() {
+    return new Table(table);
+  }
+
+  @Override
+  public List<Partition> getPartitions() {
+    return new ArrayList<>();
+  }
 }

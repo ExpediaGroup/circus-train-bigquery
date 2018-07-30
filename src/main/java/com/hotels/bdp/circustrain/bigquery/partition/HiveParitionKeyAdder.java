@@ -15,6 +15,8 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import static jodd.util.StringUtil.isBlank;
+
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 
@@ -32,7 +34,7 @@ class HiveParitionKeyAdder {
   }
 
   Table add(String partitionKey, Schema filteredTableSchema) {
-    if (filteredTableSchema == null) {
+    if (isBlank(partitionKey) || filteredTableSchema == null) {
       return new Table(table);
     }
 
