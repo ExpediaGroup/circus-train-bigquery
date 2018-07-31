@@ -24,20 +24,23 @@ import static com.hotels.bdp.circustrain.bigquery.partition.PartitionGenerationU
 import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
+import com.hotels.bdp.circustrain.core.conf.SpringExpressionParser;
 
 class PartitionQueryFactory {
 
   private final CircusTrainBigQueryConfiguration configuration;
+  private final SpringExpressionParser expressionParser;
 
-  PartitionQueryFactory(CircusTrainBigQueryConfiguration configuration) {
+  PartitionQueryFactory(CircusTrainBigQueryConfiguration configuration, SpringExpressionParser expressionParser) {
     this.configuration = configuration;
+    this.expressionParser = expressionParser;
   }
 
   String get(Table hiveTable) {
     final String partitionBy = getPartitionBy(configuration);
-    final String partitionFilter = getPartitionFilter(configuration);
+    String partitionFilter = getPartitionFilter(configuration);
     if (isNotBlank(partitionBy) && isNotBlank(partitionFilter)) {
-      // Might need to revisit this once Hive 2.3.3 issue is resolved
+      partitionFilter = expressionParser.parse(partitionFilter);
       return String.format("select * from %s.%s where %s", hiveTable.getDbName(), hiveTable.getTableName(),
           partitionFilter);
     } else if (isNotBlank(partitionBy) && isBlank(partitionFilter)) {

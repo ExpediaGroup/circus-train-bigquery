@@ -24,13 +24,13 @@ public class BigQueryMetastoreClientFactoryTest {
 
   @Test
   public void acceptsBigQueryUri() {
-    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
+    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null, null);
     assertTrue(factory.accepts("bigquery://my-project-id"));
   }
 
   @Test
   public void rejectsThriftUri() {
-    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
+    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null, null);
     assertFalse(factory.accepts("thrift://my-thrift-uri"));
   }
 }

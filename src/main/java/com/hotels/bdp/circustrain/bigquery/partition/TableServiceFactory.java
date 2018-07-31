@@ -28,6 +28,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.core.conf.SpringExpressionParser;
 
 public class TableServiceFactory {
 
@@ -40,8 +41,9 @@ public class TableServiceFactory {
   public TableServiceFactory(
       CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,
-      ExtractionService extractionService) {
-    this(configuration, bigQueryMetastore, extractionService, new HashMap<Table, TableService>());
+      ExtractionService extractionService,
+      SpringExpressionParser expressionParser) {
+    this(configuration, bigQueryMetastore, extractionService, expressionParser, new HashMap<Table, TableService>());
   }
 
   @VisibleForTesting
@@ -49,8 +51,10 @@ public class TableServiceFactory {
       CircusTrainBigQueryConfiguration configuration,
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
+      SpringExpressionParser expressionParser,
       Map<Table, TableService> cache) {
-    this(configuration, bigQueryMetastore, extractionService, cache, new PartitionQueryFactory(configuration));
+    this(configuration, bigQueryMetastore, extractionService, cache,
+        new PartitionQueryFactory(configuration, expressionParser));
   }
 
   @VisibleForTesting
