@@ -25,8 +25,12 @@ public final class RuntimeConstants {
   private static final Logger log = LoggerFactory.getLogger(RuntimeConstants.class);
 
   static {
-    DEFAULT_THREADPOOL_SIZE = Runtime.getRuntime().availableProcessors() <= 0 ? 2
-        : Runtime.getRuntime().availableProcessors() + 1;
+    final int cores = Runtime.getRuntime().availableProcessors();
+    if (cores <= 0) {
+      DEFAULT_THREADPOOL_SIZE = 2;
+    } else {
+      DEFAULT_THREADPOOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
+    }
     log.debug("com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_THREADPOOL_SIZE set to {}",
         DEFAULT_THREADPOOL_SIZE);
   }
