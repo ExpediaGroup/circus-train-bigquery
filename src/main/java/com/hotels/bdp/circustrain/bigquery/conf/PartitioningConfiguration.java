@@ -76,7 +76,6 @@ public class PartitioningConfiguration {
     if (replicationConfigMap.containsKey(key)) {
       Object o = replicationConfigMap.get(key).get(PARTITION_BY);
       if (o == null) {
-        log.info("Object is null");
         return null;
       }
       return o.toString();
