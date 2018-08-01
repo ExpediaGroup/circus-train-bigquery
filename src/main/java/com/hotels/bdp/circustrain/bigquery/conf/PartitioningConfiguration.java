@@ -40,7 +40,6 @@ public class PartitioningConfiguration {
 
   private static final Logger log = LoggerFactory.getLogger(PartitioningConfiguration.class);
 
-  // TODO: Write Test
   private final HashMap<String, Map<String, Object>> replicationConfigMap = new HashMap<>();
 
   @Autowired
