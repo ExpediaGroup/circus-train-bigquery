@@ -44,8 +44,4 @@ class TableCache {
     log.debug("Adding table {} to cache", key);
     tableCache.put(key, table);
   }
-
-  void clear() {
-    tableCache.clear();
-  }
 }

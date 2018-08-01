@@ -56,8 +56,4 @@ class PartitionCache {
     log.info("Getting partitions for key {}", key);
     return partitionCache.get(key);
   }
-
-  void clear() {
-    partitionCache.clear();
-  }
 }

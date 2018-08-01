@@ -50,7 +50,7 @@ public class DataCleaner {
     this(storage, new LinkedList<ExtractionContainer>());
   }
 
-  DataCleaner(Storage storage, Queue<ExtractionContainer> cleanupQueue) {
+  private DataCleaner(Storage storage, Queue<ExtractionContainer> cleanupQueue) {
     this.storage = storage;
     this.cleanupQueue = cleanupQueue;
   }

@@ -48,10 +48,4 @@ public class MetastoreClientCache {
   public void cacheTable(Table table) {
     tableCache.add(table);
   }
-
-  public void clear() {
-    partitionCache.clear();
-    tableCache.clear();
-  }
-
 }
