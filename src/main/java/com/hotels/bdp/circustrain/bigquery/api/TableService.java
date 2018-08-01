@@ -13,24 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.partition;
+package com.hotels.bdp.circustrain.bigquery.api;
 
-import static org.junit.Assert.assertEquals;
+import java.util.List;
 
-import org.junit.Test;
+import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.Table;
 
-import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+public interface TableService {
+  public Table getTable();
 
-public class HivePartitionLocationConverterTest {
-
-  @Test
-  public void get() {
-    ExtractionUri uri = new ExtractionUri("bucket", "folder");
-    assertEquals("gs://bucket/folder/", new HivePartitionLocationConverter(uri).get());
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void getThrowsNullPointerException() {
-    new HivePartitionLocationConverter(null);
-  }
+  public List<Partition> getPartitions();
 }

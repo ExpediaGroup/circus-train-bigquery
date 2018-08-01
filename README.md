@@ -16,8 +16,14 @@ You can obtain Circus Train BigQuery from Maven Central:
 * Provide your BigQuery dataset as `source-table` `database-name` and your BigQuery table name as `source-table` `table-name`
 
 
-#### Example:
+## Partition Generation
+Circus Train BigQuery allows you to add a partition to your Hive destination table upon replication from BigQuery to Hive. The user can configure a partition by setting the `table-replications[n].copier-option : circus-train-bigquery-partition-by` property on your specific table replication within your Circus Train configuration file.
+The destination data will be repartitioned on the specified column. Once your destination data is Partitioned you can also specify a partition filter using the `table-replications[n].copier-option : circus-train-bigquery-partition-filter` clause. The partition filter is a SQL boolean statement which will be used to filter your data for replication.
+You can think of the partition filter being executed as `select * from db.table where %s` where `%s` is substituted by your partition filter. Only the rows returned by your query will be replicated. To use the partition filter you must have the partition by option configured to your tables singular partition.
 
+### Examples:
+
+#### Simple Configuration
     source-catalog:
       name: my-google-source-catalog
       hive-metastore-uris: bigquery://my-gcp-project-id
@@ -35,6 +41,53 @@ You can obtain Circus Train BigQuery from Maven Central:
         database-name: myreplicadb
         table-name: bigquery_google_ads_data
         table-location: s3://mybucket/foo/baz/
+
+#### Configuration with partition generation configured
+    source-catalog:
+      name: bigquery-source
+      hive-metastore-uris: bigquery://foobar
+    replica-catalog:
+      name: local-host-destination
+      hive-metastore-uris: thrift://localhost:9083
+
+    gcp-security:
+      credential-provider: /.gcp/key.json
+
+    table-replications:
+      -
+        source-table:
+          database-name: bdp
+          table-name: bigquery_source
+        replica-table:
+          database-name: bdp
+          table-name: hive_replica
+          table-location: s3://bucket/foo/bar/
+        copier-options:
+          circustrain-bigquery-partition-by: date
+
+#### Configuration with partition filter configured
+    source-catalog:
+      name: bigquery-source
+      hive-metastore-uris: bigquery://foobar
+    replica-catalog:
+      name: local-host-destination
+      hive-metastore-uris: thrift://localhost:9083
+
+    gcp-security:
+      credential-provider: /.gcp/key.json
+
+    table-replications:
+      -
+        source-table:
+          database-name: bdp
+          table-name: bigquery_source
+        replica-table:
+          database-name: bdp
+          table-name: hive_replica
+          table-location: s3://bucket/foo/bar/
+        copier-options:
+          circustrain-bigquery-partition-by: date
+          circustrain-bigquery-partition-filter: date BETWEEN TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL -150 DAY) AND CURRENT_TIMESTAMP())
 
 
 #### Technical Overview

@@ -28,7 +28,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
-import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
 import com.hotels.bdp.circustrain.core.conf.SpringExpressionParser;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -49,22 +48,17 @@ public class PartitionQueryFactoryTest {
 
   @Test(expected = IllegalStateException.class)
   public void notConfiguredThrowsException() {
-    CircusTrainBigQueryConfiguration configuration = new CircusTrainBigQueryConfiguration();
-    new PartitionQueryFactory(configuration, expressionParser).get(new Table());
+    new PartitionQueryFactory(expressionParser).get(new Table(), null, null);
   }
 
   @Test(expected = IllegalStateException.class)
   public void partitionFilterOnlyConfiguredThrowsException() {
-    CircusTrainBigQueryConfiguration configuration = new CircusTrainBigQueryConfiguration();
-    configuration.setPartitionFilter("foo > 5");
-    new PartitionQueryFactory(configuration, expressionParser).get(new Table());
+    new PartitionQueryFactory(expressionParser).get(new Table(), null, "foo > 5");
   }
 
   @Test
   public void configurePartitionByOnly() {
-    CircusTrainBigQueryConfiguration configuration = new CircusTrainBigQueryConfiguration();
     String partitionKey = "foo";
-    configuration.setPartitionBy(partitionKey);
     Table table = new Table();
     String dbName = "db";
     String tblName = "tbl";
@@ -72,22 +66,19 @@ public class PartitionQueryFactoryTest {
     table.setTableName(tblName);
     String expected = String.format("select %s from %s.%s group by %s order by %s", partitionKey, dbName, tblName,
         partitionKey, partitionKey);
-    assertEquals(expected, new PartitionQueryFactory(configuration, expressionParser).get(table));
+    assertEquals(expected, new PartitionQueryFactory(expressionParser).get(table, partitionKey, null));
   }
 
   @Test
   public void configurePartitionByAndPartitionFilter() {
-    CircusTrainBigQueryConfiguration configuration = new CircusTrainBigQueryConfiguration();
     String partitionKey = "foo";
     String partitionFilter = "foo > 5";
-    configuration.setPartitionBy(partitionKey);
-    configuration.setPartitionFilter(partitionFilter);
     Table table = new Table();
     String dbName = "db";
     String tblName = "tbl";
     table.setDbName(dbName);
     table.setTableName(tblName);
     String expected = String.format("select * from %s.%s where %s", dbName, tblName, partitionFilter);
-    assertEquals(expected, new PartitionQueryFactory(configuration, expressionParser).get(table));
+    assertEquals(expected, new PartitionQueryFactory(expressionParser).get(table, partitionKey, partitionFilter));
   }
 }

@@ -29,7 +29,7 @@ import java.util.List;
 import org.junit.Test;
 
 import com.hotels.bdp.circustrain.api.copier.CopierFactory;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
 public class BigQueryCopierFactoryTest {
 

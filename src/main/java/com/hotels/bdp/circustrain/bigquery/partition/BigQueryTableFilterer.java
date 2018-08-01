@@ -17,21 +17,21 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 
 import com.google.cloud.bigquery.TableResult;
 
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 
-class BigQueryTableFilterer {
+public class BigQueryTableFilterer {
 
-  private final BigQueryMetastore bigQueryMetastore;
+  private final CircusTrainBigQueryMetastore bigQueryMetastore;
   private final ExtractionService service;
   private final String databaseName;
   private final String tableName;
   private final String filterQuery;
 
-  BigQueryTableFilterer(
-      BigQueryMetastore bigQueryMetastore,
+  public BigQueryTableFilterer(
+      CircusTrainBigQueryMetastore bigQueryMetastore,
       ExtractionService service,
       String databaseName,
       String tableName,
@@ -43,11 +43,11 @@ class BigQueryTableFilterer {
     this.filterQuery = filterQuery;
   }
 
-  TableResult filterTable() {
+  public TableResult filterTable() {
     return bigQueryMetastore.executeIntoDestinationTable(databaseName, tableName, filterQuery);
   }
 
-  com.google.cloud.bigquery.Table getFilteredTable() {
+  public com.google.cloud.bigquery.Table getFilteredTable() {
     com.google.cloud.bigquery.Table filteredTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();

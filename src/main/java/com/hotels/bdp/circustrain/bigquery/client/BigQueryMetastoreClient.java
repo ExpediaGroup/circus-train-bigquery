@@ -15,7 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.client;
 
-import static com.hotels.bdp.circustrain.bigquery.util.BigQueryKey.makeKey;
+import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryKey.makeKey;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -95,24 +95,24 @@ import org.slf4j.LoggerFactory;
 
 import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.partition.TableServiceFactory;
-import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
+import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
 class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryMetastoreClient.class);
 
-  private final BigQueryMetastore bigQueryMetastore;
+  private final CircusTrainBigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
   private final TableServiceFactory tableServiceFactory;
   private final MetastoreClientCache cache;
 
   BigQueryMetastoreClient(
-      BigQueryMetastore bigQueryMetastore,
+      CircusTrainBigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       MetastoreClientCache metastoreClientCache,
       TableServiceFactory tableServiceFactory) {

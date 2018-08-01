@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.hotels.bdp.circustrain.api.event.EventTableReplication;
 import com.hotels.bdp.circustrain.api.event.TableReplicationListener;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
 public class BigQueryReplicationListener implements TableReplicationListener {
 

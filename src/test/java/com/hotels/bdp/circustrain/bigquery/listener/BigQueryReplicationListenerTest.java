@@ -36,7 +36,7 @@ import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.api.event.EventReplicaTable;
 import com.hotels.bdp.circustrain.api.event.EventSourceTable;
 import com.hotels.bdp.circustrain.api.event.EventTableReplication;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryReplicationListenerTest {

@@ -15,7 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.cache;
 
-import static com.hotels.bdp.circustrain.bigquery.util.BigQueryKey.makeKey;
+import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryKey.makeKey;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +33,7 @@ class PartitionCache {
   private final Map<String, List<Partition>> partitionCache = new HashMap<>();
 
   void add(Partition partition) {
-    String partitionKey = makeKey(partition.getDbName(), partition.getTableName());
+    String partitionKey = makeKey(partition);
     log.debug("Adding partition with key {} to cache", partitionKey);
 
     if (partitionCache.containsKey(partitionKey)) {

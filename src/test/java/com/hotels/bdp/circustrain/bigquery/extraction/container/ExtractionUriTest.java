@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.client;
+package com.hotels.bdp.circustrain.bigquery.extraction.container;
 
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class BigQueryMetastoreClientFactoryTest {
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+
+public class ExtractionUriTest {
 
   @Test
-  public void acceptsBigQueryUri() {
-    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
-    assertTrue(factory.accepts("bigquery://my-project-id"));
+  public void constructionTest() {
+    ExtractionUri data = new ExtractionUri("bucket", "folder", "file", "csv");
+    assertEquals("bucket", data.getBucket());
+    assertEquals("folder", data.getFolder());
+    assertEquals("csv", data.getFormat());
+    assertEquals("folder/file.csv", data.getKey());
+    assertEquals("gs://bucket/folder/file.csv", data.getUri());
   }
 
-  @Test
-  public void rejectsThriftUri() {
-    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
-    assertFalse(factory.accepts("thrift://my-thrift-uri"));
-  }
 }

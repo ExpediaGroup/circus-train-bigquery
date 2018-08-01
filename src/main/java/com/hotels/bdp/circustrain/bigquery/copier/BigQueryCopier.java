@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.api.copier.Copier;
 import com.hotels.bdp.circustrain.api.metrics.Metrics;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
 public class BigQueryCopier implements Copier {
 

@@ -13,22 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.partition;
+package com.hotels.bdp.circustrain.bigquery.util;
 
-import static com.google.api.client.repackaged.com.google.common.base.Preconditions.checkNotNull;
+import java.util.UUID;
 
-import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+public final class CircusTrainBigQueryUriUtils {
 
-class HivePartitionLocationConverter {
-
-  private final String extractionLocation;
-
-  HivePartitionLocationConverter(ExtractionUri extractionUri) {
-    checkNotNull(extractionUri, "extractionUri must not be null");
-    this.extractionLocation = "gs://" + extractionUri.getBucket() + "/" + extractionUri.getFolder() + "/";
+  public static String randomUri() {
+    return UUID.randomUUID().toString().toLowerCase();
   }
 
-  String get() {
-    return extractionLocation;
-  }
 }

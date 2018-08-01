@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import org.junit.Test;
 
 import com.hotels.bdp.circustrain.api.copier.Copier;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
 public class BigQueryCopierTest {
 

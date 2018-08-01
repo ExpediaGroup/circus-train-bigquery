@@ -24,7 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import static com.hotels.bdp.circustrain.bigquery.util.BigQueryKey.makeKey;
+import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryKey.makeKey;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,10 +48,10 @@ import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableDefinition;
 
 import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.partition.PartitionedTableService;
-import com.hotels.bdp.circustrain.bigquery.partition.TableServiceFactory;
-import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.table.service.partitioned.PartitionedTableService;
+import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
+import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryMetastoreClientTest {
@@ -63,7 +63,8 @@ public class BigQueryMetastoreClientTest {
   PartitionedTableService partitionedTableService;
   private @Mock MetastoreClientCache cache;
   private @Mock Job job;
-  private @Mock BigQueryMetastore bigQueryMetastore;
+  private @Mock
+  CircusTrainBigQueryMetastore bigQueryMetastore;
   private @Mock JobStatus jobStatus;
 
   private BigQueryMetastoreClient bigQueryMetastoreClient;

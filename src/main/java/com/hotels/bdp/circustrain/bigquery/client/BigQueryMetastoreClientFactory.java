@@ -21,11 +21,9 @@ import org.springframework.stereotype.Component;
 
 import com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants;
 import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
-import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.partition.TableServiceFactory;
-import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
-import com.hotels.bdp.circustrain.core.conf.SpringExpressionParser;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
+import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 import com.hotels.bdp.circustrain.core.metastore.ConditionalMetaStoreClientFactory;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 import com.hotels.hcommon.hive.metastore.exception.MetaStoreClientException;
@@ -37,12 +35,11 @@ public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClien
 
   @Autowired
   BigQueryMetastoreClientFactory(
-      CircusTrainBigQueryConfiguration configuration,
-      BigQueryMetastore bigQueryMetastore,
+      CircusTrainBigQueryMetastore bigQueryMetastore,
       ExtractionService service,
-      SpringExpressionParser expressionParser) {
+      TableServiceFactory tableServiceFactory) {
     this.metastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, service, new MetastoreClientCache(),
-        new TableServiceFactory(configuration, bigQueryMetastore, service, expressionParser));
+        tableServiceFactory);
   }
 
   @Override

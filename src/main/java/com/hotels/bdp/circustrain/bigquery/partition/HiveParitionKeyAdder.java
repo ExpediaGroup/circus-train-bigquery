@@ -25,15 +25,15 @@ import com.google.cloud.bigquery.Schema;
 
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTypeConverter;
 
-class HiveParitionKeyAdder {
+public class HiveParitionKeyAdder {
 
   private final Table table;
 
-  HiveParitionKeyAdder(Table table) {
+  public HiveParitionKeyAdder(Table table) {
     this.table = table;
   }
 
-  Table add(String partitionKey, Schema filteredTableSchema) {
+  public Table add(String partitionKey, Schema filteredTableSchema) {
     if (isBlank(partitionKey) || filteredTableSchema == null) {
       return new Table(table);
     }

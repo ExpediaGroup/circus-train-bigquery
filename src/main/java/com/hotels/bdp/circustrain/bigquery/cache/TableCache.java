@@ -15,7 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.cache;
 
-import static com.hotels.bdp.circustrain.bigquery.util.BigQueryKey.makeKey;
+import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryKey.makeKey;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +40,7 @@ class TableCache {
   }
 
   void add(Table table) {
-    String key = makeKey(table.getDbName(), table.getTableName());
+    String key = makeKey(table);
     log.debug("Adding table {} to cache", key);
     tableCache.put(key, table);
   }

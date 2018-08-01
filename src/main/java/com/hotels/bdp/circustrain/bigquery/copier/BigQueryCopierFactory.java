@@ -36,7 +36,7 @@ import com.hotels.bdp.circustrain.api.Modules;
 import com.hotels.bdp.circustrain.api.copier.Copier;
 import com.hotels.bdp.circustrain.api.copier.CopierFactory;
 import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryCondition;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
 @Component
 @Profile({ Modules.REPLICATION })

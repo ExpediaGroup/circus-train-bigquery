@@ -24,16 +24,17 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainer;
-import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryTableFiltererTest {
 
   private BigQueryTableFilterer filterer;
 
-  private @Mock BigQueryMetastore bigQueryMetastore;
+  private @Mock
+  CircusTrainBigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService service;
 
   private final String databaseName = "db";
