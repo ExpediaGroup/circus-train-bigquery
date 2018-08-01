@@ -55,10 +55,6 @@ public class PartitioningConfiguration {
       }
       log.info("Loading BigQuery partitioning configuration for table {}", key);
       replicationConfigMap.put(key, tableReplication.getCopierOptions());
-      for (Map.Entry<String, Object> e : tableReplication.getCopierOptions().entrySet()) {
-        if (e != null)
-          log.info(e.toString());
-      }
     }
   }
 
