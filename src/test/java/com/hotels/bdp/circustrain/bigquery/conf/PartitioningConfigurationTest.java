@@ -41,19 +41,15 @@ public class PartitioningConfigurationTest {
   private static final String DB_NAME = "db";
   private static final String TABLE_NAME = "table";
 
-  private TableReplications tableReplications;
-  private Map<String, Object> copierOptions;
-  private SourceTable sourceTable;
-  private Table table;
+  private TableReplications tableReplications = new TableReplications();
+  private Map<String, Object> copierOptions = new HashMap<>();
+  private SourceTable sourceTable = new SourceTable();
+  private Table table = new Table();
 
   private PartitioningConfiguration configuration;
 
   @Before
   public void init() {
-    tableReplications = new TableReplications();
-    sourceTable = new SourceTable();
-    copierOptions = new HashMap<>();
-    table = new Table();
     table.setDbName(DB_NAME);
     table.setTableName(TABLE_NAME);
     sourceTable.setDatabaseName(table.getDbName());

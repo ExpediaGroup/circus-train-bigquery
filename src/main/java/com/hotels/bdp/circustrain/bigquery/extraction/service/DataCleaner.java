@@ -75,8 +75,8 @@ public class DataCleaner {
       Table table = container.getTable();
       boolean deleteTable = container.getDeleteTable();
       if (deleteTable) {
-        log.debug("Deleted table. {}", container.getTable().getTableId());
         table.delete();
+        log.debug("Deleted table. {}", container.getTable().getTableId());
       }
       deleteBucketAndContents(executorService, container);
     }

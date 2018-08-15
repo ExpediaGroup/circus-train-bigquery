@@ -50,7 +50,7 @@ public class PartitioningConfiguration {
           sourceTable.getTableName().trim().toLowerCase());
       if (replicationConfigMap.containsKey(key)) {
         throw new CircusTrainException(
-            "Partitioning can not be carried out when there are duplicate source tables with partitioning configured");
+            "Partitioning cannot be carried out when there are duplicate source tables with partitioning configured");
       }
       log.info("Loading BigQuery partitioning configuration for table {}", key);
       replicationConfigMap.put(key, tableReplication.getCopierOptions());
@@ -61,11 +61,10 @@ public class PartitioningConfiguration {
     String key = makeKey(table);
     log.info("Loading 'partition-filter' for table {}", key);
     if (replicationConfigMap.containsKey(key)) {
-      Object o = replicationConfigMap.get(key).get(PARTITION_FILTER);
-      if (o == null) {
-        return null;
+      Object yamlValue = replicationConfigMap.get(key).get(PARTITION_FILTER);
+      if (yamlValue != null) {
+        return yamlValue.toString();
       }
-      return o.toString();
     }
     return null;
   }
@@ -74,11 +73,10 @@ public class PartitioningConfiguration {
     String key = makeKey(table);
     log.info("Loading 'partition-by' for table {}", key);
     if (replicationConfigMap.containsKey(key)) {
-      Object o = replicationConfigMap.get(key).get(PARTITION_BY);
-      if (o == null) {
-        return null;
+      Object yamlValue = replicationConfigMap.get(key).get(PARTITION_BY);
+      if (yamlValue != null) {
+        return yamlValue.toString();
       }
-      return o.toString();
     }
     return null;
   }

@@ -15,7 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction.container;
 
-import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryUriUtils.randomUri;
+import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomUri;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 

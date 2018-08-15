@@ -17,10 +17,16 @@ package com.hotels.bdp.circustrain.bigquery.util;
 
 import java.util.UUID;
 
-public class RandomStringGenerationUtils {
+public final class RandomStringGenerationUtils {
+
+  private RandomStringGenerationUtils() {}
 
   public static String randomTableName() {
     return UUID.randomUUID().toString().replaceAll("-", "_");
+  }
+
+  public static String randomUri() {
+    return UUID.randomUUID().toString().toLowerCase();
   }
 
 }

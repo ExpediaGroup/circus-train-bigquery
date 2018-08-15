@@ -41,10 +41,10 @@ import com.google.common.base.Optional;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHivePartitionConverter;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory;
-import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 
 public class HivePartitionGenerator {
@@ -169,10 +169,10 @@ public class HivePartitionGenerator {
     }
 
     private com.google.common.base.Optional<Partition> generatePartition() {
-      Object o = row.get(partitionKey).getValue();
-      if (o != null) {
-        final String originalValue = o.toString();
-        final String formattedValue = formatter.format(objectToHiveString(o));
+      Object partitionValue = row.get(partitionKey).getValue();
+      if (partitionValue != null) {
+        final String originalValue = partitionValue.toString();
+        final String formattedValue = formatter.format(objectToHiveString(partitionValue));
         ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
             sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder).generatePart();
 
@@ -185,8 +185,8 @@ public class HivePartitionGenerator {
       return com.google.common.base.Optional.absent();
     }
 
-    private String objectToHiveString(Object o) {
-      final String originalValue = o.toString();
+    private String objectToHiveString(Object partitionValue) {
+      final String originalValue = partitionValue.toString();
       if (isBlank(originalValue)) {
         return "__HIVE_DEFAULT_PARTITION__";
       }

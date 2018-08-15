@@ -55,6 +55,9 @@ import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryMetastoreClientTest {
 
+  private final String dbName = "database";
+  private final String tblName = "table";
+
   private @Mock BigQuery bigQuery;
   private @Mock ExtractionService extractionService;
   private @Mock TableServiceFactory factory;
@@ -91,48 +94,39 @@ public class BigQueryMetastoreClientTest {
     Table table = mock(Table.class);
     when(bigQuery.getDataset(anyString())).thenReturn(dataset);
     when(dataset.get(anyString())).thenReturn(table);
-    String dbName = "database";
-    String tblName = "table";
     bigQueryMetastoreClient.tableExists(dbName, tblName);
     verify(bigQueryMetastore).tableExists(dbName, tblName);
   }
 
   @Test(expected = UnknownDBException.class)
   public void tableExistsWhenDatabaseDoesntExistThrowsExceptionTest() throws TException {
-    String dbName = "database";
-    String tblName = "table";
     doThrow(new UnknownDBException()).when(bigQueryMetastore).tableExists(dbName, tblName);
     bigQueryMetastoreClient.tableExists(dbName, tblName);
   }
 
   @Test
   public void tableExistsReturnsFalseWhenTableDoesntExist() throws TException {
-    String dbName = "database";
-    String tblName = "table";
     when(bigQueryMetastore.tableExists(dbName, tblName)).thenReturn(false);
     assertFalse(bigQueryMetastoreClient.tableExists("database", "table"));
   }
 
   @Test
   public void getTableTestPartitioningNotConfigured() throws TException, InterruptedException {
-    String dbName = "database";
-    String tableName = "table";
-
     Table mockTable = mock(Table.class);
     TableDefinition mockTableDefinition = mock(TableDefinition.class);
     when(mockTable.getDefinition()).thenReturn(mockTableDefinition);
     when(mockTableDefinition.getSchema()).thenReturn(Schema.of());
-    when(bigQueryMetastore.getTable(dbName, tableName)).thenReturn(mockTable);
+    when(bigQueryMetastore.getTable(dbName, tblName)).thenReturn(mockTable);
 
     org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
     when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class)))
         .thenReturn(partitionedTableService);
     when(partitionedTableService.getTable()).thenReturn(hiveTable);
 
-    bigQueryMetastoreClient.getTable(dbName, tableName);
+    bigQueryMetastoreClient.getTable(dbName, tblName);
 
-    verify(cache).contains(dbName, tableName);
-    verify(bigQueryMetastore).getTable(dbName, tableName);
+    verify(cache).contains(dbName, tblName);
+    verify(bigQueryMetastore).getTable(dbName, tblName);
     verify(cache).add(any(org.apache.hadoop.hive.metastore.api.Table.class));
     verify(factory).newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class));
     verify(partitionedTableService).getTable();

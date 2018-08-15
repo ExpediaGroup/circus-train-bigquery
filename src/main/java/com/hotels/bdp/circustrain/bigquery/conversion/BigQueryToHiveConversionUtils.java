@@ -25,7 +25,9 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 
-class BigQueryToHiveConversionUtils {
+final class BigQueryToHiveConversionUtils {
+
+  private BigQueryToHiveConversionUtils() {}
 
   static List<FieldSchema> getCols(Schema schema) {
     BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();

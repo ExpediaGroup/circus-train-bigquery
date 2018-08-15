@@ -18,43 +18,35 @@ package com.hotels.bdp.circustrain.bigquery.conversion;
 public class BigQueryToHiveTypeConverter {
   public String convert(String type) {
     type = type.toUpperCase();
-    if ("STRING".equals(type)) {
-      return "STRING";
+    switch (type) {
+      case "STRING":
+      case "BYTES":
+      case "DATE":
+      case "DATETIME":
+      case "TIME":
+      case "TIMESTAMP": {
+        return "STRING";
+      }
+
+      case "INTEGER":
+      case "INT64": {
+        // BigQuery ints are 8 bytes
+        return "BIGINT";
+      }
+
+      case "FLOAT":
+      case "FLOAT64": {
+        return "DOUBLE";
+      }
+
+      case "BOOL":
+      case "BOOLEAN": {
+        return "BOOLEAN";
+      }
+
+      default: {
+        throw new UnsupportedOperationException("BigQuery type " + type + " cannot be converted to Hive");
+      }
     }
-    // BigQuery ints are 8 bytes
-    if ("INTEGER".equals(type)) {
-      return "BIGINT";
-    }
-    if ("INT64".equals(type)) {
-      return "BIGINT";
-    }
-    if ("FLOAT".equals(type)) {
-      return "DOUBLE";
-    }
-    if ("FLOAT64".equals(type)) {
-      return "DOUBLE";
-    }
-    if ("BOOL".equals(type)) {
-      return "BOOLEAN";
-    }
-    if ("BOOLEAN".equals(type)) {
-      return "BOOLEAN";
-    }
-    if ("BYTES".equals(type)) {
-      return "STRING";
-    }
-    if ("DATETIME".equals(type)) {
-      return "STRING";
-    }
-    if ("DATE".equals(type)) {
-      return "STRING";
-    }
-    if ("TIME".equals(type)) {
-      return "STRING";
-    }
-    if ("TIMESTAMP".equals(type)) {
-      return "STRING";
-    }
-    throw new UnsupportedOperationException("BigQuery type " + type + " cannot be converted to Hive");
   }
 }

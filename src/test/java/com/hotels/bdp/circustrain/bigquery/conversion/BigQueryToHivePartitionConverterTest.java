@@ -36,7 +36,7 @@ public class BigQueryToHivePartitionConverterTest {
 
   @Test
   public void withpartitionName() {
-    String partitionName = "database";
+    String partitionName = "table";
     Partition partition = new BigQueryToHivePartitionConverter().withTableName(partitionName).convert();
     assertEquals(partition.getTableName(), partitionName);
   }

@@ -16,15 +16,15 @@
 package com.hotels.bdp.circustrain.bigquery.partition;
 
 import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomTableName;
-import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryUriUtils.randomUri;
+import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomUri;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
-import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 
 class BigQueryPartitionGenerator {

@@ -18,7 +18,6 @@ package com.hotels.bdp.circustrain.bigquery.extraction.service;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,7 +51,6 @@ import com.google.cloud.storage.Storage;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.extraction.service.DataExtractor;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DataExtractorTest {
@@ -75,7 +73,6 @@ public class DataExtractorTest {
   }
 
   private void initExecutor() {
-    Future future = mock(Future.class);
     try {
       when(future.get()).thenReturn(null);
     } catch (InterruptedException | ExecutionException e) {
