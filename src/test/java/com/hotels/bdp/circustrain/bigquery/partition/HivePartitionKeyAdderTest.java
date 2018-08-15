@@ -28,12 +28,12 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
 
-public class HiveParitionKeyAdderTest {
+public class HivePartitionKeyAdderTest {
 
   @Test
   public void addWithNullSchemaDoesNothing() {
     Table table = new Table();
-    assertEquals(table, new HiveParitionKeyAdder(table).add("key", null));
+    assertEquals(table, new HivePartitionKeyAdder(table).add("key", null));
   }
 
   @Test
@@ -41,7 +41,7 @@ public class HiveParitionKeyAdderTest {
     Table table = new Table();
     String key = "foo";
     Schema schema = Schema.of(Field.of(key, LegacySQLTypeName.STRING), Field.of("bar", LegacySQLTypeName.BOOLEAN));
-    Table result = new HiveParitionKeyAdder(table).add(key, schema);
+    Table result = new HivePartitionKeyAdder(table).add(key, schema);
     List<FieldSchema> partitionKeys = result.getPartitionKeys();
     FieldSchema partitionKey = partitionKeys.get(0);
     assertEquals(key, partitionKey.getName());

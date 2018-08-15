@@ -31,15 +31,14 @@ import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryTableFiltererTest {
 
-  private BigQueryTableFilterer filterer;
-
-  private @Mock
-  CircusTrainBigQueryMetastore bigQueryMetastore;
-  private @Mock ExtractionService service;
-
   private final String databaseName = "db";
   private final String tableName = "tbl";
   private final String filterQuery = "foo < 5";
+
+  private @Mock CircusTrainBigQueryMetastore bigQueryMetastore;
+  private @Mock ExtractionService service;
+
+  private BigQueryTableFilterer filterer;
 
   @Before
   public void init() {

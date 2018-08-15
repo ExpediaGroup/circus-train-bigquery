@@ -30,7 +30,7 @@ import com.hotels.bdp.circustrain.bigquery.api.TableService;
 import com.hotels.bdp.circustrain.bigquery.conf.PartitioningConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.partition.BigQueryTableFilterer;
-import com.hotels.bdp.circustrain.bigquery.partition.HiveParitionKeyAdder;
+import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionGenerator;
 import com.hotels.bdp.circustrain.bigquery.partition.PartitionQueryFactory;
 import com.hotels.bdp.circustrain.bigquery.table.service.unpartitioned.UnpartitionedTableService;
@@ -86,7 +86,7 @@ public class TableServiceFactory {
 
       BigQueryTableFilterer filterer = new BigQueryTableFilterer(bigQueryMetastore, extractionService, datasetName,
           tableName, sqlFilterQuery);
-      HiveParitionKeyAdder adder = new HiveParitionKeyAdder(hiveTable);
+      HivePartitionKeyAdder adder = new HivePartitionKeyAdder(hiveTable);
       HivePartitionGenerator hivePartitionGenerator = new HivePartitionGenerator(hiveTable, bigQueryMetastore,
           extractionService);
       tableService = new PartitionedTableService(partitionBy, filterer, adder, hivePartitionGenerator);

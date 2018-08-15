@@ -17,6 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.extraction.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
@@ -26,24 +27,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.cloud.bigquery.Table;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
-import com.hotels.bdp.circustrain.bigquery.extraction.service.DataCleaner;
-import com.hotels.bdp.circustrain.bigquery.extraction.service.DataExtractor;
-import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ExtractionServiceTest {
 
+  private @Mock DataExtractor extractor;
+  private @Mock DataCleaner cleaner;
   private ExtractionService service;
-  private @Mock
-  DataExtractor extractor;
-  private @Mock
-  DataCleaner cleaner;
   private Map<Table, ExtractionContainer> registry = new HashMap<>();
 
   @Before
@@ -57,22 +52,22 @@ public class ExtractionServiceTest {
     Table table = mock(Table.class);
     when(container.getTable()).thenReturn(table);
     service.register(container);
-    Mockito.verify(extractor).add(container);
-    Mockito.verify(cleaner).add(container);
-    Mockito.verify(extractor).add(container);
+    verify(extractor).add(container);
+    verify(cleaner).add(container);
+    verify(extractor).add(container);
     assertEquals(1, registry.size());
   }
 
   @Test
   public void extract() {
     service.extract();
-    Mockito.verify(extractor).extract();
+    verify(extractor).extract();
   }
 
   @Test
   public void cleanup() {
     service.cleanup();
-    Mockito.verify(cleaner).cleanup();
+    verify(cleaner).cleanup();
   }
 
   @Test

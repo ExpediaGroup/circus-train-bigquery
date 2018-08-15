@@ -33,23 +33,19 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.hotels.bdp.circustrain.bigquery.api.TableService;
 import com.hotels.bdp.circustrain.bigquery.conf.PartitioningConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.api.TableService;
 import com.hotels.bdp.circustrain.bigquery.partition.PartitionQueryFactory;
-import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TableServiceFactoryTest {
 
-  private @Mock
-  CircusTrainBigQueryMetastore bigQueryMetastore;
+  private @Mock CircusTrainBigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService service;
-  private @Mock
-  PartitionQueryFactory partitionQueryFactory;
-  private @Mock
-  PartitioningConfiguration configuration;
+  private @Mock PartitionQueryFactory partitionQueryFactory;
+  private @Mock PartitioningConfiguration configuration;
 
   private TableServiceFactory tableServiceFactory;
 

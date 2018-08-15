@@ -28,13 +28,13 @@ import com.google.common.annotations.VisibleForTesting;
 
 import com.hotels.bdp.circustrain.bigquery.api.TableService;
 import com.hotels.bdp.circustrain.bigquery.partition.BigQueryTableFilterer;
-import com.hotels.bdp.circustrain.bigquery.partition.HiveParitionKeyAdder;
+import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionGenerator;
 
 public class PartitionedTableService implements TableService {
 
   private final String partitionedBy;
-  private final HiveParitionKeyAdder adder;
+  private final HivePartitionKeyAdder adder;
   private final HivePartitionGenerator factory;
   private final TableResult result;
   private final com.google.cloud.bigquery.Table filteredTable;
@@ -42,7 +42,7 @@ public class PartitionedTableService implements TableService {
   public PartitionedTableService(
       String partitionedBy,
       BigQueryTableFilterer filterer,
-      HiveParitionKeyAdder adder,
+      HivePartitionKeyAdder adder,
       HivePartitionGenerator factory) {
     this(partitionedBy, adder, factory, filterer.filterTable(), filterer.getFilteredTable());
   }
@@ -50,7 +50,7 @@ public class PartitionedTableService implements TableService {
   @VisibleForTesting
   PartitionedTableService(
       String partitionedBy,
-      HiveParitionKeyAdder adder,
+      HivePartitionKeyAdder adder,
       HivePartitionGenerator factory,
       TableResult result,
       com.google.cloud.bigquery.Table filteredTable) {

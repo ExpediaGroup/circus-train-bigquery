@@ -36,21 +36,19 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 
-import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory;
-import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HivePartitionGeneratorTest {
 
   private @Mock Table table;
-  private @Mock
-  CircusTrainBigQueryMetastore metastore;
+  private @Mock CircusTrainBigQueryMetastore metastore;
   private @Mock ExtractionService service;
-  private @Mock
-  ExtractionContainerFactory factory;
+  private @Mock ExtractionContainerFactory factory;
   private @Mock ExtractionContainer container;
   private @Mock ExtractionUri uri;
 

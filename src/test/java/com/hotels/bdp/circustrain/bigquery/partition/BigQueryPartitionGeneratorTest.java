@@ -34,8 +34,7 @@ import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryPartitionGeneratorTest {
 
-  private @Mock
-  CircusTrainBigQueryMetastore bigQueryMetastore;
+  private @Mock   CircusTrainBigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService extractionService;
   private final String sourceDBName = "db";
   private final String sourceTableName = "tbl";

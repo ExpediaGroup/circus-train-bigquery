@@ -15,8 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.client;
 
-import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryKey.makeKey;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -93,11 +91,10 @@ import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
-import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
@@ -109,17 +106,17 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   private final CircusTrainBigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
   private final TableServiceFactory tableServiceFactory;
-  private final MetastoreClientCache cache;
+  private final HiveTableCache cache;
 
   BigQueryMetastoreClient(
       CircusTrainBigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
-      MetastoreClientCache metastoreClientCache,
+      HiveTableCache cache,
       TableServiceFactory tableServiceFactory) {
     this.bigQueryMetastore = bigQueryMetastore;
     this.extractionService = extractionService;
     this.tableServiceFactory = tableServiceFactory;
-    this.cache = metastoreClientCache;
+    this.cache = cache;
   }
 
   @Override
@@ -145,9 +142,8 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   @Override
   public Table getTable(final String databaseName, final String tableName) throws TException {
     log.info("Getting table '{}.{}' from BigQuery", databaseName, tableName);
-    String tableKey = makeKey(databaseName, tableName);
-    if (cache.containsTable(tableKey)) {
-      return cache.getTable(tableKey);
+    if (cache.contains(databaseName, tableName)) {
+      return cache.get(databaseName, tableName);
     }
 
     com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
@@ -166,7 +162,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
             .convert())
         .getTable();
 
-    cache.cacheTable(hiveTable);
+    cache.add(hiveTable);
     return hiveTable;
   }
 
@@ -178,8 +174,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   public List<Partition> listPartitions(String dbName, String tblName, short max)
     throws NoSuchObjectException, MetaException, TException {
     log.info("Listing partitions for table {}.{}", dbName, tblName);
-    String key = makeKey(dbName, tblName);
-    Table hiveTable = cache.getTable(key);
+    Table hiveTable = cache.get(dbName, tblName);
     if (hiveTable == null) {
       hiveTable = getTable(dbName, tblName);
     }
@@ -187,8 +182,9 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     if (max < 0) {
       return partitions;
     }
-    int s = Math.min(max, partitions.size());
-    return partitions.subList(0, s);
+    final int fromIndex = 0;
+    int toIndex = Math.min(max, partitions.size());
+    return partitions.subList(fromIndex, toIndex);
   }
 
   @Override

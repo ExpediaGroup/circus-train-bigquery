@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants;
-import com.hotels.bdp.circustrain.bigquery.cache.MetastoreClientCache;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
@@ -38,7 +37,7 @@ public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClien
       CircusTrainBigQueryMetastore bigQueryMetastore,
       ExtractionService service,
       TableServiceFactory tableServiceFactory) {
-    this.metastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, service, new MetastoreClientCache(),
+    this.metastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, service, new HiveTableCache(),
         tableServiceFactory);
   }
 

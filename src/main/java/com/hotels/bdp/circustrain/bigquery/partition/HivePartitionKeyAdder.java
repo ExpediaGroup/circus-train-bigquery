@@ -25,11 +25,11 @@ import com.google.cloud.bigquery.Schema;
 
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTypeConverter;
 
-public class HiveParitionKeyAdder {
+public class HivePartitionKeyAdder {
 
   private final Table table;
 
-  public HiveParitionKeyAdder(Table table) {
+  public HivePartitionKeyAdder(Table table) {
     this.table = table;
   }
 

@@ -20,21 +20,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 
 public class UnpartitionedTableServiceTest {
 
-  private UnpartitionedTableService service;
-  private Table table = new Table();
-
-  @Before
-  public void init() {
-    table = new BigQueryToHiveTableConverter().withTableName("foo").withDatabaseName("bar").convert();
-    service = new UnpartitionedTableService(table);
-  }
+  private Table table = new BigQueryToHiveTableConverter().withTableName("foo").withDatabaseName("bar").convert();
+  private UnpartitionedTableService service = new UnpartitionedTableService(table);
 
   @Test
   public void getTable() {

@@ -36,18 +36,16 @@ import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableResult;
 
-import com.hotels.bdp.circustrain.bigquery.partition.HiveParitionKeyAdder;
+import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionGenerator;
-import com.hotels.bdp.circustrain.bigquery.table.service.partitioned.PartitionedTableService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PartitionedTableServiceTest {
 
   private final String partitionBy = "foo";
-  private @Mock
-  HiveParitionKeyAdder adder;
-  private @Mock
-  HivePartitionGenerator factory;
+
+  private @Mock HivePartitionKeyAdder adder;
+  private @Mock HivePartitionGenerator factory;
   private @Mock TableResult result;
   private @Mock com.google.cloud.bigquery.Table filteredTable;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.cache;
+package com.hotels.bdp.circustrain.bigquery.client;
 
 import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryKey.makeKey;
 
@@ -24,17 +24,19 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class TableCache {
+class HiveTableCache {
 
-  private static final Logger log = LoggerFactory.getLogger(TableCache.class);
+  private static final Logger log = LoggerFactory.getLogger(HiveTableCache.class);
 
   private final Map<String, Table> tableCache = new HashMap<>();
 
-  boolean contains(String key) {
+  boolean contains(String databaseName, String tableName) {
+    String key = makeKey(databaseName, tableName);
     return tableCache.containsKey(key);
   }
 
-  Table get(String key) {
+  Table get(String databaseName, String tableName) {
+    String key = makeKey(databaseName, tableName);
     log.debug("Getting table {} from cache", key);
     return tableCache.get(key);
   }
