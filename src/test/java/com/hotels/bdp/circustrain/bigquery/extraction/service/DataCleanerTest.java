@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableList;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.extraction.service.DataCleaner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DataCleanerTest {
@@ -69,7 +68,6 @@ public class DataCleanerTest {
   }
 
   private void initExecutor() {
-    Future future = mock(Future.class);
     try {
       when(future.get()).thenReturn(null);
     } catch (InterruptedException | ExecutionException e) {
