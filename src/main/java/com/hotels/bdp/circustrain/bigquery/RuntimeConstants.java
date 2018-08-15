@@ -24,6 +24,8 @@ public final class RuntimeConstants {
 
   private static final Logger log = LoggerFactory.getLogger(RuntimeConstants.class);
 
+  private RuntimeConstants() {}
+
   static {
     final int cores = Runtime.getRuntime().availableProcessors();
     if (cores <= 0) {
