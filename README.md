@@ -17,9 +17,9 @@ You can obtain Circus Train BigQuery from Maven Central:
 
 
 ## Partition Generation
-Circus Train BigQuery allows you to add a partition to your Hive destination table upon replication from BigQuery to Hive. The user can configure a partition by setting the `table-replications[n].copier-option : circus-train-bigquery-partition-by` property on your specific table replication within your Circus Train configuration file.
-The destination data will be repartitioned on the specified column. Once your destination data is Partitioned you can also specify a partition filter using the `table-replications[n].copier-option : circus-train-bigquery-partition-filter` clause. The partition filter is a SQL boolean statement which will be used to filter your data for replication.
-You can think of the partition filter being executed as `select * from db.table where %s` where `%s` is substituted by your partition filter. Only the rows returned by your query will be replicated. To use the partition filter you must have the partition by option configured to your tables singular partition.
+Circus Train BigQuery allows you to add a partition to your Hive destination table upon replication from BigQuery to Hive. The user can configure the partition field by setting the `table-replications[n].copier-option : circus-train-bigquery-partition-by` property on a specific table replication within the Circus Train configuration file. The destination data will be repartitioned on the specified field. 
+
+Once your destination data is Partitioned you can also specify a partition filter using the `table-replications[n].copier-option : circus-train-bigquery-partition-filter` property. The partition filter is a SQL query which will be used to filter the data being replicated - i.e. so one doesn't have to replicate the _entire_ table on each run. You can think of the partition filter being executed as `select * from db.table where %s` with `%s` is substituted by your partition filter. Only the rows returned by this query will be replicated. See [partition filters](https://github.com/HotelsDotCom/circus-train#partition-filters) in the main Circus Train documentation for more information.
 
 ### Examples:
 
