@@ -83,7 +83,7 @@ public class PartitionedTableService implements TableService {
     // Case sensitive in Google Cloud
     String partitionKey = partitionedBy;
     for (Field field : schema.getFields()) {
-      if (field.getName().toLowerCase().equals(partitionKey.toLowerCase())) {
+      if (field.getName().toLowerCase().trim().equals(partitionKey.toLowerCase().trim())) {
         partitionKey = field.getName();
         break;
       }
