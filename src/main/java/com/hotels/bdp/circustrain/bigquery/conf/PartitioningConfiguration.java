@@ -15,9 +15,10 @@
  */
 package com.hotels.bdp.circustrain.bigquery.conf;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import static com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants.PARTITION_BY;
 import static com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants.PARTITION_FILTER;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,19 +54,23 @@ public class PartitioningConfiguration {
         throw new CircusTrainException(
             "Partitioning cannot be carried out when there are duplicate source tables with partitioning configured");
       }
-      log.info("Loading BigQuery partitioning configuration for table {}", key);
-      replicationConfigMap.put(key, tableReplication.getCopierOptions());
+      log.debug("Loading BigQuery partitioning configuration for table {}", key);
+      Map<String, Object> copierOptions = tableReplication.getCopierOptions();
+      replicationConfigMap.put(key, copierOptions);
     }
     this.replicationConfigMap = Collections.unmodifiableMap(replicationConfigMap);
   }
 
   public String getPartitionFilterFor(Table table) {
     String key = TableNameFactory.newInstance(table);
-    log.info("Loading 'partition-filter' for table {}", key);
+    log.debug("Loading 'partition-filter' for table {}", key);
     if (replicationConfigMap.containsKey(key)) {
-      Object yamlValue = replicationConfigMap.get(key).get(PARTITION_FILTER);
-      if (yamlValue != null) {
-        return yamlValue.toString();
+      Map<String, Object> copierOptions = replicationConfigMap.get(key);
+      if (copierOptions != null && copierOptions.containsKey(PARTITION_FILTER)) {
+        Object yamlValue = copierOptions.get(PARTITION_FILTER);
+        if (yamlValue != null) {
+          return yamlValue.toString();
+        }
       }
     }
     return null;
@@ -73,11 +78,14 @@ public class PartitioningConfiguration {
 
   public String getPartitionByFor(Table table) {
     String key = TableNameFactory.newInstance(table);
-    log.info("Loading 'partition-by' for table {}", key);
+    log.debug("Loading 'partition-by' for table {}", key);
     if (replicationConfigMap.containsKey(key)) {
-      Object yamlValue = replicationConfigMap.get(key).get(PARTITION_BY);
-      if (yamlValue != null) {
-        return yamlValue.toString();
+      Map<String, Object> copierOptions = replicationConfigMap.get(key);
+      if (copierOptions != null && copierOptions.containsKey(PARTITION_BY)) {
+        Object yamlValue = copierOptions.get(PARTITION_BY);
+        if (yamlValue != null) {
+          return yamlValue.toString();
+        }
       }
     }
     return null;
