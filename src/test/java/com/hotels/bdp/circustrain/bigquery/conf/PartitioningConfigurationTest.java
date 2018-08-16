@@ -78,21 +78,21 @@ public class PartitioningConfigurationTest {
   @Test
   public void getPartitionByPartitionPartitionByIsNull() {
     copierOptions.put(PARTITION_BY, null);
-    assertNull(configuration.getPartitionBy(table));
+    assertNull(configuration.getPartitionByFor(table));
   }
 
   @Test
   public void getPartitionByPartitionByConfigured() {
     String partitionKey = "foo";
     copierOptions.put(PARTITION_BY, partitionKey);
-    assertEquals(partitionKey, configuration.getPartitionBy(table));
+    assertEquals(partitionKey, configuration.getPartitionByFor(table));
   }
 
   @Test
   public void getPartitionByPartitionByNotConfigured() {
     String filter = "foo > 5";
     copierOptions.put(PARTITION_FILTER, filter);
-    assertNull(configuration.getPartitionBy(table));
+    assertNull(configuration.getPartitionByFor(table));
   }
 
   @Test
@@ -110,7 +110,7 @@ public class PartitioningConfigurationTest {
 
   @Test
   public void noConfiguration() {
-    assertNull(configuration.getPartitionBy(table));
+    assertNull(configuration.getPartitionByFor(table));
     assertNull(configuration.getPartitionFilterFor(table));
   }
 
@@ -141,9 +141,9 @@ public class PartitioningConfigurationTest {
 
     PartitioningConfiguration configuration = new PartitioningConfiguration(tableReplications);
     assertEquals(filterOne, configuration.getPartitionFilterFor(table));
-    assertEquals(partitionKeyOne, configuration.getPartitionBy(table));
+    assertEquals(partitionKeyOne, configuration.getPartitionByFor(table));
 
     assertEquals(filterTwo, configuration.getPartitionFilterFor(secondHiveTable));
-    assertEquals(partitionKeyTwo, configuration.getPartitionBy(secondHiveTable));
+    assertEquals(partitionKeyTwo, configuration.getPartitionByFor(secondHiveTable));
   }
 }

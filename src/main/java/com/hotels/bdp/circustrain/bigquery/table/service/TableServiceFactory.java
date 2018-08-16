@@ -78,7 +78,7 @@ public class TableServiceFactory {
     TableService tableService = null;
 
     if (configuration.isPartitioningConfigured(hiveTable)) {
-      final String partitionBy = configuration.getPartitionBy(hiveTable);
+      final String partitionBy = configuration.getPartitionByFor(hiveTable);
       final String partitionFilter = configuration.getPartitionFilterFor(hiveTable);
       final String sqlFilterQuery = partitionQueryFactory.get(hiveTable, partitionBy, partitionFilter);
       final String datasetName = hiveTable.getDbName();

@@ -71,7 +71,7 @@ public class PartitioningConfiguration {
     return null;
   }
 
-  public String getPartitionBy(Table table) {
+  public String getPartitionByFor(Table table) {
     String key = TableNameFactory.newInstance(table);
     log.info("Loading 'partition-by' for table {}", key);
     if (replicationConfigMap.containsKey(key)) {
@@ -84,6 +84,6 @@ public class PartitioningConfiguration {
   }
 
   public boolean isPartitioningConfigured(Table table) {
-    return isNotBlank(getPartitionBy(table));
+    return isNotBlank(getPartitionByFor(table));
   }
 }

@@ -45,14 +45,7 @@ If your destination data is partitioned you can also specify a partition filter 
 
 #### Configuration with partition generation configured
     source-catalog:
-      name: bigquery-source
-      hive-metastore-uris: bigquery://foobar
-    replica-catalog:
-      name: local-host-destination
-      hive-metastore-uris: thrift://localhost:9083
-
-    gcp-security:
-      credential-provider: /.gcp/key.json
+      ... see above ...
 
     table-replications:
       -
@@ -68,14 +61,7 @@ If your destination data is partitioned you can also specify a partition filter 
 
 #### Configuration with partition filter configured
     source-catalog:
-      name: bigquery-source
-      hive-metastore-uris: bigquery://foobar
-    replica-catalog:
-      name: local-host-destination
-      hive-metastore-uris: thrift://localhost:9083
-
-    gcp-security:
-      credential-provider: /.gcp/key.json
+      ... see above ...
 
     table-replications:
       -
