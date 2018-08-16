@@ -41,7 +41,7 @@ import com.hotels.bdp.circustrain.bigquery.listener.BigQueryReplicationListener;
 import com.hotels.bdp.circustrain.gcp.context.GCPSecurity;
 
 @Profile({ Modules.REPLICATION })
-@Conditional(CircusTrainBigQueryCondition.class)
+@Conditional(CircusTrainBigQueryConfiguration.class)
 @Configuration
 class CircusTrainBigQueryCommonBeans {
 

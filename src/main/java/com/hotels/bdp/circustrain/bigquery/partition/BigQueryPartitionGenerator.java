@@ -25,13 +25,13 @@ import org.slf4j.LoggerFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 class BigQueryPartitionGenerator {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryPartitionGenerator.class);
 
-  private final CircusTrainBigQueryMetastore bigQueryMetastore;
+  private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
   private final String sourceDBName;
   private final String sourceTableName;
@@ -41,7 +41,7 @@ class BigQueryPartitionGenerator {
   private final String destinationFolder;
 
   BigQueryPartitionGenerator(
-      CircusTrainBigQueryMetastore bigQueryMetastore,
+      BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       String sourceDBName,
       String sourceTableName,

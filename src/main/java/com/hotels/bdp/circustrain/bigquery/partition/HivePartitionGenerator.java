@@ -17,8 +17,6 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 
-import static com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_THREADPOOL_SIZE;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,25 +38,26 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
+import com.hotels.bdp.circustrain.bigquery.RuntimeConfiguration;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHivePartitionConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 public class HivePartitionGenerator {
 
   private static final Logger log = LoggerFactory.getLogger(HivePartitionGenerator.class);
 
   private final Table sourceTableAsHive;
-  private final CircusTrainBigQueryMetastore bigQueryMetastore;
+  private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
   private final ExtractionContainerFactory extractionContainerFactory;
 
   public HivePartitionGenerator(
       Table sourceTableAsHive,
-      CircusTrainBigQueryMetastore bigQueryMetastore,
+      BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService) {
     this(sourceTableAsHive, bigQueryMetastore, extractionService,
         new ExtractionContainerFactory(extractionService, bigQueryMetastore, sourceTableAsHive));
@@ -67,7 +66,7 @@ public class HivePartitionGenerator {
   @VisibleForTesting
   HivePartitionGenerator(
       Table sourceTableAsHive,
-      CircusTrainBigQueryMetastore bigQueryMetastore,
+      BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       ExtractionContainerFactory extractionContainerFactory) {
     this.sourceTableAsHive = sourceTableAsHive;
@@ -77,7 +76,7 @@ public class HivePartitionGenerator {
   }
 
   public List<Partition> generate(final String partitionKey, Iterable<FieldValueList> results) {
-    ExecutorService executorService = Executors.newFixedThreadPool(DEFAULT_THREADPOOL_SIZE);
+    ExecutorService executorService = Executors.newFixedThreadPool(RuntimeConfiguration.DEFAULT.getThreadPoolSize());
     List<Partition> partitions = generate(executorService, partitionKey, results);
     executorService.shutdownNow();
     return partitions;
@@ -90,7 +89,7 @@ public class HivePartitionGenerator {
     final String sourceTableName = sourceTableAsHive.getTableName();
     final String sourceDBName = sourceTableAsHive.getDbName();
 
-    ExtractionContainer container = extractionContainerFactory.get();
+    ExtractionContainer container = extractionContainerFactory.newInstance();
     final String tableBucket = container.getExtractionUri().getBucket();
     final String tableFolder = container.getExtractionUri().getFolder();
 

@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 import com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.bdp.circustrain.core.metastore.ConditionalMetaStoreClientFactory;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 import com.hotels.hcommon.hive.metastore.exception.MetaStoreClientException;
@@ -34,7 +34,7 @@ public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClien
 
   @Autowired
   BigQueryMetastoreClientFactory(
-      CircusTrainBigQueryMetastore bigQueryMetastore,
+      BigQueryMetastore bigQueryMetastore,
       ExtractionService service,
       TableServiceFactory tableServiceFactory) {
     this.metastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, service, new HiveTableCache(),

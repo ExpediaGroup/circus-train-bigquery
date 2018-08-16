@@ -35,12 +35,12 @@ import com.google.cloud.bigquery.TableResult;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 
 @Component
-public class CircusTrainBigQueryMetastore {
+public class BigQueryMetastore {
 
   private final BigQuery client;
 
   @Autowired
-  public CircusTrainBigQueryMetastore(BigQuery client) {
+  public BigQueryMetastore(BigQuery client) {
     this.client = client;
   }
 

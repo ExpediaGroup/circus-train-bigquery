@@ -15,8 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction.service;
 
-import static com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_THREADPOOL_SIZE;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,6 +37,7 @@ import com.google.cloud.storage.StorageException;
 import com.google.common.annotations.VisibleForTesting;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
+import com.hotels.bdp.circustrain.bigquery.RuntimeConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 
@@ -81,7 +80,7 @@ public class DataExtractor {
   }
 
   List<ExtractionContainer> extract() {
-    ExecutorService executorService = Executors.newFixedThreadPool(DEFAULT_THREADPOOL_SIZE);
+    ExecutorService executorService = Executors.newFixedThreadPool(RuntimeConfiguration.DEFAULT.getThreadPoolSize());
     List<ExtractionContainer> extracted = extract(executorService);
     executorService.shutdownNow();
     return extracted;

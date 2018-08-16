@@ -19,24 +19,24 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 public class ExtractionContainerFactory {
 
   private final ExtractionService service;
-  private final CircusTrainBigQueryMetastore bigQueryMetastore;
+  private final BigQueryMetastore bigQueryMetastore;
   private final Table hiveTable;
 
   public ExtractionContainerFactory(
       ExtractionService service,
-      CircusTrainBigQueryMetastore bigQueryMetastore,
+      BigQueryMetastore bigQueryMetastore,
       Table hiveTable) {
     this.service = service;
     this.bigQueryMetastore = bigQueryMetastore;
     this.hiveTable = hiveTable;
   }
 
-  public ExtractionContainer get() {
+  public ExtractionContainer newInstance() {
     com.google.cloud.bigquery.Table bigQueryRepresentation = bigQueryMetastore.getTable(hiveTable.getDbName(),
         hiveTable.getTableName());
 

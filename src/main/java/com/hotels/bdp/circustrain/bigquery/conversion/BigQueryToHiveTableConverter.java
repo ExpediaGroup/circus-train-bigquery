@@ -16,6 +16,7 @@
 package com.hotels.bdp.circustrain.bigquery.conversion;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,17 +41,15 @@ public class BigQueryToHiveTableConverter {
     table.setOwner("");
     table.setLastAccessTime(0);
     table.setRetention(0);
-    table.setPartitionKeys(new ArrayList<FieldSchema>());
+    table.setParameters(Collections.<String, String>emptyMap());
+    table.setPartitionKeys(Collections.<FieldSchema>emptyList());
     StorageDescriptor sd = new StorageDescriptor();
     sd.setLocation("");
-    sd.setParameters(new HashMap<String, String>());
-    sd.setSerdeInfo(new SerDeInfo());
     sd.setNumBuckets(-1);
-    sd.setBucketCols(new ArrayList<String>());
+    sd.setParameters(Collections.<String, String>emptyMap());
+    sd.setBucketCols(Collections.<String>emptyList());
+    sd.setSortCols(Collections.<Order>emptyList());
     sd.setCols(new ArrayList<FieldSchema>());
-    sd.setParameters(new HashMap<String, String>());
-    sd.setSortCols(new ArrayList<Order>());
-    sd.getSerdeInfo().setParameters(new HashMap<String, String>());
     sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
     sd.setOutputFormat("org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat");
     sd.setCompressed(false);
@@ -64,9 +63,9 @@ public class BigQueryToHiveTableConverter {
     serDeParameters.put("skip.header.line.count", "1");
     serDeInfo.setParameters(serDeParameters);
     SkewedInfo si = new SkewedInfo();
-    si.setSkewedColNames(new ArrayList<String>());
-    si.setSkewedColValueLocationMaps(new HashMap<List<String>, String>());
-    si.setSkewedColValues(new ArrayList<List<String>>());
+    si.setSkewedColNames(Collections.<String>emptyList());
+    si.setSkewedColValueLocationMaps(Collections.<List<String>, String>emptyMap());
+    si.setSkewedColValues(Collections.<List<String>>emptyList());
     sd.setSkewedInfo(new SkewedInfo());
     sd.setSerdeInfo(serDeInfo);
     table.setSd(sd);
@@ -92,7 +91,7 @@ public class BigQueryToHiveTableConverter {
   }
 
   public BigQueryToHiveTableConverter withCols(Schema schema) {
-    return this.withCols(BigQueryToHiveConversionUtils.getCols(schema));
+    return this.withCols(BigQueryToHiveFieldConverter.convert(schema));
   }
 
   public BigQueryToHiveTableConverter withLocation(String location) {

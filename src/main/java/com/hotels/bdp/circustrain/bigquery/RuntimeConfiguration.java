@@ -18,23 +18,23 @@ package com.hotels.bdp.circustrain.bigquery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class RuntimeConstants {
+public interface RuntimeConfiguration {
 
-  public static final int DEFAULT_THREADPOOL_SIZE;
+  int getThreadPoolSize();
 
-  private static final Logger log = LoggerFactory.getLogger(RuntimeConstants.class);
+  public static final RuntimeConfiguration DEFAULT = new Default(Runtime.getRuntime().availableProcessors());
 
-  private RuntimeConstants() {}
+  static class Default implements RuntimeConfiguration {
+    private static final Logger log = LoggerFactory.getLogger(Default.class);
+    private final int threads;
 
-  static {
-    final int cores = Runtime.getRuntime().availableProcessors();
-    if (cores <= 0) {
-      DEFAULT_THREADPOOL_SIZE = 2;
-    } else {
-      DEFAULT_THREADPOOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
+    Default(int cores) { // ← easy to test with different core values
+      threads = cores <= 0 ? 2 : cores + 1;
+      log.debug("Default thread pool size set to {}", threads);
     }
-    log.debug("com.hotels.bdp.circustrain.bigquery.RuntimeConstants.DEFAULT_THREADPOOL_SIZE set to {}",
-        DEFAULT_THREADPOOL_SIZE);
-  }
 
+    public int getThreadPoolSize() {
+      return threads;
+    }
+  }
 }

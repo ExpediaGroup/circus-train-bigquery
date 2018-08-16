@@ -25,11 +25,11 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 
-final class BigQueryToHiveConversionUtils {
+final class BigQueryToHiveFieldConverter {
 
-  private BigQueryToHiveConversionUtils() {}
+  private BigQueryToHiveFieldConverter() {}
 
-  static List<FieldSchema> getCols(Schema schema) {
+  static List<FieldSchema> convert(Schema schema) {
     BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
     Set<FieldSchema> partitionKeys = new LinkedHashSet<>();
 

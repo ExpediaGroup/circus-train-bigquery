@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.api;
+package com.hotels.bdp.circustrain.bigquery.util;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
 
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
+import static com.hotels.bdp.circustrain.bigquery.util.TableNameFactory.newInstance;
 
-public interface TableService {
-  Table getTable();
+import org.junit.Test;
 
-  List<Partition> getPartitions();
+public class TableNameFactoryTest {
+
+  @Test
+  public void makeKeyTest() {
+    assertEquals("database.table", TableNameFactory.newInstance("database", "table"));
+  }
 }

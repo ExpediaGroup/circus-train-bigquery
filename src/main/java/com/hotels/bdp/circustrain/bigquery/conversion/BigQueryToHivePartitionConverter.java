@@ -16,6 +16,7 @@
 package com.hotels.bdp.circustrain.bigquery.conversion;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,14 +44,10 @@ public class BigQueryToHivePartitionConverter {
     mockStats();
     StorageDescriptor sd = new StorageDescriptor();
     sd.setLocation("");
-    sd.setParameters(new HashMap<String, String>());
-    sd.setSerdeInfo(new SerDeInfo());
     sd.setNumBuckets(-1);
-    sd.setBucketCols(new ArrayList<String>());
+    sd.setBucketCols(Collections.<String> emptyList());
+    sd.setSortCols(Collections.<Order> emptyList());
     sd.setCols(new ArrayList<FieldSchema>());
-    sd.setParameters(new HashMap<String, String>());
-    sd.setSortCols(new ArrayList<Order>());
-    sd.getSerdeInfo().setParameters(new HashMap<String, String>());
     sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
     sd.setOutputFormat("org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat");
     sd.setCompressed(false);
@@ -61,13 +58,14 @@ public class BigQueryToHivePartitionConverter {
     Map<String, String> serDeParameters = new HashMap<>();
     serDeParameters.put("serialization.format", "1");
     serDeParameters.put("field.delim", ",");
+    serDeParameters.put("skip.header.line.count", "1");
     serDeInfo.setParameters(serDeParameters);
-    sd.setSerdeInfo(serDeInfo);
     SkewedInfo si = new SkewedInfo();
-    si.setSkewedColNames(new ArrayList<String>());
-    si.setSkewedColValueLocationMaps(new HashMap<List<String>, String>());
-    si.setSkewedColValues(new ArrayList<List<String>>());
+    si.setSkewedColNames(Collections.<String> emptyList());
+    si.setSkewedColValueLocationMaps(Collections.<List<String>, String> emptyMap());
+    si.setSkewedColValues(Collections.<List<String>> emptyList());
     sd.setSkewedInfo(new SkewedInfo());
+    sd.setSerdeInfo(serDeInfo);
     partition.setSd(sd);
   }
 
@@ -96,7 +94,7 @@ public class BigQueryToHivePartitionConverter {
   }
 
   public BigQueryToHivePartitionConverter withCols(Schema schema) {
-    return this.withCols(BigQueryToHiveConversionUtils.getCols(schema));
+    return this.withCols(BigQueryToHiveFieldConverter.convert(schema));
   }
 
   public BigQueryToHivePartitionConverter withCols(List<FieldSchema> cols) {

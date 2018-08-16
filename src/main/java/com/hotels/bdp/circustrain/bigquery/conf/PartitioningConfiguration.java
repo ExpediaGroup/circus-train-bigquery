@@ -15,12 +15,11 @@
  */
 package com.hotels.bdp.circustrain.bigquery.conf;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-
 import static com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants.PARTITION_BY;
 import static com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants.PARTITION_FILTER;
-import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryKey.makeKey;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,19 +33,21 @@ import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.api.conf.SourceTable;
 import com.hotels.bdp.circustrain.api.conf.TableReplication;
 import com.hotels.bdp.circustrain.api.conf.TableReplications;
+import com.hotels.bdp.circustrain.bigquery.util.TableNameFactory;
 
 @Component
 public class PartitioningConfiguration {
 
   private static final Logger log = LoggerFactory.getLogger(PartitioningConfiguration.class);
 
-  private final HashMap<String, Map<String, Object>> replicationConfigMap = new HashMap<>();
+  private final Map<String, Map<String, Object>> replicationConfigMap;
 
   @Autowired
   PartitioningConfiguration(TableReplications tableReplications) {
+    HashMap<String, Map<String, Object>> replicationConfigMap = new HashMap<>();
     for (TableReplication tableReplication : tableReplications.getTableReplications()) {
       SourceTable sourceTable = tableReplication.getSourceTable();
-      String key = makeKey(sourceTable.getDatabaseName().trim().toLowerCase(),
+      String key = TableNameFactory.newInstance(sourceTable.getDatabaseName().trim().toLowerCase(),
           sourceTable.getTableName().trim().toLowerCase());
       if (replicationConfigMap.containsKey(key)) {
         throw new CircusTrainException(
@@ -55,10 +56,11 @@ public class PartitioningConfiguration {
       log.info("Loading BigQuery partitioning configuration for table {}", key);
       replicationConfigMap.put(key, tableReplication.getCopierOptions());
     }
+    this.replicationConfigMap = Collections.unmodifiableMap(replicationConfigMap);
   }
 
-  public String getPartitionFilter(Table table) {
-    String key = makeKey(table);
+  public String getPartitionFilterFor(Table table) {
+    String key = TableNameFactory.newInstance(table);
     log.info("Loading 'partition-filter' for table {}", key);
     if (replicationConfigMap.containsKey(key)) {
       Object yamlValue = replicationConfigMap.get(key).get(PARTITION_FILTER);
@@ -70,7 +72,7 @@ public class PartitioningConfiguration {
   }
 
   public String getPartitionBy(Table table) {
-    String key = makeKey(table);
+    String key = TableNameFactory.newInstance(table);
     log.info("Loading 'partition-by' for table {}", key);
     if (replicationConfigMap.containsKey(key)) {
       Object yamlValue = replicationConfigMap.get(key).get(PARTITION_BY);
@@ -81,7 +83,7 @@ public class PartitioningConfiguration {
     return null;
   }
 
-  public boolean partitioningConfigured(Table table) {
+  public boolean isPartitioningConfigured(Table table) {
     return isNotBlank(getPartitionBy(table));
   }
 }

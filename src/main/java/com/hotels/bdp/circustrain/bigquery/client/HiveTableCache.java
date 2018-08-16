@@ -15,14 +15,14 @@
  */
 package com.hotels.bdp.circustrain.bigquery.client;
 
-import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryKey.makeKey;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.hotels.bdp.circustrain.bigquery.util.TableNameFactory;
 
 class HiveTableCache {
 
@@ -31,18 +31,18 @@ class HiveTableCache {
   private final Map<String, Table> tableCache = new HashMap<>();
 
   boolean contains(String databaseName, String tableName) {
-    String key = makeKey(databaseName, tableName);
+    String key = TableNameFactory.newInstance(databaseName, tableName);
     return tableCache.containsKey(key);
   }
 
   Table get(String databaseName, String tableName) {
-    String key = makeKey(databaseName, tableName);
+    String key = TableNameFactory.newInstance(databaseName, tableName);
     log.debug("Getting table {} from cache", key);
     return tableCache.get(key);
   }
 
-  void add(Table table) {
-    String key = makeKey(table);
+  void put(Table table) {
+    String key = TableNameFactory.newInstance(table);
     log.debug("Adding table {} to cache", key);
     tableCache.put(key, table);
   }

@@ -65,14 +65,14 @@ public class PartitioningConfigurationTest {
   public void getPartitionFilterPartitionFilterConfigured() {
     String filter = "foo > 5";
     copierOptions.put(PARTITION_FILTER, filter);
-    assertEquals(filter, configuration.getPartitionFilter(table));
+    assertEquals(filter, configuration.getPartitionFilterFor(table));
   }
 
   @Test
   public void getPartitionByPartitionFilterNotConfigured() {
     String partitionKey = "foo";
     copierOptions.put(PARTITION_BY, partitionKey);
-    assertNull(configuration.getPartitionFilter(table));
+    assertNull(configuration.getPartitionFilterFor(table));
   }
 
   @Test
@@ -98,7 +98,7 @@ public class PartitioningConfigurationTest {
   @Test
   public void getPartitionFilterPartitionPartitionFilterIsNull() {
     copierOptions.put(PARTITION_FILTER, null);
-    assertNull(configuration.getPartitionFilter(table));
+    assertNull(configuration.getPartitionFilterFor(table));
   }
 
   @Test(expected = CircusTrainException.class)
@@ -111,7 +111,7 @@ public class PartitioningConfigurationTest {
   @Test
   public void noConfiguration() {
     assertNull(configuration.getPartitionBy(table));
-    assertNull(configuration.getPartitionFilter(table));
+    assertNull(configuration.getPartitionFilterFor(table));
   }
 
   @Test
@@ -140,10 +140,10 @@ public class PartitioningConfigurationTest {
     secondCopierOptions.put(PARTITION_FILTER, filterTwo);
 
     PartitioningConfiguration configuration = new PartitioningConfiguration(tableReplications);
-    assertEquals(filterOne, configuration.getPartitionFilter(table));
+    assertEquals(filterOne, configuration.getPartitionFilterFor(table));
     assertEquals(partitionKeyOne, configuration.getPartitionBy(table));
 
-    assertEquals(filterTwo, configuration.getPartitionFilter(secondHiveTable));
+    assertEquals(filterTwo, configuration.getPartitionFilterFor(secondHiveTable));
     assertEquals(partitionKeyTwo, configuration.getPartitionBy(secondHiveTable));
   }
 }

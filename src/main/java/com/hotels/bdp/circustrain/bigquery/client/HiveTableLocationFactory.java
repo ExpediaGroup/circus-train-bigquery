@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.util;
+package com.hotels.bdp.circustrain.bigquery.client;
 
-import static org.junit.Assert.assertEquals;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 
-import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryKey.makeKey;
+class HiveTableLocationFactory {
+  private HiveTableLocationFactory() {}
 
-import org.junit.Test;
-
-public class CircusTrainBigQueryKeyTest {
-
-  @Test
-  public void makeKeyTest() {
-    assertEquals("database.table", makeKey("database", "table"));
+  static String getLocation(ExtractionUri extractionUri) {
+    return "gs://" + extractionUri.getBucket() + "/" + extractionUri.getFolder() + "/";
   }
 }

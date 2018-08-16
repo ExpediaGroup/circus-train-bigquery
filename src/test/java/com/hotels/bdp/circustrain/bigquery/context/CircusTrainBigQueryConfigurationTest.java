@@ -28,7 +28,7 @@ import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.env.Environment;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CircusTrainBigQueryConditionTest {
+public class CircusTrainBigQueryConfigurationTest {
 
   private @Mock ConditionContext context;
   private @Mock Environment environment;
@@ -39,7 +39,7 @@ public class CircusTrainBigQueryConditionTest {
     when(environment.getProperty(eq("source-catalog.hive-metastore-uris"), eq(String.class)))
         .thenReturn("bigquery://foobaz");
     when(environment.containsProperty(eq("source-catalog.hive-metastore-uris"))).thenReturn(true);
-    CircusTrainBigQueryCondition condition = new CircusTrainBigQueryCondition();
+    CircusTrainBigQueryConfiguration condition = new CircusTrainBigQueryConfiguration();
     assertTrue(condition.matches(context, null));
   }
 
@@ -49,7 +49,7 @@ public class CircusTrainBigQueryConditionTest {
     when(environment.getProperty(eq("source-catalog.hive-metastore-uris"), eq(String.class)))
         .thenReturn("thrift://foo-baz-1234");
     when(environment.containsProperty(eq("source-catalog.hive-metastore-uris"))).thenReturn(true);
-    CircusTrainBigQueryCondition condition = new CircusTrainBigQueryCondition();
+    CircusTrainBigQueryConfiguration condition = new CircusTrainBigQueryConfiguration();
     assertFalse(condition.matches(context, null));
   }
 }

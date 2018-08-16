@@ -40,13 +40,14 @@ import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HivePartitionGeneratorTest {
 
   private @Mock Table table;
-  private @Mock CircusTrainBigQueryMetastore metastore;
+  private @Mock
+  BigQueryMetastore metastore;
   private @Mock ExtractionService service;
   private @Mock ExtractionContainerFactory factory;
   private @Mock ExtractionContainer container;
@@ -86,7 +87,7 @@ public class HivePartitionGeneratorTest {
     when(row.get(partitionKey)).thenReturn(fieldValue);
     when(fieldValue.getValue()).thenReturn(o);
 
-    when(factory.get()).thenReturn(container);
+    when(factory.newInstance()).thenReturn(container);
     when(container.getExtractionUri()).thenReturn(uri);
     String bucket = "bucket";
     String folder = "folder";

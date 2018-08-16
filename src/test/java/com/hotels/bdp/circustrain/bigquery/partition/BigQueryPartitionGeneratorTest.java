@@ -29,12 +29,13 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryPartitionGeneratorTest {
 
-  private @Mock   CircusTrainBigQueryMetastore bigQueryMetastore;
+  private @Mock
+  BigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService extractionService;
   private final String sourceDBName = "db";
   private final String sourceTableName = "tbl";

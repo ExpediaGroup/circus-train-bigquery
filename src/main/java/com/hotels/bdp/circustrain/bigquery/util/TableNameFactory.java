@@ -18,21 +18,21 @@ package com.hotels.bdp.circustrain.bigquery.util;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 
-public class CircusTrainBigQueryKey {
+public class TableNameFactory {
 
-  public static String makeKey(String databaseName, String tableName) {
+  public static String newInstance(String databaseName, String tableName) {
     return databaseName.trim().toLowerCase() + "." + tableName.trim().toLowerCase();
   }
 
-  public static String makeKey(Table table) {
-    return makeKey(table.getDbName(), table.getTableName());
+  public static String newInstance(Table table) {
+    return newInstance(table.getDbName(), table.getTableName());
   }
 
-  public static String makeKey(Partition partition) {
-    return makeKey(partition.getDbName(), partition.getTableName());
+  public static String newInstance(Partition partition) {
+    return newInstance(partition.getDbName(), partition.getTableName());
   }
 
-  public static String makeKey(com.google.cloud.bigquery.Table table) {
-    return makeKey(table.getTableId().getDataset(), table.getTableId().getDataset());
+  public static String newInstance(com.google.cloud.bigquery.Table table) {
+    return newInstance(table.getTableId().getDataset(), table.getTableId().getDataset());
   }
 }

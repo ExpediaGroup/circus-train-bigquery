@@ -35,12 +35,12 @@ import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionGenerator;
 import com.hotels.bdp.circustrain.bigquery.partition.PartitionQueryFactory;
 import com.hotels.bdp.circustrain.bigquery.table.service.unpartitioned.UnpartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.table.service.partitioned.PartitionedTableService;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 @Component
 public class TableServiceFactory {
 
-  private final CircusTrainBigQueryMetastore bigQueryMetastore;
+  private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
   private final Map<Table, TableService> cache;
   private final PartitionQueryFactory partitionQueryFactory;
@@ -48,7 +48,7 @@ public class TableServiceFactory {
 
   @Autowired
   public TableServiceFactory(
-      CircusTrainBigQueryMetastore bigQueryMetastore,
+      BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       PartitionQueryFactory partitionQueryFactory,
       PartitioningConfiguration configuration) {
@@ -58,7 +58,7 @@ public class TableServiceFactory {
 
   @VisibleForTesting
   TableServiceFactory(
-      CircusTrainBigQueryMetastore bigQueryMetastore,
+      BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       Map<Table, TableService> cache,
       PartitionQueryFactory partitionQueryFactory,
@@ -77,9 +77,9 @@ public class TableServiceFactory {
 
     TableService tableService = null;
 
-    if (configuration.partitioningConfigured(hiveTable)) {
+    if (configuration.isPartitioningConfigured(hiveTable)) {
       final String partitionBy = configuration.getPartitionBy(hiveTable);
-      final String partitionFilter = configuration.getPartitionFilter(hiveTable);
+      final String partitionFilter = configuration.getPartitionFilterFor(hiveTable);
       final String sqlFilterQuery = partitionQueryFactory.get(hiveTable, partitionBy, partitionFilter);
       final String datasetName = hiveTable.getDbName();
       final String tableName = randomTableName();

@@ -20,18 +20,18 @@ import com.google.cloud.bigquery.TableResult;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 public class BigQueryTableFilterer {
 
-  private final CircusTrainBigQueryMetastore bigQueryMetastore;
+  private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService service;
   private final String databaseName;
   private final String tableName;
   private final String filterQuery;
 
   public BigQueryTableFilterer(
-      CircusTrainBigQueryMetastore bigQueryMetastore,
+      BigQueryMetastore bigQueryMetastore,
       ExtractionService service,
       String databaseName,
       String tableName,

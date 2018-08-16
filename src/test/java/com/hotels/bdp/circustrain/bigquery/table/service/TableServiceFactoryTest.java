@@ -37,12 +37,13 @@ import com.hotels.bdp.circustrain.bigquery.api.TableService;
 import com.hotels.bdp.circustrain.bigquery.conf.PartitioningConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.partition.PartitionQueryFactory;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TableServiceFactoryTest {
 
-  private @Mock CircusTrainBigQueryMetastore bigQueryMetastore;
+  private @Mock
+  BigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService service;
   private @Mock PartitionQueryFactory partitionQueryFactory;
   private @Mock PartitioningConfiguration configuration;

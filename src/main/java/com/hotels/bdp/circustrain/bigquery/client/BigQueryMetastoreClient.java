@@ -17,8 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.client;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -96,20 +95,20 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContai
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
 class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryMetastoreClient.class);
 
-  private final CircusTrainBigQueryMetastore bigQueryMetastore;
+  private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
   private final TableServiceFactory tableServiceFactory;
   private final HiveTableCache cache;
 
   BigQueryMetastoreClient(
-      CircusTrainBigQueryMetastore bigQueryMetastore,
+      BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       HiveTableCache cache,
       TableServiceFactory tableServiceFactory) {
@@ -158,16 +157,12 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
             .withTableName(tableName)
             .withSchema(bigQueryTable.getDefinition().getSchema())
             .withCols(bigQueryTable.getDefinition().getSchema())
-            .withLocation(hiveTableLocationFromExtractionUri(extractionUri))
+            .withLocation(HiveTableLocationFactory.getLocation(extractionUri))
             .convert())
         .getTable();
 
-    cache.add(hiveTable);
+    cache.put(hiveTable);
     return hiveTable;
-  }
-
-  private String hiveTableLocationFromExtractionUri(ExtractionUri extractionUri) {
-    return "gs://" + extractionUri.getBucket() + "/" + extractionUri.getFolder() + "/";
   }
 
   @Override
@@ -194,13 +189,13 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       List<String> partNames,
       List<String> colNames)
     throws NoSuchObjectException, MetaException, TException {
-    return new HashMap<>();
+    return Collections.emptyMap();
   }
 
   @Override
   public List<ColumnStatisticsObj> getTableColumnStatistics(String dbName, String tableName, List<String> colNames)
     throws NoSuchObjectException, MetaException, TException {
-    return new ArrayList<>();
+    return Collections.emptyList();
   }
 
   @Override

@@ -24,7 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import static com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryKey.makeKey;
+import static com.hotels.bdp.circustrain.bigquery.util.TableNameFactory.newInstance;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +50,8 @@ import com.google.cloud.bigquery.TableDefinition;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.table.service.partitioned.PartitionedTableService;
-import com.hotels.bdp.circustrain.bigquery.util.CircusTrainBigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.TableNameFactory;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryMetastoreClientTest {
@@ -64,7 +65,8 @@ public class BigQueryMetastoreClientTest {
   private @Mock PartitionedTableService partitionedTableService;
   private @Mock HiveTableCache cache;
   private @Mock Job job;
-  private @Mock CircusTrainBigQueryMetastore bigQueryMetastore;
+  private @Mock
+  BigQueryMetastore bigQueryMetastore;
   private @Mock JobStatus jobStatus;
 
   private BigQueryMetastoreClient bigQueryMetastoreClient;
@@ -127,7 +129,7 @@ public class BigQueryMetastoreClientTest {
 
     verify(cache).contains(dbName, tblName);
     verify(bigQueryMetastore).getTable(dbName, tblName);
-    verify(cache).add(any(org.apache.hadoop.hive.metastore.api.Table.class));
+    verify(cache).put(any(org.apache.hadoop.hive.metastore.api.Table.class));
     verify(factory).newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class));
     verify(partitionedTableService).getTable();
   }
@@ -170,7 +172,7 @@ public class BigQueryMetastoreClientTest {
   public void listPartitionsWithoutTableCachedTest() throws TException {
     String dbName = "db";
     String tblName = "tbl";
-    String key = makeKey(dbName, tblName);
+    String key = TableNameFactory.newInstance(dbName, tblName);
     org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
     when(cache.get(dbName, tblName)).thenReturn(null).thenReturn(hiveTable);
 
@@ -199,7 +201,7 @@ public class BigQueryMetastoreClientTest {
   public void listPartitionsWithoutTableCachedAndPartitionsSizeLimitedTest() throws TException {
     String dbName = "db";
     String tblName = "tbl";
-    String key = makeKey(dbName, tblName);
+    String key = TableNameFactory.newInstance(dbName, tblName);
     org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
     when(cache.get(dbName, tblName)).thenReturn(null).thenReturn(hiveTable);
 
@@ -247,7 +249,7 @@ public class BigQueryMetastoreClientTest {
   public void listPartitionsWithoutTableCachedAndPartitionsSizeNegativeReturnsAllPartitionsTest() throws TException {
     String dbName = "db";
     String tblName = "tbl";
-    String key = makeKey(dbName, tblName);
+    String key = TableNameFactory.newInstance(dbName, tblName);
     org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
     when(cache.get(dbName, tblName)).thenReturn(null).thenReturn(hiveTable);
 
