@@ -19,24 +19,13 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.hotels.bdp.circustrain.core.conf.SpringExpressionParser;
 
 @Component
 public class PartitionQueryFactory {
 
-  private final SpringExpressionParser expressionParser;
-
-  @Autowired
-  PartitionQueryFactory(SpringExpressionParser expressionParser) {
-    this.expressionParser = expressionParser;
-  }
-
   public String get(Table hiveTable, String partitionBy, String partitionFilter) {
     if (isNotBlank(partitionBy) && isNotBlank(partitionFilter)) {
-      partitionFilter = expressionParser.parse(partitionFilter);
       return String.format("select %s from %s.%s where %s group by %s order by %s", partitionBy, hiveTable.getDbName(),
           hiveTable.getTableName(), partitionFilter, partitionBy, partitionBy);
     } else if (isNotBlank(partitionBy) && isBlank(partitionFilter)) {

@@ -72,8 +72,7 @@ class BigQueryPartitionGenerator {
   }
 
   private String getQueryStatement(String sourceDBName, String sourceTableName, String partitionKey, String value) {
-    return String.format("select * from %s.%s where %s = %s ignore case", sourceDBName, sourceTableName, partitionKey,
-        value);
+    return String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey, value);
   }
 
   private com.google.cloud.bigquery.Table createPartitionInBigQuery(
