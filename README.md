@@ -74,7 +74,7 @@ If your destination data is partitioned you can also specify a partition filter 
           table-location: s3://bucket/foo/bar/
         copier-options:
           circustrain-bigquery-partition-by: date
-          circustrain-bigquery-partition-filter: date BETWEEN TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL -150 DAY) AND CURRENT_TIMESTAMP())
+          circustrain-bigquery-partition-filter: date BETWEEN TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL -150 DAY) AND CURRENT_TIMESTAMP()
 
 
 #### Technical Overview
