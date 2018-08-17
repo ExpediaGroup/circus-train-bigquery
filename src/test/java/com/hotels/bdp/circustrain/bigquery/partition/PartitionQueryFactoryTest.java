@@ -78,7 +78,8 @@ public class PartitionQueryFactoryTest {
     String tblName = "tbl";
     table.setDbName(dbName);
     table.setTableName(tblName);
-    String expected = String.format("select * from %s.%s where %s", dbName, tblName, partitionFilter);
+    String expected = String.format("select %s from %s.%s where %s group by %s order by %s", partitionKey, dbName,
+        tblName, partitionFilter, partitionKey, partitionKey);
     assertEquals(expected, new PartitionQueryFactory(expressionParser).get(table, partitionKey, partitionFilter));
   }
 }

@@ -37,8 +37,8 @@ public class PartitionQueryFactory {
   public String get(Table hiveTable, String partitionBy, String partitionFilter) {
     if (isNotBlank(partitionBy) && isNotBlank(partitionFilter)) {
       partitionFilter = expressionParser.parse(partitionFilter);
-      return String.format("select * from %s.%s where %s", hiveTable.getDbName(), hiveTable.getTableName(),
-          partitionFilter);
+      return String.format("select %s from %s.%s where %s group by %s order by %s", partitionBy, hiveTable.getDbName(),
+          hiveTable.getTableName(), partitionFilter, partitionBy, partitionBy);
     } else if (isNotBlank(partitionBy) && isBlank(partitionFilter)) {
       return String.format("select %s from %s.%s group by %s order by %s", partitionBy, hiveTable.getDbName(),
           hiveTable.getTableName(), partitionBy, partitionBy);
