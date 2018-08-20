@@ -80,7 +80,7 @@ public class TableServiceFactory {
     if (configuration.isPartitioningConfigured(hiveTable)) {
       final String partitionBy = configuration.getPartitionByFor(hiveTable);
       final String partitionFilter = configuration.getPartitionFilterFor(hiveTable);
-      final String sqlFilterQuery = partitionQueryFactory.get(hiveTable, partitionBy, partitionFilter);
+      final String sqlFilterQuery = partitionQueryFactory.newInstance(hiveTable, partitionBy, partitionFilter);
       final String datasetName = hiveTable.getDbName();
       final String tableName = randomTableName();
 

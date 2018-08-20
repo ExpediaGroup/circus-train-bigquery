@@ -15,7 +15,8 @@
  */
 package com.hotels.bdp.circustrain.bigquery.conversion;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.util.Collections;
 
@@ -31,28 +32,28 @@ public class BigQueryToHivePartitionConverterTest {
   public void withDatabaseName() {
     String dbName = "database";
     Partition partition = new BigQueryToHivePartitionConverter().withDatabaseName(dbName).convert();
-    assertEquals(partition.getDbName(), dbName);
+    assertThat(partition.getDbName(), is(dbName));
   }
 
   @Test
   public void withpartitionName() {
     String partitionName = "table";
     Partition partition = new BigQueryToHivePartitionConverter().withTableName(partitionName).convert();
-    assertEquals(partition.getTableName(), partitionName);
+    assertThat(partition.getTableName(), is(partitionName));
   }
 
   @Test
   public void withLocation() {
     String location = "getExtractedDataBaseLocation";
     Partition partition = new BigQueryToHivePartitionConverter().withLocation(location).convert();
-    assertEquals(partition.getSd().getLocation(), location);
+    assertThat(partition.getSd().getLocation(), is(location));
   }
 
   @Test
   public void withValues() {
-    Partition partition = new BigQueryToHivePartitionConverter()
-        .withValues(Collections.singletonList("foo=baz"))
+    String values = "foo=baz";
+    Partition partition = new BigQueryToHivePartitionConverter().withValues(Collections.singletonList(values))
         .convert();
-    assertEquals(partition.getValues().get(0), "foo=baz");
+    assertThat(partition.getValues().get(0), is(values));
   }
 }

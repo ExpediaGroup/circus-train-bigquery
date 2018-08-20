@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PartitionQueryFactory {
 
-  public String get(Table hiveTable, String partitionBy, String partitionFilter) {
+  public String newInstance(Table hiveTable, String partitionBy, String partitionFilter) {
     if (isNotBlank(partitionBy) && isNotBlank(partitionFilter)) {
       return String.format("select %s from %s.%s where %s group by %s order by %s", partitionBy, hiveTable.getDbName(),
           hiveTable.getTableName(), partitionFilter, partitionBy, partitionBy);
@@ -32,7 +32,8 @@ public class PartitionQueryFactory {
       return String.format("select %s from %s.%s group by %s order by %s", partitionBy, hiveTable.getDbName(),
           hiveTable.getTableName(), partitionBy, partitionBy);
     } else {
-      throw new IllegalStateException();
+      throw new IllegalStateException(
+          "Cannot create a partition filter query if neither partitionBy nor partitionFilter are provided");
     }
   }
 }

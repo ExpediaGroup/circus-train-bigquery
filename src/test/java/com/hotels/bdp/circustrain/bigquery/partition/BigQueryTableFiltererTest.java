@@ -35,8 +35,7 @@ public class BigQueryTableFiltererTest {
   private final String tableName = "tbl";
   private final String filterQuery = "foo < 5";
 
-  private @Mock
-  BigQueryMetastore bigQueryMetastore;
+  private @Mock BigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService service;
 
   private BigQueryTableFilterer filterer;

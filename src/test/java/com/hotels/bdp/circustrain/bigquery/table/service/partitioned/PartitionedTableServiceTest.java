@@ -36,8 +36,8 @@ import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableResult;
 
-import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionGenerator;
+import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PartitionedTableServiceTest {

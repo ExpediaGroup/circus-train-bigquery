@@ -45,7 +45,7 @@ public class PartitioningConfiguration {
 
   @Autowired
   PartitioningConfiguration(TableReplications tableReplications) {
-    HashMap<String, Map<String, Object>> replicationConfigMap = new HashMap<>();
+    Map<String, Map<String, Object>> replicationConfigMap = new HashMap<>();
     for (TableReplication tableReplication : tableReplications.getTableReplications()) {
       SourceTable sourceTable = tableReplication.getSourceTable();
       String key = TableNameFactory.newInstance(sourceTable.getDatabaseName().trim().toLowerCase(),
@@ -64,25 +64,20 @@ public class PartitioningConfiguration {
   public String getPartitionFilterFor(Table table) {
     String key = TableNameFactory.newInstance(table);
     log.debug("Loading 'partition-filter' for table {}", key);
-    if (replicationConfigMap.containsKey(key)) {
-      Map<String, Object> copierOptions = replicationConfigMap.get(key);
-      if (copierOptions != null && copierOptions.containsKey(PARTITION_FILTER)) {
-        Object yamlValue = copierOptions.get(PARTITION_FILTER);
-        if (yamlValue != null) {
-          return yamlValue.toString();
-        }
-      }
-    }
-    return null;
+    return getPartitionForKey(key, PARTITION_FILTER);
   }
 
   public String getPartitionByFor(Table table) {
     String key = TableNameFactory.newInstance(table);
     log.debug("Loading 'partition-by' for table {}", key);
+    return getPartitionForKey(key, PARTITION_BY);
+  }
+
+  private String getPartitionForKey(String key, String partitionType) {
     if (replicationConfigMap.containsKey(key)) {
       Map<String, Object> copierOptions = replicationConfigMap.get(key);
-      if (copierOptions != null && copierOptions.containsKey(PARTITION_BY)) {
-        Object yamlValue = copierOptions.get(PARTITION_BY);
+      if (copierOptions != null && copierOptions.containsKey(partitionType)) {
+        Object yamlValue = copierOptions.get(partitionType);
         if (yamlValue != null) {
           return yamlValue.toString();
         }

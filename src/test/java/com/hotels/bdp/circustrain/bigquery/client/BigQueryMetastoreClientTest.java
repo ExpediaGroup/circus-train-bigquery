@@ -24,8 +24,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import static com.hotels.bdp.circustrain.bigquery.util.TableNameFactory.newInstance;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,8 +63,7 @@ public class BigQueryMetastoreClientTest {
   private @Mock PartitionedTableService partitionedTableService;
   private @Mock HiveTableCache cache;
   private @Mock Job job;
-  private @Mock
-  BigQueryMetastore bigQueryMetastore;
+  private @Mock BigQueryMetastore bigQueryMetastore;
   private @Mock JobStatus jobStatus;
 
   private BigQueryMetastoreClient bigQueryMetastoreClient;

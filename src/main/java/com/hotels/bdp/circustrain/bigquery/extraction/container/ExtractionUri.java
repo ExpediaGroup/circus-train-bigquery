@@ -49,11 +49,11 @@ public class ExtractionUri {
   }
 
   public ExtractionUri(String bucket, String folder, String fileName, String fileFormat) {
-    this.dataBucket = bucket;
-    this.dataFolder = folder;
-    this.dataFormat = fileFormat;
-    this.dataKey = folder + "/" + fileName + "." + fileFormat;
-    this.dataUri = "gs://" + dataBucket + "/" + dataKey;
+    dataBucket = bucket;
+    dataFolder = folder;
+    dataFormat = fileFormat;
+    dataKey = folder + "/" + fileName + "." + fileFormat;
+    dataUri = "gs://" + dataBucket + "/" + dataKey;
   }
 
   public String getFolder() {
@@ -76,6 +76,10 @@ public class ExtractionUri {
     return dataBucket;
   }
 
+  public String getTableLocation() {
+    return "gs://" + dataBucket + "/" + dataFolder + "/";
+  }
+
   @Override
   public int hashCode() {
     return new HashCodeBuilder().append(dataFormat).append(dataBucket).append(dataKey).append(dataUri).toHashCode();
@@ -85,16 +89,16 @@ public class ExtractionUri {
   public boolean equals(Object o) {
     if (o instanceof ExtractionUri) {
       ExtractionUri other = (ExtractionUri) o;
-      if (!other.dataBucket.equals(this.dataBucket)) {
+      if (!other.dataBucket.equals(dataBucket)) {
         return false;
       }
-      if (!other.dataKey.equals(this.dataKey)) {
+      if (!other.dataKey.equals(dataKey)) {
         return false;
       }
-      if (!other.dataUri.equals(this.dataUri)) {
+      if (!other.dataUri.equals(dataUri)) {
         return false;
       }
-      if (!other.dataFormat.equals(this.dataFormat)) {
+      if (!other.dataFormat.equals(dataFormat)) {
         return false;
       }
       return true;
@@ -105,6 +109,6 @@ public class ExtractionUri {
 
   @Override
   public String toString() {
-    return this.getUri();
+    return getUri();
   }
 }

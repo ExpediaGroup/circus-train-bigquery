@@ -176,7 +176,7 @@ public class HivePartitionGenerator {
             sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder).generatePart();
 
         Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
-            new HivePartitionLocationConverter(extractionUri).get(), cols, originalValue).get();
+            extractionUri.getTableLocation(), cols, originalValue).get();
         log.info("Generated partition {}={}", partitionKey, formattedValue);
         log.debug("{}", partition);
         return com.google.common.base.Optional.of(partition);
@@ -212,13 +212,8 @@ public class HivePartitionGenerator {
         String location,
         List<FieldSchema> cols,
         List<String> partitionValues) {
-      this.partition = new BigQueryToHivePartitionConverter()
-          .withDatabaseName(databaseName)
-          .withTableName(tableName)
-          .withValues(partitionValues)
-          .withCols(cols)
-          .withLocation(location)
-          .convert();
+      partition = new BigQueryToHivePartitionConverter().withDatabaseName(databaseName).withTableName(tableName)
+          .withValues(partitionValues).withCols(cols).withLocation(location).convert();
     }
 
     public Partition get() {

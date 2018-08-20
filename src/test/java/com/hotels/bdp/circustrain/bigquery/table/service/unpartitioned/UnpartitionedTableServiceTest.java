@@ -16,7 +16,7 @@
 package com.hotels.bdp.circustrain.bigquery.table.service.unpartitioned;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -26,15 +26,15 @@ import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConvert
 
 public class UnpartitionedTableServiceTest {
 
-  private Table table = new BigQueryToHiveTableConverter().withTableName("foo").withDatabaseName("bar").convert();
-  private UnpartitionedTableService service = new UnpartitionedTableService(table);
+  private final Table table = new BigQueryToHiveTableConverter().withTableName("foo").withDatabaseName("bar").convert();
+  private final UnpartitionedTableService service = new UnpartitionedTableService(table);
 
   @Test
   public void getTable() {
     UnpartitionedTableService service = new UnpartitionedTableService(table);
     Table returned = service.getTable();
     assertEquals(table, returned);
-    assertFalse(table == returned);
+    assertNotSame(table, returned);
   }
 
   @Test

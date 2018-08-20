@@ -46,8 +46,7 @@ import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 public class HivePartitionGeneratorTest {
 
   private @Mock Table table;
-  private @Mock
-  BigQueryMetastore metastore;
+  private @Mock BigQueryMetastore metastore;
   private @Mock ExtractionService service;
   private @Mock ExtractionContainerFactory factory;
   private @Mock ExtractionContainer container;

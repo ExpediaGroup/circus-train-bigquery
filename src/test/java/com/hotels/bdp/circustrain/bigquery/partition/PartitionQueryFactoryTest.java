@@ -27,12 +27,12 @@ public class PartitionQueryFactoryTest {
 
   @Test(expected = IllegalStateException.class)
   public void notConfiguredThrowsException() {
-    new PartitionQueryFactory().get(new Table(), null, null);
+    new PartitionQueryFactory().newInstance(new Table(), null, null);
   }
 
   @Test(expected = IllegalStateException.class)
   public void partitionFilterOnlyConfiguredThrowsException() {
-    new PartitionQueryFactory().get(new Table(), null, "foo > 5");
+    new PartitionQueryFactory().newInstance(new Table(), null, "foo > 5");
   }
 
   @Test
@@ -45,7 +45,7 @@ public class PartitionQueryFactoryTest {
     table.setTableName(tblName);
     String expected = String.format("select %s from %s.%s group by %s order by %s", partitionKey, dbName, tblName,
         partitionKey, partitionKey);
-    assertEquals(expected, new PartitionQueryFactory().get(table, partitionKey, null));
+    assertEquals(expected, new PartitionQueryFactory().newInstance(table, partitionKey, null));
   }
 
   @Test
@@ -59,6 +59,6 @@ public class PartitionQueryFactoryTest {
     table.setTableName(tblName);
     String expected = String.format("select %s from %s.%s where %s group by %s order by %s", partitionKey, dbName,
         tblName, partitionFilter, partitionKey, partitionKey);
-    assertEquals(expected, new PartitionQueryFactory().get(table, partitionKey, partitionFilter));
+    assertEquals(expected, new PartitionQueryFactory().newInstance(table, partitionKey, partitionFilter));
   }
 }

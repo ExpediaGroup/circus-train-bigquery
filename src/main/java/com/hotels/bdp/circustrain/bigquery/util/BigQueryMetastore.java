@@ -51,13 +51,17 @@ public class BigQueryMetastore {
   }
 
   public boolean tableExists(String databaseName, String tableName) throws TException {
-    this.checkDbExists(databaseName);
+    checkDbExists(databaseName);
     return client.getDataset(databaseName).get(tableName) != null;
   }
 
   public Table getTable(String databaseName, String tableName) {
     try {
-      return getBigQueryTableHelper(client, databaseName, tableName);
+      com.google.cloud.bigquery.Table table = client.getDataset(databaseName).get(tableName);
+      if (table == null) {
+        throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");
+      }
+      return table;
     } catch (NoSuchObjectException e) {
       throw new CircusTrainException(e);
     }
@@ -80,25 +84,12 @@ public class BigQueryMetastore {
     }
   }
 
-  private com.google.cloud.bigquery.Table getBigQueryTableHelper(BigQuery client, String databaseName, String tableName)
-    throws NoSuchObjectException {
-    com.google.cloud.bigquery.Table table = client.getDataset(databaseName).get(tableName);
-    if (table == null) {
-      throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");
-    }
-    return table;
-  }
-
   public TableResult executeIntoDestinationTable(String destinationDBName, String destinationTableName, String query) {
-    return this.runJob(configureFilterJob(destinationDBName, destinationTableName, query));
+    return runJob(configureFilterJob(destinationDBName, destinationTableName, query));
   }
 
   private QueryJobConfiguration configureFilterJob(String databaseName, String tableName, String partitionFilter) {
-    return QueryJobConfiguration
-        .newBuilder(partitionFilter)
-        .setDestinationTable(TableId.of(databaseName, tableName))
-        .setUseLegacySql(true)
-        .setAllowLargeResults(true)
-        .build();
+    return QueryJobConfiguration.newBuilder(partitionFilter).setDestinationTable(TableId.of(databaseName, tableName))
+        .setUseLegacySql(true).setAllowLargeResults(true).build();
   }
 }

@@ -42,8 +42,7 @@ import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 @RunWith(MockitoJUnitRunner.class)
 public class TableServiceFactoryTest {
 
-  private @Mock
-  BigQueryMetastore bigQueryMetastore;
+  private @Mock BigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService service;
   private @Mock PartitionQueryFactory partitionQueryFactory;
   private @Mock PartitioningConfiguration configuration;
@@ -53,10 +52,10 @@ public class TableServiceFactoryTest {
   @Test
   public void newInstanceCachesService() {
     Map<Table, TableService> map = new HashMap<>();
-    this.tableServiceFactory = new TableServiceFactory(bigQueryMetastore, service, map, partitionQueryFactory,
+    tableServiceFactory = new TableServiceFactory(bigQueryMetastore, service, map, partitionQueryFactory,
         configuration);
     Table table = new Table();
-    when(partitionQueryFactory.get(eq(table), anyString(), anyString())).thenReturn("foo > 5");
+    when(partitionQueryFactory.newInstance(eq(table), anyString(), anyString())).thenReturn("foo > 5");
     tableServiceFactory.newInstance(table);
     assertEquals(1, map.size());
   }
@@ -66,10 +65,10 @@ public class TableServiceFactoryTest {
     Map<Table, TableService> map = mock(Map.class);
     when(map.containsKey(anyString())).thenReturn(false).thenReturn(true);
 
-    this.tableServiceFactory = new TableServiceFactory(bigQueryMetastore, service, map, partitionQueryFactory,
+    tableServiceFactory = new TableServiceFactory(bigQueryMetastore, service, map, partitionQueryFactory,
         configuration);
     Table table = new Table();
-    when(partitionQueryFactory.get(eq(table), anyString(), anyString())).thenReturn("foo > 5");
+    when(partitionQueryFactory.newInstance(eq(table), anyString(), anyString())).thenReturn("foo > 5");
     tableServiceFactory.newInstance(table);
     tableServiceFactory.newInstance(table);
     verify(map, times(1)).put(eq(table), any(TableService.class));

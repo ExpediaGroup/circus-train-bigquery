@@ -18,7 +18,7 @@ package com.hotels.bdp.circustrain.bigquery;
 public final class CircusTrainBigQueryConstants {
 
   public static final String ACCEPT_PREFIX = "bigquery://";
-  public static final String CIRCUS_TRAIN_BIGQUERY_PREFIX = "circustrain-bigquery";
+  private static final String CIRCUS_TRAIN_BIGQUERY_PREFIX = "circustrain-bigquery";
   public static final String PARTITION_BY = CIRCUS_TRAIN_BIGQUERY_PREFIX + "-partition-by";
   public static final String PARTITION_FILTER = CIRCUS_TRAIN_BIGQUERY_PREFIX + "-partition-filter";
 
