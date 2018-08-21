@@ -15,18 +15,19 @@
  */
 package com.hotels.bdp.circustrain.bigquery.table.service.partitioned;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.hive.metastore.api.Partition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.cloud.bigquery.Field;
@@ -46,37 +47,34 @@ public class PartitionedTableServiceTest {
 
   private @Mock HivePartitionKeyAdder adder;
   private @Mock HivePartitionGenerator factory;
-  private @Mock TableResult result;
+  private @Mock TableResult tableResult;
+  private @Mock TableDefinition definition;
   private @Mock com.google.cloud.bigquery.Table filteredTable;
+
+  Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
 
   private PartitionedTableService partitionedTableService;
 
   @Before
   public void init() {
-    partitionedTableService = new PartitionedTableService(partitionBy, adder, factory, result, filteredTable);
+    partitionedTableService = new PartitionedTableService(partitionBy, adder, factory, tableResult, filteredTable);
+    when(filteredTable.getDefinition()).thenReturn(definition);
+    when(definition.getSchema()).thenReturn(schema);
   }
 
   @Test
   public void getTable() {
-    TableDefinition definition = mock(TableDefinition.class);
-    when(filteredTable.getDefinition()).thenReturn(definition);
-    Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
-    when(definition.getSchema()).thenReturn(schema);
-    partitionedTableService.getTable();
-    Mockito.verify(adder).add(eq(partitionBy), eq(schema));
+    org.apache.hadoop.hive.metastore.api.Table result = partitionedTableService.getTable();
+    assertThat(result, is(adder.add(partitionBy, schema)));
   }
 
   @Test
   public void getPartitions() {
-    TableDefinition definition = mock(TableDefinition.class);
-    when(filteredTable.getDefinition()).thenReturn(definition);
-    Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
-    when(definition.getSchema()).thenReturn(schema);
     List<FieldValueList> rows = new ArrayList<>();
-    when(result.iterateAll()).thenReturn(rows);
+    when(tableResult.iterateAll()).thenReturn(rows);
 
-    partitionedTableService.getPartitions();
-
-    Mockito.verify(factory).generate(eq(partitionBy), eq(rows));
+    List<Partition> result = partitionedTableService.getPartitions();
+    assertThat(result, is(factory.generate(eq(partitionBy), eq(rows))));
   }
+
 }

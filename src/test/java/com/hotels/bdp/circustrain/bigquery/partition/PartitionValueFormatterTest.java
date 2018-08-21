@@ -25,12 +25,14 @@ import org.junit.Test;
 
 public class PartitionValueFormatterTest {
 
+  private final List<FieldSchema> cols = new ArrayList<>();
+  private final FieldSchema fieldSchema = new FieldSchema();
+
+  private final String partitionKey = "key";
+  private final String value = "value";
+
   @Test
   public void formatNotNeeded() {
-    String partitionKey = "key";
-    String value = "value";
-    List<FieldSchema> cols = new ArrayList<>();
-    FieldSchema fieldSchema = new FieldSchema();
     fieldSchema.setName(partitionKey);
     fieldSchema.setType("int");
     cols.add(fieldSchema);
@@ -41,10 +43,6 @@ public class PartitionValueFormatterTest {
 
   @Test
   public void formatStringValue() {
-    String partitionKey = "key";
-    String value = "string_value";
-    List<FieldSchema> cols = new ArrayList<>();
-    FieldSchema fieldSchema = new FieldSchema();
     fieldSchema.setName(partitionKey);
     fieldSchema.setType("string");
     cols.add(fieldSchema);
@@ -53,4 +51,5 @@ public class PartitionValueFormatterTest {
     PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, cols);
     assertEquals(expected, formatter.format(value));
   }
+
 }
