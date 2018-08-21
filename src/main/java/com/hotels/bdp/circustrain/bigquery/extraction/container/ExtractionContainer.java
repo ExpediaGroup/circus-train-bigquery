@@ -22,12 +22,12 @@ public class ExtractionContainer {
   private final Table table;
   private final ExtractionUri extractionUri;
   // TODO: replace with enum but first see where it's used
-  private final Boolean deleteTable;
+  private final PostExtractionAction postExtractionAction;
 
-  public ExtractionContainer(Table table, ExtractionUri extractionUri, Boolean deleteTable) {
+  public ExtractionContainer(Table table, ExtractionUri extractionUri, PostExtractionAction postExtractionAction) {
     this.table = table;
     this.extractionUri = extractionUri;
-    this.deleteTable = deleteTable;
+    this.postExtractionAction = postExtractionAction;
   }
 
   public Table getTable() {
@@ -38,8 +38,8 @@ public class ExtractionContainer {
     return extractionUri;
   }
 
-  public Boolean getDeleteTable() {
-    return deleteTable;
+  public PostExtractionAction getPostExtractionAction() {
+    return postExtractionAction;
   }
 
 }

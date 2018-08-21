@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
@@ -94,7 +95,7 @@ class BigQueryPartitionGenerator {
     String partitionFolder = tableFolder + "/" + randomUri();
 
     ExtractionUri extractionUri = new ExtractionUri(partitionBucket, partitionFolder, fileName);
-    ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri, true);
+    ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri, PostExtractionAction.DELETE);
     extractionService.register(toRegister);
     return extractionUri;
   }

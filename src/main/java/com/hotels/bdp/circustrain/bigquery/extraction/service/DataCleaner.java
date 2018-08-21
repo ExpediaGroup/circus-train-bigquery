@@ -37,6 +37,7 @@ import com.google.cloud.storage.StorageException;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.RuntimeConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
 public class DataCleaner {
 
@@ -72,8 +73,8 @@ public class DataCleaner {
       log.info("Cleaning data at location {}", container.getExtractionUri());
 
       Table table = container.getTable();
-      boolean deleteTable = container.getDeleteTable();
-      if (deleteTable) {
+      PostExtractionAction deleteTable = container.getPostExtractionAction();
+      if (deleteTable == PostExtractionAction.DELETE) {
         table.delete();
         log.debug("Deleted table. {}", container.getTable().getTableId());
       }

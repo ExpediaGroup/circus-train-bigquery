@@ -93,6 +93,7 @@ import org.slf4j.LoggerFactory;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
@@ -149,7 +150,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();
-    ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, false);
+    ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, PostExtractionAction.RETAIN);
     extractionService.register(container);
 
     Table hiveTable = tableServiceFactory.newInstance(new BigQueryToHiveTableConverter().withDatabaseName(databaseName)

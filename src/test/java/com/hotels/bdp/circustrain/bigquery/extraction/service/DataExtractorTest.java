@@ -51,6 +51,7 @@ import com.google.cloud.storage.Storage;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DataExtractorTest {
@@ -64,7 +65,7 @@ public class DataExtractorTest {
   private @Mock JobStatus jobStatus;
   private @Mock Future future;
   private @Mock ExecutorService executorService;
-  private Queue<ExtractionContainer> queue = new ConcurrentLinkedQueue<>();
+  private final Queue<ExtractionContainer> queue = new ConcurrentLinkedQueue<>();
 
   @Before
   public void init() throws ExecutionException, InterruptedException {
@@ -79,7 +80,7 @@ public class DataExtractorTest {
       throw new RuntimeException(e);
     }
     when(executorService.submit(any(Callable.class))).thenReturn(future);
-    Mockito.when(executorService.submit(Mockito.argThat(new ArgumentMatcher<Callable>() {
+    Mockito.when(executorService.submit(Matchers.argThat(new ArgumentMatcher<Callable>() {
       @Override
       public boolean matches(Object argument) {
         Callable callable = (Callable) argument;
@@ -104,7 +105,7 @@ public class DataExtractorTest {
     when(job.getStatus()).thenReturn(jobStatus);
     when(jobStatus.getError()).thenReturn(null);
 
-    extractor.add(new ExtractionContainer(table, data, false));
+    extractor.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
     extractor.extract(executorService);
 
     verify(storage).create(any(BucketInfo.class));
@@ -122,7 +123,7 @@ public class DataExtractorTest {
     when(table.extract(anyString(), anyString())).thenReturn(job);
     when(job.waitFor(Matchers.<RetryOption> anyVararg())).thenReturn(null);
 
-    extractor.add(new ExtractionContainer(table, data, false));
+    extractor.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
     extractor.extract(executorService);
   }
 
@@ -142,7 +143,7 @@ public class DataExtractorTest {
     when(job.getStatus()).thenReturn(jobStatus);
     when(jobStatus.getError()).thenReturn(new BigQueryError("reason", "getExtractedDataBaseLocation", "message"));
 
-    extractor.add(new ExtractionContainer(table, data, false));
+    extractor.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
     extractor.extract(executorService);
   }
 

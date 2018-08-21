@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -51,6 +52,7 @@ import com.google.common.collect.ImmutableList;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DataCleanerTest {
@@ -74,7 +76,7 @@ public class DataCleanerTest {
       throw new RuntimeException(e);
     }
     when(executorService.submit(any(Callable.class))).thenReturn(future);
-    Mockito.when(executorService.submit(Mockito.argThat(new ArgumentMatcher<Callable>() {
+    Mockito.when(executorService.submit(Matchers.argThat(new ArgumentMatcher<Callable>() {
       @Override
       public boolean matches(Object argument) {
         Callable callable = (Callable) argument;
@@ -113,7 +115,7 @@ public class DataCleanerTest {
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(blobs);
 
-    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
     cleaner.cleanup(executorService);
 
     for (int i = 0; i < numBlobs; ++i) {
@@ -139,7 +141,7 @@ public class DataCleanerTest {
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(blobs);
 
-    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
     cleaner.cleanup(executorService);
 
     verify(storage).delete(any(BlobId.class));
@@ -162,7 +164,7 @@ public class DataCleanerTest {
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(blobs);
 
-    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
     cleaner.cleanup(executorService);
 
     verify(storage).delete(any(BlobId.class));
@@ -184,14 +186,14 @@ public class DataCleanerTest {
 
     Blob blob = mock(Blob.class);
     when(blob.exists()).thenReturn(true);
-    when(blob.getBlobId()).thenReturn(firstCall).thenThrow(new StorageException(new IOException())).thenReturn(
-        thirdCall);
+    when(blob.getBlobId()).thenReturn(firstCall).thenThrow(new StorageException(new IOException()))
+        .thenReturn(thirdCall);
 
     Page pages = mock(Page.class);
     when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(ImmutableList.of(blob, blob, blob));
 
-    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
     cleaner.cleanup(executorService);
 
     verify(storage).delete(firstCall);
@@ -217,7 +219,7 @@ public class DataCleanerTest {
     when(pages.iterateAll()).thenReturn(blobs);
     when(storage.delete(any(BlobId.class))).thenThrow(new StorageException(new IOException()));
 
-    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
     cleaner.cleanup(executorService);
 
     verify(storage).delete(any(BlobId.class));
@@ -234,7 +236,7 @@ public class DataCleanerTest {
     when(bucket.delete()).thenThrow(new StorageException(new IOException()));
     when(storage.get(anyString())).thenReturn(bucket);
 
-    cleaner.add(new ExtractionContainer(table, data, false));
+    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
     cleaner.cleanup(executorService);
 
     verify(storage, times(0)).delete(any(BlobId.class));
