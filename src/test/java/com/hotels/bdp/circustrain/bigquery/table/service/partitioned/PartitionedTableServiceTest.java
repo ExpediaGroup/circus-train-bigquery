@@ -51,8 +51,7 @@ public class PartitionedTableServiceTest {
   private @Mock TableDefinition definition;
   private @Mock com.google.cloud.bigquery.Table filteredTable;
 
-  Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
-
+  private final Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
   private PartitionedTableService partitionedTableService;
 
   @Before

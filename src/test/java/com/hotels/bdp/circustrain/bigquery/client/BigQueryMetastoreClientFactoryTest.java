@@ -15,22 +15,31 @@
  */
 package com.hotels.bdp.circustrain.bigquery.client;
 
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
+import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
+
 public class BigQueryMetastoreClientFactoryTest {
+
+  private final BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
 
   @Test
   public void acceptsBigQueryUri() {
-    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
-    assertTrue(factory.accepts("bigquery://my-project-id"));
+    assertThat(factory.accepts("bigquery://my-project-id"), is(true));
   }
 
   @Test
   public void rejectsThriftUri() {
-    BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
-    assertFalse(factory.accepts("thrift://my-thrift-uri"));
+    assertThat(factory.accepts("thrift://my-thrift-uri"), is(false));
+  }
+
+  @Test
+  public void newInstance() {
+    CloseableMetaStoreClient client = factory.newInstance(null, "testName");
+    assertThat(client, instanceOf(BigQueryMetastoreClient.class));
   }
 }
