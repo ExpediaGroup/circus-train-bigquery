@@ -57,12 +57,12 @@ public class BigQueryMetastore {
 
   public Table getTable(String databaseName, String tableName) {
     try {
-      com.google.cloud.bigquery.Table table = client.getDataset(databaseName).get(tableName);
-      if (table == null) {
+      if (tableExists(databaseName, tableName)) {
+        return client.getDataset(databaseName).get(tableName);
+      } else {
         throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");
       }
-      return table;
-    } catch (NoSuchObjectException e) {
+    } catch (TException e) {
       throw new CircusTrainException(e);
     }
   }
