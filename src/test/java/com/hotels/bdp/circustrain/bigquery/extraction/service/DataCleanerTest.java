@@ -15,6 +15,8 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction.service;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -24,6 +26,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -47,7 +51,6 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
-import com.google.common.collect.ImmutableList;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
@@ -57,24 +60,35 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAc
 @RunWith(MockitoJUnitRunner.class)
 public class DataCleanerTest {
 
-  private DataCleaner cleaner;
+  private @Mock Bucket bucket;
+  private @Mock Blob blob;
+  private @Mock ExecutorService executorService;
+  private @Mock Future future;
+  private @Mock Page pages;
   private @Mock Storage storage;
   private @Mock Table table;
-  private @Mock Future future;
-  private @Mock ExecutorService executorService;
+  private DataCleaner cleaner;
+  private final ExtractionUri extractionUri = new ExtractionUri();
+  private final TableId tableId = TableId.of("dataset", "table");
+  private ExtractionContainer extractionContainer;
 
   @Before
   public void init() throws ExecutionException, InterruptedException {
     initExecutor();
+
     cleaner = new DataCleaner(storage);
+    extractionContainer = new ExtractionContainer(table, extractionUri, PostExtractionAction.RETAIN);
+
+    when(table.getTableId()).thenReturn(tableId);
+    when(future.get()).thenReturn(null);
+    when(storage.get(anyString())).thenReturn(bucket);
+    when(bucket.delete()).thenReturn(true);
+    when(storage.list(anyString())).thenReturn(pages);
+    when(blob.exists()).thenReturn(true);
+    when(pages.iterateAll()).thenReturn(Collections.singletonList(blob));
   }
 
-  private void initExecutor() {
-    try {
-      when(future.get()).thenReturn(null);
-    } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException(e);
-    }
+  private void initExecutor() throws InterruptedException, ExecutionException {
     when(executorService.submit(any(Callable.class))).thenReturn(future);
     Mockito.when(executorService.submit(Matchers.argThat(new ArgumentMatcher<Callable>() {
       @Override
@@ -93,152 +107,123 @@ public class DataCleanerTest {
 
   @Test
   public void cleanup() {
-    ExtractionUri data = new ExtractionUri();
-    TableId tableId = TableId.of("dataset", "table");
-    when(table.getTableId()).thenReturn(tableId);
-    when(storage.delete(any(BlobId.class))).thenReturn(true);
-    Bucket bucket = mock(Bucket.class);
-    when(bucket.delete()).thenReturn(true);
-    when(storage.get(anyString())).thenReturn(bucket);
-
     List<Blob> blobs = new ArrayList<>();
     final int numBlobs = 10;
     for (int i = 0; i < numBlobs; ++i) {
       Blob blob = mock(Blob.class);
       when(blob.exists()).thenReturn(true);
-      BlobId blobId = BlobId.of(data.getBucket(), data.getKey() + i);
+      BlobId blobId = BlobId.of(extractionUri.getBucket(), extractionUri.getKey() + i);
       when(blob.getBlobId()).thenReturn(blobId);
       blobs.add(blob);
     }
 
-    Page pages = mock(Page.class);
-    when(storage.list(anyString())).thenReturn(pages);
     when(pages.iterateAll()).thenReturn(blobs);
+    when(storage.delete(any(BlobId.class))).thenReturn(true);
 
-    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
-    cleaner.cleanup(executorService);
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup(executorService);
 
     for (int i = 0; i < numBlobs; ++i) {
       verify(storage).delete(blobs.get(i).getBlobId());
     }
 
     verify(bucket).delete();
+    assertThat(cleaned.get(0), is(extractionContainer));
   }
 
   @Test
   public void cleanupWhenDeletionFailsOnBlobDoesntThrowException() {
-    ExtractionUri data = new ExtractionUri();
-    TableId tableId = TableId.of("dataset", "table");
-    when(table.getTableId()).thenReturn(tableId);
     when(storage.delete(any(BlobId.class))).thenReturn(false);
-    Bucket bucket = mock(Bucket.class);
-    when(bucket.delete()).thenReturn(true);
-    when(storage.get(anyString())).thenReturn(bucket);
-    Blob blob = mock(Blob.class);
-    when(blob.exists()).thenReturn(true);
-    List<Blob> blobs = ImmutableList.of(blob);
-    Page pages = mock(Page.class);
-    when(storage.list(anyString())).thenReturn(pages);
-    when(pages.iterateAll()).thenReturn(blobs);
 
-    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
-    cleaner.cleanup(executorService);
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup(executorService);
 
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
+    assertThat(cleaned.get(0), is(extractionContainer));
   }
 
   @Test
   public void cleanupWhenDeletionThrowsExceptionOnBlobDoesntThrowException() {
-    ExtractionUri data = new ExtractionUri();
-    TableId tableId = TableId.of("dataset", "table");
-    when(table.getTableId()).thenReturn(tableId);
     when(storage.delete(any(BlobId.class))).thenThrow(new StorageException(new IOException()));
-    Bucket bucket = mock(Bucket.class);
-    when(bucket.delete()).thenReturn(true);
-    when(storage.get(anyString())).thenReturn(bucket);
-    Blob blob = mock(Blob.class);
-    when(blob.exists()).thenReturn(true);
-    List<Blob> blobs = ImmutableList.of(blob);
-    Page pages = mock(Page.class);
-    when(storage.list(anyString())).thenReturn(pages);
-    when(pages.iterateAll()).thenReturn(blobs);
 
-    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
-    cleaner.cleanup(executorService);
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup(executorService);
 
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
+    assertThat(cleaned.get(0), is(extractionContainer));
   }
 
   @Test
   public void cleanupWhenDeletionThrowsExceptionOnBlobDoesntStillCleansRemainingBlobs() {
-    ExtractionUri data = new ExtractionUri();
-    TableId tableId = TableId.of("dataset", "table");
-    when(table.getTableId()).thenReturn(tableId);
+    BlobId firstCall = BlobId.of(extractionUri.getBucket(), extractionUri.getKey() + 1);
+    BlobId thirdCall = BlobId.of(extractionUri.getBucket(), extractionUri.getKey() + 3);
     when(storage.delete(any(BlobId.class))).thenReturn(true);
-    Bucket bucket = mock(Bucket.class);
-    when(bucket.delete()).thenReturn(true);
-    when(storage.get(anyString())).thenReturn(bucket);
-
-    BlobId firstCall = BlobId.of(data.getBucket(), data.getKey() + 1);
-    BlobId thirdCall = BlobId.of(data.getBucket(), data.getKey() + 3);
-
-    Blob blob = mock(Blob.class);
-    when(blob.exists()).thenReturn(true);
     when(blob.getBlobId()).thenReturn(firstCall).thenThrow(new StorageException(new IOException()))
         .thenReturn(thirdCall);
+    when(pages.iterateAll()).thenReturn(Arrays.asList(blob, blob, blob));
 
-    Page pages = mock(Page.class);
-    when(storage.list(anyString())).thenReturn(pages);
-    when(pages.iterateAll()).thenReturn(ImmutableList.of(blob, blob, blob));
-
-    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
-    cleaner.cleanup(executorService);
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup(executorService);
 
     verify(storage).delete(firstCall);
     verify(storage).delete(thirdCall);
     verify(storage, times(2)).delete(any(BlobId.class));
     verify(bucket).delete();
+    assertThat(cleaned.get(0), is(extractionContainer));
   }
 
   @Test
   public void cleanupWhenBucketDeletionThrowExceptionDoesntFailJob() {
-    ExtractionUri data = new ExtractionUri();
-    TableId tableId = TableId.of("dataset", "table");
-    when(table.getTableId()).thenReturn(tableId);
-    when(storage.delete(any(BlobId.class))).thenReturn(true);
-    Bucket bucket = mock(Bucket.class);
-    when(bucket.delete()).thenReturn(true);
-    when(storage.get(anyString())).thenReturn(bucket);
-    Blob blob = mock(Blob.class);
-    when(blob.exists()).thenReturn(true);
-    List<Blob> blobs = ImmutableList.of(blob);
-    Page pages = mock(Page.class);
-    when(storage.list(anyString())).thenReturn(pages);
-    when(pages.iterateAll()).thenReturn(blobs);
     when(storage.delete(any(BlobId.class))).thenThrow(new StorageException(new IOException()));
-
-    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
-    cleaner.cleanup(executorService);
-
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup(executorService);
     verify(storage).delete(any(BlobId.class));
     verify(bucket).delete();
+    assertThat(cleaned.get(0), is(extractionContainer));
   }
 
   @Test
   public void exceptionNotThrownWhenListFails() {
-    ExtractionUri data = new ExtractionUri();
     when(storage.list(anyString())).thenThrow(new StorageException(new IOException()));
-    TableId tableId = TableId.of("dataset", "table");
-    when(table.getTableId()).thenReturn(tableId);
-    Bucket bucket = mock(Bucket.class);
-    when(bucket.delete()).thenThrow(new StorageException(new IOException()));
-    when(storage.get(anyString())).thenReturn(bucket);
-
-    cleaner.add(new ExtractionContainer(table, data, PostExtractionAction.RETAIN));
-    cleaner.cleanup(executorService);
-
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup(executorService);
     verify(storage, times(0)).delete(any(BlobId.class));
+    assertThat(cleaned.get(0), is(extractionContainer));
+  }
+
+  @Test
+  public void cleanupNoArguments() {
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup();
+    assertThat(cleaned.get(0), is(extractionContainer));
+  }
+
+  @Test
+  public void cleanupTable() {
+    ExtractionContainer container = new ExtractionContainer(table, extractionUri, PostExtractionAction.DELETE);
+    cleaner.add(container);
+    List<ExtractionContainer> cleaned = cleaner.cleanup();
+    verify(table).delete();
+    assertThat(cleaned.get(0), is(container));
+  }
+
+  @Test
+  public void cleanupAbsentBucket() {
+    when(storage.get(anyString())).thenReturn(null);
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup();
+    verify(storage, times(0)).delete(any(BlobId.class));
+    assertThat(cleaned.get(0), is(extractionContainer));
+  }
+
+  @Test
+  public void cleanupAbsentBlob() {
+    when(blob.exists()).thenReturn(false);
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup();
+    verify(storage, times(0)).delete(any(BlobId.class));
+    assertThat(cleaned.get(0), is(extractionContainer));
   }
 }
