@@ -28,8 +28,8 @@ import com.google.common.annotations.VisibleForTesting;
 
 import com.hotels.bdp.circustrain.bigquery.api.TableService;
 import com.hotels.bdp.circustrain.bigquery.partition.BigQueryTableFilterer;
-import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionGenerator;
+import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 
 public class PartitionedTableService implements TableService {
 
@@ -61,6 +61,7 @@ public class PartitionedTableService implements TableService {
     this.filteredTable = filteredTable;
   }
 
+  @Override
   public Table getTable() {
     return adder.add(Objects.requireNonNull(partitionedBy).toLowerCase(), filteredTable.getDefinition().getSchema());
   }

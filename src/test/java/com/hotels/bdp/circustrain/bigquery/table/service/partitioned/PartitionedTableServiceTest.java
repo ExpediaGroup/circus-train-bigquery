@@ -21,6 +21,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -53,6 +55,7 @@ public class PartitionedTableServiceTest {
 
   private final Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
   private PartitionedTableService partitionedTableService;
+  private final List<FieldValueList> rows = new ArrayList<>();
 
   @Before
   public void init() {
@@ -69,7 +72,27 @@ public class PartitionedTableServiceTest {
 
   @Test
   public void getPartitions() {
-    List<FieldValueList> rows = new ArrayList<>();
+    when(tableResult.iterateAll()).thenReturn(rows);
+    List<Partition> result = partitionedTableService.getPartitions();
+    assertThat(result, is(factory.generate(eq(partitionBy), eq(rows))));
+  }
+
+  @Test
+  public void getPartitionColumnNotFoundFromTheFirstTry() {
+    Field barField = Field.of("bar", LegacySQLTypeName.INTEGER);
+    Field fooField = Field.of(partitionBy, LegacySQLTypeName.STRING);
+    Schema schemaWithTwoFields = Schema.of(Arrays.asList(barField, fooField));
+    when(definition.getSchema()).thenReturn(schemaWithTwoFields);
+    when(tableResult.iterateAll()).thenReturn(rows);
+
+    List<Partition> result = partitionedTableService.getPartitions();
+    assertThat(result, is(factory.generate(eq(partitionBy), eq(rows))));
+  }
+
+  @Test
+  public void getPartitionFieldsNotFound() {
+    Schema schemaWithNoFields = Schema.of(Collections.<Field> emptyList());
+    when(definition.getSchema()).thenReturn(schemaWithNoFields);
     when(tableResult.iterateAll()).thenReturn(rows);
 
     List<Partition> result = partitionedTableService.getPartitions();
