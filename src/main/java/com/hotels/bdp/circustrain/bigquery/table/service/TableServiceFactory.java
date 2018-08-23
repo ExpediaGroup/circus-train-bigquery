@@ -30,11 +30,11 @@ import com.hotels.bdp.circustrain.bigquery.api.TableService;
 import com.hotels.bdp.circustrain.bigquery.conf.PartitioningConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.partition.BigQueryTableFilterer;
-import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionGenerator;
+import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 import com.hotels.bdp.circustrain.bigquery.partition.PartitionQueryFactory;
-import com.hotels.bdp.circustrain.bigquery.table.service.unpartitioned.UnpartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.table.service.partitioned.PartitionedTableService;
+import com.hotels.bdp.circustrain.bigquery.table.service.unpartitioned.UnpartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 @Component
