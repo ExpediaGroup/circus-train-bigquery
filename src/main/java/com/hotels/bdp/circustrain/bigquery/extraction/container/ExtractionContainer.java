@@ -21,7 +21,6 @@ public class ExtractionContainer {
 
   private final Table table;
   private final ExtractionUri extractionUri;
-  // TODO: replace with enum but first see where it's used
   private final PostExtractionAction postExtractionAction;
 
   public ExtractionContainer(Table table, ExtractionUri extractionUri, PostExtractionAction postExtractionAction) {
