@@ -90,6 +90,6 @@ public class BigQueryMetastore {
 
   private QueryJobConfiguration configureFilterJob(String databaseName, String tableName, String partitionFilter) {
     return QueryJobConfiguration.newBuilder(partitionFilter).setDestinationTable(TableId.of(databaseName, tableName))
-        .setUseLegacySql(true).setAllowLargeResults(true).build();
+        .setUseLegacySql(false).setAllowLargeResults(true).build();
   }
 }
