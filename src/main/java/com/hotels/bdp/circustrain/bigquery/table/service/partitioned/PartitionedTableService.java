@@ -20,6 +20,8 @@ import java.util.Objects;
 
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
@@ -32,6 +34,7 @@ import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionGenerator;
 import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 
 public class PartitionedTableService implements TableService {
+  private static final Logger log = LoggerFactory.getLogger(PartitionedTableService.class);
 
   private final String partitionedBy;
   private final HivePartitionKeyAdder adder;
@@ -59,6 +62,12 @@ public class PartitionedTableService implements TableService {
     this.factory = factory;
     this.result = result;
     this.filteredTable = filteredTable;
+
+    try {
+      log.info("result : {}", result.iterateAll().iterator().next().get(0).toString());
+    } catch (Exception e) {
+      log.info("could not get the result wanted: results.iterator().next().get(0).toString()");
+    }
   }
 
   @Override
@@ -68,11 +77,11 @@ public class PartitionedTableService implements TableService {
 
   @Override
   public List<Partition> getPartitions() {
-    return factory.generate(getPartitionKey(filteredTable), result.iterateAll());
+    return factory.generate(getPartitionKey(), getPartitionKeyType(), result.iterateAll());
   }
 
-  private String getPartitionKey(com.google.cloud.bigquery.Table table) {
-    Schema schema = table.getDefinition().getSchema();
+  private String getPartitionKey() {
+    Schema schema = filteredTable.getDefinition().getSchema();
     if (schema == null) {
       return "";
     }
@@ -80,11 +89,27 @@ public class PartitionedTableService implements TableService {
     return sanitisePartitionKey(schema);
   }
 
+  private String getPartitionKeyType() {
+    if (tableContainsField()) {
+      int position = filteredTable.getDefinition().getSchema().getFields().getIndex(partitionedBy);
+      return filteredTable.getDefinition().getSchema().getFields().get(position).getType().name();
+    } else {
+      return null;
+    }
+  }
+
+  private boolean tableContainsField() {
+    return filteredTable.getDefinition().getSchema().getFields().size() > 0;
+  }
+
   private String sanitisePartitionKey(Schema schema) {
     // Case sensitive in Google Cloud
     String partitionKey = partitionedBy;
     for (Field field : schema.getFields()) {
-      if (field.getName().toLowerCase().trim().equals(partitionKey.toLowerCase().trim())) {
+      String trimmedFieldName = field.getName().toLowerCase().trim();
+      String trimmedPartitionKey = partitionKey.toLowerCase().trim();
+
+      if (trimmedFieldName.equals(trimmedPartitionKey)) {
         partitionKey = field.getName();
         break;
       }

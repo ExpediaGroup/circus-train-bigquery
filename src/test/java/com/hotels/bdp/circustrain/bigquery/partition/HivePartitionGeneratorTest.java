@@ -92,7 +92,7 @@ public class HivePartitionGeneratorTest {
     String folder = "folder";
     when(uri.getBucket()).thenReturn(bucket);
     when(uri.getFolder()).thenReturn(folder);
-    List<Partition> partitions = hivePartitionGenerator.generate(partitionKey, rows);
+    List<Partition> partitions = hivePartitionGenerator.generate(partitionKey, "STRING", rows);
     assertEquals(1, partitions.size());
     Partition partition = partitions.get(0);
     assertEquals(dbName, partition.getDbName());

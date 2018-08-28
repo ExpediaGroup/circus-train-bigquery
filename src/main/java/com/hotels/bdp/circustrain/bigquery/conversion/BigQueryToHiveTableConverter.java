@@ -27,13 +27,15 @@ import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 
 public class BigQueryToHiveTableConverter {
 
-  private Table table = new Table();
+  private final Table table = new Table();
 
   public BigQueryToHiveTableConverter() {
     table.setDbName("default");
@@ -41,14 +43,14 @@ public class BigQueryToHiveTableConverter {
     table.setOwner("");
     table.setLastAccessTime(0);
     table.setRetention(0);
-    table.setParameters(Collections.<String, String>emptyMap());
-    table.setPartitionKeys(Collections.<FieldSchema>emptyList());
+    table.setParameters(Collections.<String, String> emptyMap());
+    table.setPartitionKeys(Collections.<FieldSchema> emptyList());
     StorageDescriptor sd = new StorageDescriptor();
     sd.setLocation("");
     sd.setNumBuckets(-1);
-    sd.setParameters(Collections.<String, String>emptyMap());
-    sd.setBucketCols(Collections.<String>emptyList());
-    sd.setSortCols(Collections.<Order>emptyList());
+    sd.setParameters(Collections.<String, String> emptyMap());
+    sd.setBucketCols(Collections.<String> emptyList());
+    sd.setSortCols(Collections.<Order> emptyList());
     sd.setCols(new ArrayList<FieldSchema>());
     sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
     sd.setOutputFormat("org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat");
@@ -63,9 +65,9 @@ public class BigQueryToHiveTableConverter {
     serDeParameters.put("skip.header.line.count", "1");
     serDeInfo.setParameters(serDeParameters);
     SkewedInfo si = new SkewedInfo();
-    si.setSkewedColNames(Collections.<String>emptyList());
-    si.setSkewedColValueLocationMaps(Collections.<List<String>, String>emptyMap());
-    si.setSkewedColValues(Collections.<List<String>>emptyList());
+    si.setSkewedColNames(Collections.<String> emptyList());
+    si.setSkewedColValueLocationMaps(Collections.<List<String>, String> emptyMap());
+    si.setSkewedColValues(Collections.<List<String>> emptyList());
     sd.setSkewedInfo(new SkewedInfo());
     sd.setSerdeInfo(serDeInfo);
     table.setSd(sd);
@@ -99,12 +101,17 @@ public class BigQueryToHiveTableConverter {
     return this;
   }
 
+  private static final Logger log = LoggerFactory.getLogger(BigQueryToHiveTableConverter.class);
+
   public BigQueryToHiveTableConverter withSchema(Schema schema) {
     BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
     for (Field field : schema.getFields()) {
       FieldSchema fieldSchema = new FieldSchema();
+      log.info("setting field name: {}", field.getName().toLowerCase());
+      log.info("setting field type old way: {}", typeConverter.convert(field.getType().toString()));
+      log.info("setting field type new way: {}", typeConverter.convert(field.getType().name()));
       fieldSchema.setName(field.getName().toLowerCase());
-      fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
+      fieldSchema.setType(typeConverter.convert(field.getType().name().toLowerCase()));
       table.getSd().addToCols(fieldSchema);
     }
     return this;

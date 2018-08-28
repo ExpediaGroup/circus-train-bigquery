@@ -30,6 +30,7 @@ public class PartitionValueFormatterTest {
 
   private final String partitionKey = "key";
   private final String value = "value";
+  private final String type = "STRING";
 
   @Test
   public void formatNotNeeded() {
@@ -37,7 +38,7 @@ public class PartitionValueFormatterTest {
     fieldSchema.setType("int");
     cols.add(fieldSchema);
 
-    PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, cols);
+    PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, type, cols);
     assertEquals(value, formatter.format(value));
   }
 
@@ -48,7 +49,7 @@ public class PartitionValueFormatterTest {
     cols.add(fieldSchema);
 
     String expected = "\"" + value + "\"";
-    PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, cols);
+    PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, type, cols);
     assertEquals(expected, formatter.format(value));
   }
 

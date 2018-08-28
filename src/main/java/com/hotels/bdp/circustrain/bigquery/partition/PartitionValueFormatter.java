@@ -19,21 +19,31 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
 class PartitionValueFormatter {
+  private static final Logger log = LoggerFactory.getLogger(BigQueryPartitionGenerator.class);
 
   private static final Set<String> NEEDS_FORMATTING = ImmutableSet.of("string");
   private boolean format = false;
+  private final String partitionKeyType;
 
-  PartitionValueFormatter(String partitionKey, List<FieldSchema> cols) {
+  PartitionValueFormatter(String partitionKey, String partitionKeyType, List<FieldSchema> cols) {
+    this.partitionKeyType = partitionKeyType.toLowerCase();
     partitionKey = partitionKey.toLowerCase().trim();
     for (FieldSchema col : cols) {
       String name = col.getName().toLowerCase().trim();
       String type = col.getType().toLowerCase().trim();
 
-      if (name.equals(partitionKey) && NEEDS_FORMATTING.contains(type)) {
+      System.out.println("HIVE COLUMN NAME: " + name);
+      System.out.println("HIVE COLUMN TYPE: " + type);
+      System.out.println("BIG QUERY COLUMN TYPE: " + this.partitionKeyType);
+      System.out.println("BIG QUERY COLUMN CONTAINS HIVE TYPE: " + this.partitionKeyType.contains(type));
+
+      if (name.equals(partitionKey) && this.partitionKeyType.contains(type)) {
         format = true;
         break;
       }
@@ -44,7 +54,24 @@ class PartitionValueFormatter {
     partitionValue = partitionValue.toLowerCase().trim();
     if (!format) {
       return partitionValue;
+    } else if (partitionKeyType.equals("timestamp") && isNumber(partitionValue)) {
+      return getTimestampFromNumber(partitionValue);
     }
     return "\"" + partitionValue + "\"";
+  }
+
+  private String getTimestampFromNumber(String partitionValue) {
+    return String.format("TIMESTAMP(%s)", Double.valueOf(partitionValue).intValue());
+  }
+
+  private boolean isNumber(String partitionValue) {
+    try {
+      Double.valueOf(partitionValue);
+      log.info("PARTITION VALUE IS NUMBER");
+      return true;
+    } catch (Exception e) {
+      log.info("PARTITION VALUE IS NOT A NUMBER: {}; exception: {}", partitionValue, e.getMessage());
+      return false;
+    }
   }
 }

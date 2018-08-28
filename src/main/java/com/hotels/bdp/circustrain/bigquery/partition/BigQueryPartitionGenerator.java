@@ -60,48 +60,50 @@ class BigQueryPartitionGenerator {
     this.destinationFolder = destinationFolder;
   }
 
-  ExtractionUri generatePart() {
-    final String statement = getQueryStatement(sourceDBName, sourceTableName, partitionKey, partitionValue);
+  ExtractionUri generatePartition() {
+    final String statement = getQueryStatement();
     final String destinationTableName = randomTableName();
 
     com.google.cloud.bigquery.Table part = createPartitionInBigQuery(sourceDBName, destinationTableName, statement);
 
-    ExtractionUri extractionUri = scheduleForExtraction(part, destinationBucket, destinationFolder,
-        generateFileName(partitionKey, partitionValue));
+    try {
+      log.info("Partition = {}", part.getDescription());
+    } catch (Exception e) {
+      log.info("Could not get description of partition");
+    }
+    ExtractionUri extractionUri = scheduleForExtraction(part);
     return extractionUri;
 
   }
 
-  private String getQueryStatement(String sourceDBName, String sourceTableName, String partitionKey, String value) {
-    return String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey, value);
+  private String getQueryStatement() {
+    return String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey,
+        partitionValue);
   }
 
   private com.google.cloud.bigquery.Table createPartitionInBigQuery(
       String destinationDBName,
       String destinationTableName,
       String queryStatement) {
-    log.debug("Generating BigQuery partition using query {}", queryStatement);
+    log.info("Generating BigQuery partition using query {}", queryStatement);
     bigQueryMetastore.executeIntoDestinationTable(destinationDBName, destinationTableName, queryStatement);
     com.google.cloud.bigquery.Table part = bigQueryMetastore.getTable(destinationDBName, destinationTableName);
     return part;
   }
 
-  private ExtractionUri scheduleForExtraction(
-      com.google.cloud.bigquery.Table table,
-      String tableBucket,
-      String tableFolder,
-      String fileName) {
-    String partitionBucket = tableBucket;
-    String partitionFolder = tableFolder + "/" + randomUri();
-
-    ExtractionUri extractionUri = new ExtractionUri(partitionBucket, partitionFolder, fileName);
+  private ExtractionUri scheduleForExtraction(com.google.cloud.bigquery.Table table) {
+    ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
     ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri, PostExtractionAction.DELETE);
     extractionService.register(toRegister);
     return extractionUri;
   }
 
-  private String generateFileName(String partitionKey, String partitionValue) {
+  private String generateFileName() {
     return partitionKey + "=" + pruneQuotes(partitionValue.replaceAll("\\s", "_"));
+  }
+
+  private String generateFolderName() {
+    return destinationFolder + "/" + randomUri();
   }
 
   private String pruneQuotes(String partitionValue) {
