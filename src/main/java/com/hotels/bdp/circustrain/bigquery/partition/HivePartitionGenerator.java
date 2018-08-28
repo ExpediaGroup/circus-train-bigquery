@@ -173,7 +173,7 @@ public class HivePartitionGenerator {
         final String originalValue = partitionValue.toString();
         final String formattedValue = formatter.format(objectToHiveString(partitionValue));
         ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
-            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder).generatePart();
+            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder).generatePartition();
 
         Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
             extractionUri.getTableLocation(), cols, originalValue).get();

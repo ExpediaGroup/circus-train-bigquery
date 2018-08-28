@@ -41,7 +41,7 @@ class PartitionValueFormatter {
   }
 
   String format(String partitionValue) {
-    partitionValue = partitionValue.toLowerCase().trim();
+    partitionValue = partitionValue.trim();
     if (!format) {
       return partitionValue;
     }

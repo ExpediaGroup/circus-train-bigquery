@@ -53,7 +53,7 @@ public class BigQueryPartitionGeneratorTest {
 
   @Test
   public void generatePart() {
-    ExtractionUri uri = generator.generatePart();
+    ExtractionUri uri = generator.generatePartition();
     assertEquals(destinationBucket, uri.getBucket());
     assertTrue(uri.getFolder().startsWith(destinationFolder));
     assertTrue(uri.getKey().endsWith(String.format("%s=%s.%s", partitionKey, partitionValue, uri.getFormat())));
