@@ -45,7 +45,7 @@ public class BigQueryToHiveTableConverterTest {
 
   @Test
   public void withLocation() {
-    String location = "location";
+    String location = "getExtractedDataBaseLocation";
     Table table = new BigQueryToHiveTableConverter().withLocation(location).convert();
     assertEquals(table.getSd().getLocation(), location);
   }
@@ -67,7 +67,7 @@ public class BigQueryToHiveTableConverterTest {
     Table table = new BigQueryToHiveTableConverter().withSchema(schema).convert();
     List<FieldSchema> fields = table.getSd().getCols();
     assertEquals("integer", fields.get(0).getName());
-    assertEquals("int", fields.get(0).getType());
+    assertEquals("bigint", fields.get(0).getType());
     assertEquals("string", fields.get(1).getName());
     assertEquals("string", fields.get(1).getType());
     assertEquals("boolean", fields.get(2).getName());

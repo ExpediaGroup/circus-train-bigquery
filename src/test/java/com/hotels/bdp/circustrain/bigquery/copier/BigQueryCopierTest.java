@@ -22,18 +22,18 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import org.junit.Test;
 
 import com.hotels.bdp.circustrain.api.copier.Copier;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
 public class BigQueryCopierTest {
 
   @Test
   public void copy() {
-    BigQueryDataExtractionManager dataExtractionManager = mock(BigQueryDataExtractionManager.class);
+    ExtractionService service = mock(ExtractionService.class);
     Copier delegate = mock(Copier.class);
-    BigQueryCopier bigQueryCopier = new BigQueryCopier(delegate, dataExtractionManager);
+    BigQueryCopier bigQueryCopier = new BigQueryCopier(delegate, service);
     bigQueryCopier.copy();
-    verify(dataExtractionManager).extract();
-    verifyNoMoreInteractions(dataExtractionManager);
+    verify(service).extract();
+    verifyNoMoreInteractions(service);
     verify(delegate).copy();
   }
 }

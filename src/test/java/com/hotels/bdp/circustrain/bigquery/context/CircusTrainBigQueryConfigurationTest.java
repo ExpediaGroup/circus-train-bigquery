@@ -15,19 +15,41 @@
  */
 package com.hotels.bdp.circustrain.bigquery.context;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.core.env.Environment;
 
-import com.hotels.bdp.circustrain.api.conf.SourceCatalog;
-
+@RunWith(MockitoJUnitRunner.class)
 public class CircusTrainBigQueryConfigurationTest {
 
+  private @Mock ConditionContext context;
+  private @Mock Environment environment;
+
   @Test
-  public void getProjectId() {
-    SourceCatalog sourceCatalog = new SourceCatalog();
-    sourceCatalog.setHiveMetastoreUris("bigquery://test-project-id");
-    CircusTrainBigQueryConfiguration configuration = new CircusTrainBigQueryConfiguration();
-    assertEquals("test-project-id", configuration.getProjectId(sourceCatalog));
+  public void matches() {
+    when(context.getEnvironment()).thenReturn(environment);
+    when(environment.getProperty(eq("source-catalog.hive-metastore-uris"), eq(String.class)))
+        .thenReturn("bigquery://foobaz");
+    when(environment.containsProperty(eq("source-catalog.hive-metastore-uris"))).thenReturn(true);
+    CircusTrainBigQueryConfiguration condition = new CircusTrainBigQueryConfiguration();
+    assertTrue(condition.matches(context, null));
+  }
+
+  @Test
+  public void doesntMatch() {
+    when(context.getEnvironment()).thenReturn(environment);
+    when(environment.getProperty(eq("source-catalog.hive-metastore-uris"), eq(String.class)))
+        .thenReturn("thrift://foo-baz-1234");
+    when(environment.containsProperty(eq("source-catalog.hive-metastore-uris"))).thenReturn(true);
+    CircusTrainBigQueryConfiguration condition = new CircusTrainBigQueryConfiguration();
+    assertFalse(condition.matches(context, null));
   }
 }

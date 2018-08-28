@@ -16,14 +16,21 @@ You can obtain Circus Train BigQuery from Maven Central:
 * Provide your BigQuery dataset as `source-table` `database-name` and your BigQuery table name as `source-table` `table-name`
 
 
-#### Example:
+## Partition Generation
+Circus Train BigQuery allows you to add partitions for one column to your Hive destination table upon replication from BigQuery to Hive. The partition must be a field present on your source BigQuery table. The user can configure the partition field by setting the `table-replications[n].copier-option : circus-train-bigquery-partition-by` property on a specific table replication within the Circus Train configuration file. The destination data will be repartitioned on the specified field.
 
+If your destination data is partitioned you can also specify a partition filter using the `table-replications[n].copier-option : circus-train-bigquery-partition-filter` property. The partition filter is a BigQuery SQL query which will be used to filter the data being replicated - i.e. so one doesn't have to replicate the entire table on each run. You can think of the partition filter being executed as `select * from bq_db.table where ${filter-condition}`, with the `${filter-condition}` being substituted by your partition filter. Only the rows returned by this query will be replicated. See [partition filters](https://github.com/HotelsDotCom/circus-train#partition-filters) in the main Circus Train documentation for more information.
+
+### Examples:
+
+#### Simple Configuration
     source-catalog:
       name: my-google-source-catalog
       hive-metastore-uris: bigquery://my-gcp-project-id
     replica-catalog:
       name: my-replica-catalog
       hive-metastore-uris: thrift://internal-shared-hive-metastore-elb-123456789.us-west-2.elb.foobaz.com:9083
+
     gcp-security:
       credential-provider: /home/hadoop/.gcp/my-gcp-project-01c26fd71db7.json 
 
@@ -35,6 +42,39 @@ You can obtain Circus Train BigQuery from Maven Central:
         database-name: myreplicadb
         table-name: bigquery_google_ads_data
         table-location: s3://mybucket/foo/baz/
+
+#### Configuration with partition generation configured
+    source-catalog:
+      ... see above ...
+
+    table-replications:
+      -
+        source-table:
+          database-name: bdp
+          table-name: bigquery_source
+        replica-table:
+          database-name: bdp
+          table-name: hive_replica
+          table-location: s3://bucket/foo/bar/
+        copier-options:
+          circustrain-bigquery-partition-by: date
+
+#### Configuration with partition filter configured
+    source-catalog:
+      ... see above ...
+
+    table-replications:
+      -
+        source-table:
+          database-name: bdp
+          table-name: bigquery_source
+        replica-table:
+          database-name: bdp
+          table-name: hive_replica
+          table-location: s3://bucket/foo/bar/
+        copier-options:
+          circustrain-bigquery-partition-by: date
+          circustrain-bigquery-partition-filter: date BETWEEN TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL -150 DAY) AND CURRENT_TIMESTAMP()
 
 
 #### Technical Overview

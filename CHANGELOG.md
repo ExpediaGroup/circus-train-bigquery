@@ -1,3 +1,10 @@
+# TBD
+### Added
+* Support for partition generation upon replication.
+* Support for partition filters.
+### Fixed
+* Integers from BigQuery are treated as 64 bit (BigInt Hive type) values rather than 32 bit (Int Hive type) values.
+
 # 2.0.2 - 2018-07-19
 ### Fixed
 * Jobs no longer fail when parts of the best effort temporary data cleanup fail.

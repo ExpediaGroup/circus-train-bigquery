@@ -35,26 +35,26 @@ import com.google.common.collect.ImmutableList;
 import com.hotels.bdp.circustrain.api.Modules;
 import com.hotels.bdp.circustrain.api.copier.Copier;
 import com.hotels.bdp.circustrain.api.copier.CopierFactory;
-import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryCondition;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.bdp.circustrain.bigquery.context.CircusTrainBigQueryConfiguration;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
 @Component
 @Profile({ Modules.REPLICATION })
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@Conditional(CircusTrainBigQueryCondition.class)
+@Conditional(CircusTrainBigQueryConfiguration.class)
 public class BigQueryCopierFactory implements CopierFactory {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryCopierFactory.class);
 
   private final List<CopierFactory> delegates;
-  private final BigQueryDataExtractionManager dataExtractionManager;
+  private final ExtractionService service;
 
   private CopierFactory supportedFactory;
 
   @Autowired
-  BigQueryCopierFactory(List<CopierFactory> delegates, BigQueryDataExtractionManager dataExtractionManager) {
+  BigQueryCopierFactory(List<CopierFactory> delegates, ExtractionService service) {
     this.delegates = ImmutableList.copyOf(delegates);
-    this.dataExtractionManager = dataExtractionManager;
+    this.service = service;
   }
 
   @Override
@@ -82,7 +82,7 @@ public class BigQueryCopierFactory implements CopierFactory {
       Map<String, Object> copierOptions) {
     Copier copier = supportedFactory.newInstance(eventId, sourceBaseLocation, sourceSubLocations, replicaLocation,
         copierOptions);
-    Copier bigQueryCopier = new BigQueryCopier(copier, dataExtractionManager);
+    Copier bigQueryCopier = new BigQueryCopier(copier, service);
     log.info("Created copier which delegates to the copier produced by {}", supportedFactory.getClass().getName());
     return bigQueryCopier;
   }

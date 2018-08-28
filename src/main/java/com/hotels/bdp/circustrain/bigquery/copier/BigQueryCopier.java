@@ -21,24 +21,24 @@ import org.slf4j.LoggerFactory;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.api.copier.Copier;
 import com.hotels.bdp.circustrain.api.metrics.Metrics;
-import com.hotels.bdp.circustrain.bigquery.extraction.BigQueryDataExtractionManager;
+import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
 public class BigQueryCopier implements Copier {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryCopier.class);
 
   private final Copier copier;
-  private final BigQueryDataExtractionManager dataExtractionManager;
+  private final ExtractionService service;
 
-  BigQueryCopier(Copier copier, BigQueryDataExtractionManager dataExtractionManager) {
+  BigQueryCopier(Copier copier, ExtractionService service) {
     this.copier = copier;
-    this.dataExtractionManager = dataExtractionManager;
+    this.service = service;
   }
 
   @Override
   public Metrics copy() throws CircusTrainException {
     log.info("Extracting table data for copying by {}", copier.getClass().getName());
-    dataExtractionManager.extract();
+    service.extract();
     log.info("Delegating to {} to execute copying of the data", copier.getClass().getName());
     return copier.copy();
   }
