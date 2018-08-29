@@ -111,7 +111,7 @@ public class BigQueryToHiveTableConverter {
       log.info("setting field type old way: {}", typeConverter.convert(field.getType().toString()));
       log.info("setting field type new way: {}", typeConverter.convert(field.getType().name()));
       fieldSchema.setName(field.getName().toLowerCase());
-      fieldSchema.setType(typeConverter.convert(field.getType().name().toLowerCase()));
+      fieldSchema.setType(typeConverter.convert(field.getType().name()).toLowerCase());
       table.getSd().addToCols(fieldSchema);
     }
     return this;

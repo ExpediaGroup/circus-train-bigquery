@@ -197,7 +197,6 @@ public class HivePartitionGenerator {
       }
       return originalValue;
     }
-
   }
 
   private class HivePartitionFactory {
