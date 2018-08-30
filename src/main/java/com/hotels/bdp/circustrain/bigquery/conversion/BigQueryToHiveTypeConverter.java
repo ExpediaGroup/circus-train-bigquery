@@ -21,11 +21,17 @@ public class BigQueryToHiveTypeConverter {
     switch (type) {
     case "STRING":
     case "BYTES":
-    case "DATE":
     case "DATETIME":
-    case "TIME":
-    case "TIMESTAMP": {
+    case "TIME": {
       return "STRING";
+    }
+
+    case "DATE": {
+      return "DATE";
+    }
+
+    case "TIMESTAMP": {
+      return "TIMESTAMP";
     }
 
     case "INTEGER":

@@ -15,7 +15,9 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,13 +31,14 @@ public class PartitionValueFormatterTest {
   private final FieldSchema fieldSchema = new FieldSchema();
 
   private final String partitionKey = "key";
-  private final String value = "value";
-  private final String type = "STRING";
+  private String type;
+  private String value = "value";
 
   @Test
   public void formatNotNeeded() {
+    type = "INTEGER";
     fieldSchema.setName(partitionKey);
-    fieldSchema.setType("int");
+    fieldSchema.setType(type);
     cols.add(fieldSchema);
 
     PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, type, cols);
@@ -44,11 +47,49 @@ public class PartitionValueFormatterTest {
 
   @Test
   public void formatStringValue() {
+    type = "STRING";
     fieldSchema.setName(partitionKey);
-    fieldSchema.setType("string");
+    fieldSchema.setType(type);
     cols.add(fieldSchema);
 
     String expected = "\"" + value + "\"";
+    PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, type, cols);
+    assertThat(formatter.format(value), is(expected));
+  }
+
+  @Test
+  public void formatTimestampValue() {
+    type = "TIMESTAMP";
+    fieldSchema.setName(partitionKey);
+    fieldSchema.setType(type);
+    cols.add(fieldSchema);
+
+    String expected = "cast(\"" + value + "\" as timestamp)";
+    PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, type, cols);
+    assertEquals(expected, formatter.format(value));
+  }
+
+  @Test
+  public void formatDateValue() {
+    type = "DATE";
+    fieldSchema.setName(partitionKey);
+    fieldSchema.setType(type);
+    cols.add(fieldSchema);
+
+    String expected = "cast(\"" + value + "\" as date)";
+    PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, type, cols);
+    assertEquals(expected, formatter.format(value));
+  }
+
+  @Test
+  public void formatTimestampFromUnixTimestampValue() {
+    type = "TIMESTAMP";
+    value = "1483228800.0";
+    fieldSchema.setName(partitionKey);
+    fieldSchema.setType(type);
+    cols.add(fieldSchema);
+
+    String expected = "timestamp_seconds(1483228800)";
     PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, type, cols);
     assertEquals(expected, formatter.format(value));
   }

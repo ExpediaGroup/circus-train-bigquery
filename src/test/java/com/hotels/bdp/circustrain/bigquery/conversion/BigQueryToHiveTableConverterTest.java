@@ -75,13 +75,13 @@ public class BigQueryToHiveTableConverterTest {
     assertEquals("float", fields.get(3).getName());
     assertEquals("double", fields.get(3).getType());
     assertEquals("date", fields.get(4).getName());
-    assertEquals("string", fields.get(4).getType());
+    assertEquals("date", fields.get(4).getType());
     assertEquals("datetime", fields.get(5).getName());
     assertEquals("string", fields.get(5).getType());
     assertEquals("bytes", fields.get(6).getName());
     assertEquals("string", fields.get(6).getType());
     assertEquals("timestamp", fields.get(7).getName());
-    assertEquals("string", fields.get(7).getType());
+    assertEquals("timestamp", fields.get(7).getType());
     assertEquals("time", fields.get(8).getName());
     assertEquals("string", fields.get(8).getType());
   }
