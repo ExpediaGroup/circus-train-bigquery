@@ -19,6 +19,8 @@ import static jodd.util.StringUtil.isBlank;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
@@ -26,6 +28,8 @@ import com.google.cloud.bigquery.Schema;
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTypeConverter;
 
 public class HivePartitionKeyAdder {
+
+  private static final Logger log = LoggerFactory.getLogger(HivePartitionKeyAdder.class);
 
   private final Table table;
 
@@ -35,6 +39,8 @@ public class HivePartitionKeyAdder {
 
   public Table add(String partitionKey, Schema filteredTableSchema) {
     if (isBlank(partitionKey) || filteredTableSchema == null) {
+      log.info("PARTITION KEY ({}) IS BLANK OR FILTERED TABLE SCHEMA IS NULL ({})", partitionKey,
+          filteredTableSchema == null);
       return new Table(table);
     }
 
@@ -43,9 +49,13 @@ public class HivePartitionKeyAdder {
     BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
     for (Field field : filteredTableSchema.getFields()) {
       String fieldName = field.getName().toLowerCase().trim();
+      log.info("field name is {}", fieldName);
       if (partitionKey.equals(fieldName)) {
+        log.info("field name is equal to partition key ({})", partitionKey);
         FieldSchema fieldSchema = new FieldSchema();
         fieldSchema.setName(fieldName);
+        String type = typeConverter.convert(field.getType().toString()).toLowerCase();
+        log.info("type is set to {}", type);
         fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
         newTable.addToPartitionKeys(fieldSchema);
       }

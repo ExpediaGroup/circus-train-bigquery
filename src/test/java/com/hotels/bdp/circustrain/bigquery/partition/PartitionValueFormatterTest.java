@@ -64,7 +64,7 @@ public class PartitionValueFormatterTest {
     fieldSchema.setType(type);
     cols.add(fieldSchema);
 
-    String expected = "cast(\"" + value + "\" as timestamp)";
+    String expected = "\"" + value + "\"";
     PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, type, cols);
     assertEquals(expected, formatter.format(value));
   }
@@ -90,8 +90,9 @@ public class PartitionValueFormatterTest {
     cols.add(fieldSchema);
 
     String expected = "timestamp_seconds(1483228800)";
+    String timestampExpected = "\"2017-01-01 00:00:00.0\"";
     PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, type, cols);
-    assertEquals(expected, formatter.format(value));
+    assertEquals(timestampExpected, formatter.format(value));
   }
 
 }

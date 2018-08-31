@@ -22,41 +22,33 @@ public class BigQueryToHiveTypeConverter {
     case "STRING":
     case "BYTES":
     case "DATETIME":
-    case "TIME": {
+    case "TIME":
       return "STRING";
-    }
 
-    case "DATE": {
+    case "DATE":
       return "DATE";
-    }
 
-    case "TIMESTAMP": {
+    case "TIMESTAMP":
       return "TIMESTAMP";
-    }
 
     case "INTEGER":
-    case "INT64": {
-      // BigQuery ints are 8 bytes
+    case "INT64":
       return "BIGINT";
-    }
 
-    case "NUMERIC": {
+    case "NUMERIC":
       return "DECIMAL(38,9)";
-    }
 
     case "FLOAT":
-    case "FLOAT64": {
+    case "FLOAT64":
       return "DOUBLE";
-    }
 
     case "BOOL":
-    case "BOOLEAN": {
+    case "BOOLEAN":
       return "BOOLEAN";
-    }
 
-    default: {
+    default:
       throw new UnsupportedOperationException("BigQuery type " + type + " cannot be converted to Hive");
-    }
+
     }
   }
 }

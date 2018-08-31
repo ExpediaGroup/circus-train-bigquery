@@ -15,6 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -22,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class PartitionValueFormatter {
-  private static final Logger log = LoggerFactory.getLogger(BigQueryPartitionGenerator.class);
+  private static final Logger log = LoggerFactory.getLogger(PartitionValueFormatter.class);
 
   private String partitionValue;
   private String hiveColumnType;
@@ -46,19 +47,13 @@ class PartitionValueFormatter {
     this.partitionValue = partitionValue.trim();
 
     switch (hiveColumnType) {
-    case "string": {
+    case "string":
+    case "date":
       return getStringValue();
-    }
-    case "date": {
-      return getDateValue();
-    }
-    case "timestamp": {
+    case "timestamp":
       return getTimestampValue();
-    }
-
-    default: {
+    default:
       return this.partitionValue;
-    }
     }
 
   }
@@ -67,20 +62,20 @@ class PartitionValueFormatter {
     return String.format("\"%s\"", partitionValue);
   }
 
-  private String getDateValue() {
-    return String.format("cast(\"%s\" as date)", partitionValue);
-  }
-
   private String getTimestampValue() {
     if (isNumber()) {
       return getTimestampFromNumber();
     } else {
-      return String.format("cast(\"%s\" as timestamp)", partitionValue);
+      // System.out.println("new Timestamp(1419984003) = " + new Timestamp(1419984003 * 1000L).toString());
+      return String.format("\"%s\"", partitionValue.split(" UTC")[0]);
     }
   }
 
   private String getTimestampFromNumber() {
-    return String.format("timestamp_seconds(%s)", Double.valueOf(partitionValue).intValue());
+    Long unixTimestamp = Double.valueOf(partitionValue).longValue();
+    String timestamp = new Timestamp(unixTimestamp * 1000L).toString();
+    return String.format("\"%s\"", timestamp);
+    // return String.format("timestamp_seconds(%s)", Double.valueOf(partitionValue).intValue());
   }
 
   private boolean isNumber() {

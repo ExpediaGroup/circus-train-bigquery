@@ -184,7 +184,7 @@ public class HivePartitionGenerator {
         Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
             extractionUri.getTableLocation(), cols, originalValue).get();
         log.info("Generated partition {}={}", partitionKey, formattedValue);
-        log.debug("{}", partition);
+        // log.info("Partition in GeneratePartitionTask = {}", partition);
         return com.google.common.base.Optional.of(partition);
       }
       return com.google.common.base.Optional.absent();

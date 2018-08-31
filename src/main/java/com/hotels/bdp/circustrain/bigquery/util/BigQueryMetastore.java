@@ -20,6 +20,8 @@ import java.util.UUID;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.thrift.TException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -36,6 +38,8 @@ import com.hotels.bdp.circustrain.api.CircusTrainException;
 
 @Component
 public class BigQueryMetastore {
+
+  private static final Logger log = LoggerFactory.getLogger(BigQueryMetastore.class);
 
   private final BigQuery client;
 
@@ -58,7 +62,17 @@ public class BigQueryMetastore {
   public Table getTable(String databaseName, String tableName) {
     try {
       if (tableExists(databaseName, tableName)) {
-        return client.getDataset(databaseName).get(tableName);
+        Table table = client.getDataset(databaseName).get(tableName);
+        // try {
+        // log.info("table schema: {}", table.getDefinition().getSchema());
+        // log.info("table partition: {}", table.getDefinition());
+        // } catch (Exception e) {
+        // log.info("Could not get table schema");
+        // }
+        // com.google.cloud.bigquery.Schema schema = table.getDefinition().getSchema();
+        // TableDefinition definition = table.getDefinition().toBuilder().setSchema(schema).build();
+        // table = table.toBuilder().setDefinition(definition).build();
+        return table;
       } else {
         throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");
       }

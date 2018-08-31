@@ -22,6 +22,8 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.cloud.bigquery.TableResult;
+
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
@@ -86,8 +88,16 @@ class BigQueryPartitionGenerator {
       String destinationTableName,
       String queryStatement) {
     log.info("Generating BigQuery partition using query {}", queryStatement);
-    bigQueryMetastore.executeIntoDestinationTable(destinationDBName, destinationTableName, queryStatement);
+    TableResult tableResult = bigQueryMetastore.executeIntoDestinationTable(destinationDBName, destinationTableName,
+        queryStatement);
+    log.info("Result is {}", tableResult);
     com.google.cloud.bigquery.Table part = bigQueryMetastore.getTable(destinationDBName, destinationTableName);
+    try {
+      part = part.toBuilder().setDescription(partitionValue).build();
+      log.info("executed part = part.toBuilder().setDescription(queryStatement).build()");
+    } catch (Exception e) {
+      log.info("could not build the partition");
+    }
     return part;
   }
 
