@@ -20,8 +20,6 @@ import java.util.UUID;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.thrift.TException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -38,8 +36,6 @@ import com.hotels.bdp.circustrain.api.CircusTrainException;
 
 @Component
 public class BigQueryMetastore {
-
-  private static final Logger log = LoggerFactory.getLogger(BigQueryMetastore.class);
 
   private final BigQuery client;
 
