@@ -15,9 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.cloud.bigquery.TableResult;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
@@ -27,7 +24,6 @@ import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 public class BigQueryTableFilterer {
-  private static final Logger log = LoggerFactory.getLogger(BigQueryTableFilterer.class);
 
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService service;
@@ -49,7 +45,6 @@ public class BigQueryTableFilterer {
   }
 
   public TableResult filterTable() {
-    log.info("filter table query: {}", filterQuery);
     return bigQueryMetastore.executeIntoDestinationTable(databaseName, tableName, filterQuery);
   }
 

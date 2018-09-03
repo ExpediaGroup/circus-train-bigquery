@@ -75,12 +75,9 @@ public class HivePartitionGenerator {
     this.extractionContainerFactory = extractionContainerFactory;
   }
 
-  public List<Partition> generate(
-      final String partitionKey,
-      String partitionKeyType,
-      Iterable<FieldValueList> results) {
+  public List<Partition> generate(final String partitionKey, Iterable<FieldValueList> results) {
     ExecutorService executorService = Executors.newFixedThreadPool(RuntimeConfiguration.DEFAULT.getThreadPoolSize());
-    List<Partition> partitions = generate(executorService, partitionKey, partitionKeyType, results);
+    List<Partition> partitions = generate(executorService, partitionKey, results);
     executorService.shutdownNow();
     return partitions;
   }
@@ -88,7 +85,6 @@ public class HivePartitionGenerator {
   private List<Partition> generate(
       final ExecutorService executorService,
       String partitionKey,
-      String partitionKeyType,
       Iterable<FieldValueList> results) {
     final String sourceTableName = sourceTableAsHive.getTableName();
     final String sourceDBName = sourceTableAsHive.getDbName();
@@ -98,7 +94,7 @@ public class HivePartitionGenerator {
     final String tableFolder = container.getExtractionUri().getFolder();
 
     List<FieldSchema> cols = Collections.unmodifiableList(sourceTableAsHive.getSd().getCols());
-    PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, partitionKeyType, cols);
+    PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, cols);
 
     List<GeneratePartitionTask> tasks = getTasks(sourceDBName, sourceTableName, partitionKey, tableBucket, tableFolder,
         results, cols, formatter);
@@ -176,7 +172,6 @@ public class HivePartitionGenerator {
       if (partitionValue != null) {
         final String originalValue = partitionValue.toString();
         final String formattedValue = formatter.format(objectToHiveString(partitionValue));
-        log.info("Formatted value = {}", formattedValue);
         ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
             sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition();
 

@@ -62,8 +62,7 @@ public class BigQueryMetastore {
   public Table getTable(String databaseName, String tableName) {
     try {
       if (tableExists(databaseName, tableName)) {
-        Table table = client.getDataset(databaseName).get(tableName);
-        return table;
+        return client.getDataset(databaseName).get(tableName);
       } else {
         throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");
       }

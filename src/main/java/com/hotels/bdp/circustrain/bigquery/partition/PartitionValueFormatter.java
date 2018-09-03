@@ -25,8 +25,7 @@ class PartitionValueFormatter {
   private String partitionValue;
   private String hiveColumnType;
 
-  PartitionValueFormatter(String partitionKey, String partitionKeyType, List<FieldSchema> cols) {
-    partitionKeyType = partitionKeyType.toLowerCase();
+  PartitionValueFormatter(String partitionKey, List<FieldSchema> cols) {
     partitionKey = partitionKey.toLowerCase().trim();
     for (FieldSchema col : cols) {
       String name = col.getName().toLowerCase().trim();

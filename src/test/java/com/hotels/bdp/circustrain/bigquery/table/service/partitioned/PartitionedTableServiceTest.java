@@ -53,7 +53,6 @@ public class PartitionedTableServiceTest {
   private @Mock TableDefinition definition;
   private @Mock com.google.cloud.bigquery.Table filteredTable;
 
-  private final String partitionKeyType = "STRING";
   private final Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
   private PartitionedTableService partitionedTableService;
   private final List<FieldValueList> rows = new ArrayList<>();
@@ -75,7 +74,7 @@ public class PartitionedTableServiceTest {
   public void getPartitions() {
     when(tableResult.iterateAll()).thenReturn(rows);
     List<Partition> result = partitionedTableService.getPartitions();
-    assertThat(result, is(factory.generate(eq(partitionBy), eq(partitionKeyType), eq(rows))));
+    assertThat(result, is(factory.generate(eq(partitionBy), eq(rows))));
   }
 
   @Test
@@ -87,7 +86,7 @@ public class PartitionedTableServiceTest {
     when(tableResult.iterateAll()).thenReturn(rows);
 
     List<Partition> result = partitionedTableService.getPartitions();
-    assertThat(result, is(factory.generate(eq(partitionBy), eq(partitionKeyType), eq(rows))));
+    assertThat(result, is(factory.generate(eq(partitionBy), eq(rows))));
   }
 
   @Test
@@ -97,7 +96,7 @@ public class PartitionedTableServiceTest {
     when(tableResult.iterateAll()).thenReturn(rows);
 
     List<Partition> result = partitionedTableService.getPartitions();
-    assertThat(result, is(factory.generate(eq(partitionBy), eq(partitionKeyType), eq(rows))));
+    assertThat(result, is(factory.generate(eq(partitionBy), eq(rows))));
   }
 
 }
