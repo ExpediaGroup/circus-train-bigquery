@@ -15,10 +15,11 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import java.sql.Timestamp;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 class PartitionValueFormatter {
 
@@ -66,8 +67,9 @@ class PartitionValueFormatter {
   }
 
   private String getTimestampFromNumber() {
-    Long unixTimestamp = Double.valueOf(partitionValue).longValue();
-    String timestamp = new Timestamp(unixTimestamp * 1000L).toString();
+    Double unixMilliseconds = Double.valueOf(partitionValue) * 1000;
+    DateTime dateTime = new DateTime(unixMilliseconds.longValue()).toDateTime(DateTimeZone.UTC);
+    String timestamp = dateTime.toString("yyyy-MM-dd HH:mm:ss.SSS");
     return String.format("\"%s\"", timestamp);
   }
 
