@@ -63,15 +63,6 @@ public class BigQueryMetastore {
     try {
       if (tableExists(databaseName, tableName)) {
         Table table = client.getDataset(databaseName).get(tableName);
-        // try {
-        // log.info("table schema: {}", table.getDefinition().getSchema());
-        // log.info("table partition: {}", table.getDefinition());
-        // } catch (Exception e) {
-        // log.info("Could not get table schema");
-        // }
-        // com.google.cloud.bigquery.Schema schema = table.getDefinition().getSchema();
-        // TableDefinition definition = table.getDefinition().toBuilder().setSchema(schema).build();
-        // table = table.toBuilder().setDefinition(definition).build();
         return table;
       } else {
         throw new NoSuchObjectException(databaseName + "." + tableName + " could not be found");

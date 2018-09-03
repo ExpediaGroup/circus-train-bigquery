@@ -19,6 +19,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,13 +46,14 @@ public class BigQueryPartitionGeneratorTest {
   private final String partitionValue = "bar";
   private final String destinationBucket = "bucket";
   private final String destinationFolder = "folder";
+  private final List<FieldSchema> cols = new ArrayList<>();
 
   private BigQueryPartitionGenerator generator;
 
   @Before
   public void init() {
     generator = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName, sourceTableName,
-        partitionKey, partitionValue, destinationBucket, destinationFolder);
+        partitionKey, partitionValue, destinationBucket, destinationFolder, cols);
   }
 
   @Test
@@ -61,4 +66,5 @@ public class BigQueryPartitionGeneratorTest {
     verify(extractionService).register(extractionContainerCaptor.capture());
     assertEquals(extractionContainerCaptor.getValue().getExtractionUri(), uri);
   }
+
 }

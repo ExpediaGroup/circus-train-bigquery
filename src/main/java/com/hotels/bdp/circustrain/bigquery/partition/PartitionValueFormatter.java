@@ -19,18 +19,14 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class PartitionValueFormatter {
-  private static final Logger log = LoggerFactory.getLogger(PartitionValueFormatter.class);
 
   private String partitionValue;
   private String hiveColumnType;
-  private final String partitionKeyType;
 
   PartitionValueFormatter(String partitionKey, String partitionKeyType, List<FieldSchema> cols) {
-    this.partitionKeyType = partitionKeyType.toLowerCase();
+    partitionKeyType = partitionKeyType.toLowerCase();
     partitionKey = partitionKey.toLowerCase().trim();
     for (FieldSchema col : cols) {
       String name = col.getName().toLowerCase().trim();
@@ -66,7 +62,6 @@ class PartitionValueFormatter {
     if (isNumber()) {
       return getTimestampFromNumber();
     } else {
-      // System.out.println("new Timestamp(1419984003) = " + new Timestamp(1419984003 * 1000L).toString());
       return String.format("\"%s\"", partitionValue.split(" UTC")[0]);
     }
   }
@@ -75,7 +70,6 @@ class PartitionValueFormatter {
     Long unixTimestamp = Double.valueOf(partitionValue).longValue();
     String timestamp = new Timestamp(unixTimestamp * 1000L).toString();
     return String.format("\"%s\"", timestamp);
-    // return String.format("timestamp_seconds(%s)", Double.valueOf(partitionValue).intValue());
   }
 
   private boolean isNumber() {

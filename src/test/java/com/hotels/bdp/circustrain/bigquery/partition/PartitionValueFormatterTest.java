@@ -76,7 +76,7 @@ public class PartitionValueFormatterTest {
     fieldSchema.setType(type);
     cols.add(fieldSchema);
 
-    String expected = "cast(\"" + value + "\" as date)";
+    String expected = "\"" + value + "\"";
     PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, type, cols);
     assertEquals(expected, formatter.format(value));
   }

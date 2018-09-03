@@ -178,13 +178,13 @@ public class HivePartitionGenerator {
         final String formattedValue = formatter.format(objectToHiveString(partitionValue));
         log.info("Formatted value = {}", formattedValue);
         ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
-            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder).generatePartition();
+            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition();
 
         log.info("Extraction uri = {}", extractionUri.toString());
         Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
             extractionUri.getTableLocation(), cols, originalValue).get();
         log.info("Generated partition {}={}", partitionKey, formattedValue);
-        // log.info("Partition in GeneratePartitionTask = {}", partition);
+        log.debug("{}", partition);
         return com.google.common.base.Optional.of(partition);
       }
       return com.google.common.base.Optional.absent();

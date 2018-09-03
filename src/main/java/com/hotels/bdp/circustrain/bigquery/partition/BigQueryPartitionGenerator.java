@@ -18,7 +18,10 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomTableName;
 import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomUri;
 
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +45,7 @@ class BigQueryPartitionGenerator {
   private final String partitionValue;
   private final String destinationBucket;
   private final String destinationFolder;
+  private final List<FieldSchema> cols;
 
   BigQueryPartitionGenerator(
       BigQueryMetastore bigQueryMetastore,
@@ -51,7 +55,8 @@ class BigQueryPartitionGenerator {
       String partitionKey,
       String partitionValue,
       String destinationBucket,
-      String destinationFolder) {
+      String destinationFolder,
+      List<FieldSchema> cols) {
     this.bigQueryMetastore = bigQueryMetastore;
     this.extractionService = extractionService;
     this.partitionValue = partitionValue;
@@ -60,6 +65,7 @@ class BigQueryPartitionGenerator {
     this.partitionKey = partitionKey;
     this.destinationBucket = destinationBucket;
     this.destinationFolder = destinationFolder;
+    this.cols = cols;
   }
 
   ExtractionUri generatePartition() {
@@ -79,7 +85,8 @@ class BigQueryPartitionGenerator {
   }
 
   private String getQueryStatement() {
-    return String.format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey,
+    String columnNames = PartitionColumnFormatter.getFormattedListOfColumns(cols);
+    return String.format("select %s from %s.%s where %s = %s", columnNames, sourceDBName, sourceTableName, partitionKey,
         partitionValue);
   }
 
