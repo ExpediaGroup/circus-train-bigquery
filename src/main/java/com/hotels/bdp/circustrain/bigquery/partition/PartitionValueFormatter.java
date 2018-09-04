@@ -15,67 +15,49 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import java.util.List;
-
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import com.google.cloud.bigquery.FieldValue;
 
 class PartitionValueFormatter {
 
-  private String partitionValue;
-  private String hiveColumnType;
+  private final String partitionKeyType;
+  private final FieldValue partitionFieldValue;
 
-  PartitionValueFormatter(String partitionKey, List<FieldSchema> cols) {
-    partitionKey = partitionKey.toLowerCase().trim();
-    for (FieldSchema col : cols) {
-      String name = col.getName().toLowerCase().trim();
-      String type = col.getType().toLowerCase().trim();
-
-      if (name.equals(partitionKey)) {
-        hiveColumnType = type;
-        break;
-      }
-    }
+  PartitionValueFormatter(FieldValue partitionFieldValue, String partitionKeyType) {
+    this.partitionFieldValue = partitionFieldValue;
+    this.partitionKeyType = partitionKeyType.toLowerCase();
   }
 
-  String format(String partitionValue) {
-    this.partitionValue = partitionValue.trim();
-
-    switch (hiveColumnType) {
+  String formatValue() {
+    switch (partitionKeyType) {
     case "string":
     case "date":
-      return getStringValue();
+      return getValueWithQuotes();
     case "timestamp":
       return getTimestampValue();
     default:
-      return this.partitionValue;
+      return partitionFieldValue.getStringValue();
     }
-
   }
 
-  private String getStringValue() {
-    return String.format("\"%s\"", partitionValue);
+  private String getValueWithQuotes() {
+    return String.format("\"%s\"", partitionFieldValue.getStringValue());
   }
 
   private String getTimestampValue() {
     if (isNumber()) {
       return getTimestampFromNumber();
     } else {
-      return String.format("\"%s\"", partitionValue.split(" UTC")[0]);
+      throw new IllegalStateException("Expected to get number from BigQuery for timestamp column but did not get it");
     }
   }
 
   private String getTimestampFromNumber() {
-    Double unixMilliseconds = Double.valueOf(partitionValue) * 1000;
-    DateTime dateTime = new DateTime(unixMilliseconds.longValue()).toDateTime(DateTimeZone.UTC);
-    String timestamp = dateTime.toString("yyyy-MM-dd HH:mm:ss.SSS");
-    return String.format("\"%s\"", timestamp);
+    return String.format("TIMESTAMP_MICROS(%s)", partitionFieldValue.getTimestampValue());
   }
 
   private boolean isNumber() {
     try {
-      Double.valueOf(partitionValue);
+      Double.valueOf(partitionFieldValue.getStringValue());
       return true;
     } catch (Exception e) {
       return false;

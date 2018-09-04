@@ -56,6 +56,7 @@ public class PartitionedTableServiceTest {
   private final Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
   private PartitionedTableService partitionedTableService;
   private final List<FieldValueList> rows = new ArrayList<>();
+  private final String type = "STRING";
 
   @Before
   public void init() {
@@ -74,7 +75,7 @@ public class PartitionedTableServiceTest {
   public void getPartitions() {
     when(tableResult.iterateAll()).thenReturn(rows);
     List<Partition> result = partitionedTableService.getPartitions();
-    assertThat(result, is(factory.generate(eq(partitionBy), eq(rows))));
+    assertThat(result, is(factory.generate(eq(partitionBy), eq(type), eq(rows))));
   }
 
   @Test
@@ -86,7 +87,7 @@ public class PartitionedTableServiceTest {
     when(tableResult.iterateAll()).thenReturn(rows);
 
     List<Partition> result = partitionedTableService.getPartitions();
-    assertThat(result, is(factory.generate(eq(partitionBy), eq(rows))));
+    assertThat(result, is(factory.generate(eq(partitionBy), eq(type), eq(rows))));
   }
 
   @Test
@@ -96,7 +97,7 @@ public class PartitionedTableServiceTest {
     when(tableResult.iterateAll()).thenReturn(rows);
 
     List<Partition> result = partitionedTableService.getPartitions();
-    assertThat(result, is(factory.generate(eq(partitionBy), eq(rows))));
+    assertThat(result, is(factory.generate(eq(partitionBy), eq(type), eq(rows))));
   }
 
 }

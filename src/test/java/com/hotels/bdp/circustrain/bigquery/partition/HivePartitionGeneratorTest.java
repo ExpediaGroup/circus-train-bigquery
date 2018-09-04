@@ -15,9 +15,9 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -36,6 +36,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 
+import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
@@ -45,61 +46,95 @@ import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 @RunWith(MockitoJUnitRunner.class)
 public class HivePartitionGeneratorTest {
 
-  private @Mock Table table;
   private @Mock BigQueryMetastore metastore;
   private @Mock ExtractionService service;
   private @Mock ExtractionContainerFactory factory;
   private @Mock ExtractionContainer container;
   private @Mock ExtractionUri uri;
+  private @Mock FieldValue fieldValue;
+  private @Mock FieldValueList row;
 
   private HivePartitionGenerator hivePartitionGenerator;
+  private final Table table = new Table();
+  private final StorageDescriptor storageDescriptor = new StorageDescriptor();
+  private final String bucket = "bucket";
+  private final String folder = "folder";
+  private final String databaseName = "database";
+  private final String tableName = "table";
+  private final String partitionKey = "foo";
+  private String value = "value";
+  private String type = "string";
+  private final FieldSchema fieldSchema = new FieldSchema();
+  private final List<FieldValueList> rows = new ArrayList<>();
+  private final List<FieldSchema> cols = new ArrayList<>();
 
   @Before
   public void init() {
+    table.setDbName(databaseName);
+    table.setTableName(tableName);
+    table.setSd(storageDescriptor);
+
+    fieldSchema.setName(partitionKey);
+
     hivePartitionGenerator = new HivePartitionGenerator(table, metastore, service, factory);
+    when(factory.newInstance()).thenReturn(container);
+    when(container.getExtractionUri()).thenReturn(uri);
+    when(uri.getBucket()).thenReturn(bucket);
+    when(uri.getFolder()).thenReturn(folder);
+
+    when(row.get(partitionKey)).thenReturn(fieldValue);
+    when(fieldValue.getValue()).thenReturn(value);
   }
 
   @Test
-  public void generateTest() {
-    String dbName = "db";
-    String tblName = "tbl";
-    when(table.getDbName()).thenReturn(dbName);
-    when(table.getTableName()).thenReturn(tblName);
-    StorageDescriptor sd = new StorageDescriptor();
-    String partitionKey = "foo";
-    String type = "string";
-
-    FieldSchema fieldSchema = new FieldSchema();
-    fieldSchema.setName(partitionKey);
+  public void typical() {
     fieldSchema.setType(type);
-    List<FieldSchema> cols = new ArrayList<>();
     cols.add(fieldSchema);
-    when(table.getSd()).thenReturn(sd);
-    sd.setCols(cols);
+    storageDescriptor.setCols(cols);
 
-    List<FieldValueList> rows = new ArrayList<>();
-    FieldValueList row = mock(FieldValueList.class);
     rows.add(row);
-    Object o = mock(Object.class);
-    when(o.toString()).thenReturn(partitionKey);
-    FieldValue fieldValue = mock(FieldValue.class);
-    when(row.get(partitionKey)).thenReturn(fieldValue);
-    when(fieldValue.getValue()).thenReturn(o);
 
-    when(factory.newInstance()).thenReturn(container);
-    when(container.getExtractionUri()).thenReturn(uri);
-    String bucket = "bucket";
-    String folder = "folder";
-    when(uri.getBucket()).thenReturn(bucket);
-    when(uri.getFolder()).thenReturn(folder);
-    List<Partition> partitions = hivePartitionGenerator.generate(partitionKey, rows);
-    assertEquals(1, partitions.size());
+    List<Partition> partitions = hivePartitionGenerator.generate(partitionKey, type, rows);
+
+    assertThat(partitions.size(), is(1));
     Partition partition = partitions.get(0);
-    assertEquals(dbName, partition.getDbName());
-    assertEquals(tblName, partition.getTableName());
-    assertEquals(1, partition.getSd().getCols().size());
-    assertEquals(cols.get(0), partition.getSd().getCols().get(0));
-    assertTrue(partition.getSd().getLocation().startsWith(String.format("gs://%s/%s/", bucket, folder)));
+    assertThat(partition.getDbName(), is(databaseName));
+    assertThat(partition.getTableName(), is(tableName));
+    assertThat(partition.getSd().getCols().size(), is(1));
+    assertThat(partition.getSd().getCols().get(0), is(cols.get(0)));
+    assertThat(partition.getSd().getLocation(), startsWith(String.format("gs://%s/%s/", bucket, folder)));
+  }
+
+  @Test
+  public void partitionsForTimestampColumn() {
+    type = "timestamp";
+    value = "1419984005.0";
+    when(fieldValue.getValue()).thenReturn(value);
+    when(fieldValue.getStringValue()).thenReturn(value);
+    fieldSchema.setType(type);
+    cols.add(fieldSchema);
+    storageDescriptor.setCols(cols);
+
+    rows.add(row);
+    List<Partition> partitions = hivePartitionGenerator.generate(partitionKey, type, rows);
+    assertThat(partitions.size(), is(1));
+    Partition partition = partitions.get(0);
+    assertThat(partition.getDbName(), is(databaseName));
+    assertThat(partition.getTableName(), is(tableName));
+    assertThat(partition.getSd().getCols().size(), is(1));
+    assertThat(partition.getSd().getCols().get(0), is(cols.get(0)));
+    assertThat(partition.getSd().getLocation(), startsWith(String.format("gs://%s/%s/", bucket, folder)));
+  }
+
+  @Test(expected = CircusTrainException.class)
+  public void partitionForWrongValueForTimestamp() {
+    type = "timestamp";
+    fieldSchema.setType(type);
+    cols.add(fieldSchema);
+    storageDescriptor.setCols(cols);
+
+    rows.add(row);
+    hivePartitionGenerator.generate(partitionKey, type, rows);
   }
 
 }

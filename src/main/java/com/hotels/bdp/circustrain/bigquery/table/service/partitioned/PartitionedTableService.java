@@ -68,7 +68,7 @@ public class PartitionedTableService implements TableService {
 
   @Override
   public List<Partition> getPartitions() {
-    return factory.generate(getPartitionKey(), result.iterateAll());
+    return factory.generate(getPartitionKey(), getPartitionKeyType(), result.iterateAll());
   }
 
   private String getPartitionKey() {
@@ -80,10 +80,23 @@ public class PartitionedTableService implements TableService {
     return sanitisePartitionKey(schema);
   }
 
+  private String getPartitionKeyType() {
+    if (tableContainsField()) {
+      return filteredTable.getDefinition().getSchema().getFields().get(partitionedBy).getType().name();
+    } else {
+      return "";
+    }
+  }
+
+  private boolean tableContainsField() {
+    return filteredTable.getDefinition().getSchema().getFields().size() > 0;
+  }
+
   private String sanitisePartitionKey(Schema schema) {
     // Case sensitive in Google Cloud
     String partitionKey = partitionedBy;
     for (Field field : schema.getFields()) {
+
       String trimmedFieldName = field.getName().toLowerCase().trim();
       String trimmedPartitionKey = partitionKey.toLowerCase().trim();
 
