@@ -170,13 +170,10 @@ public class HivePartitionGenerator {
     }
 
     private com.google.common.base.Optional<Partition> generatePartition() {
-      Object partitionValue = row.get(partitionKey).getValue();
       FieldValue partitionFieldValue = row.get(partitionKey);
-      if (partitionValue != null) {
-        final String originalValue = partitionValue.toString();
-        log.info("Original value = {}", originalValue);
+      if (partitionFieldValue != null) {
+        final String originalValue = partitionFieldValue.getValue().toString();
         String formattedValue = new PartitionValueFormatter(partitionFieldValue, partitionKeyType).formatValue();
-        log.info("Formatted value = {}", formattedValue);
         ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
             sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition();
 
