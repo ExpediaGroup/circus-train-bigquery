@@ -62,6 +62,7 @@ public class HivePartitionGeneratorTest {
   private final String databaseName = "database";
   private final String tableName = "table";
   private final String partitionKey = "foo";
+  private final String filePartialLocation = String.format("gs://%s/%s/", bucket, folder);
   private String value = "value";
   private String type = "string";
   private final FieldSchema fieldSchema = new FieldSchema();
@@ -102,7 +103,7 @@ public class HivePartitionGeneratorTest {
     assertThat(partition.getTableName(), is(tableName));
     assertThat(partition.getSd().getCols().size(), is(1));
     assertThat(partition.getSd().getCols().get(0), is(cols.get(0)));
-    assertThat(partition.getSd().getLocation(), startsWith(String.format("gs://%s/%s/", bucket, folder)));
+    assertThat(partition.getSd().getLocation(), startsWith(filePartialLocation));
   }
 
   @Test
@@ -123,7 +124,7 @@ public class HivePartitionGeneratorTest {
     assertThat(partition.getTableName(), is(tableName));
     assertThat(partition.getSd().getCols().size(), is(1));
     assertThat(partition.getSd().getCols().get(0), is(cols.get(0)));
-    assertThat(partition.getSd().getLocation(), startsWith(String.format("gs://%s/%s/", bucket, folder)));
+    assertThat(partition.getSd().getLocation(), startsWith(filePartialLocation));
   }
 
   @Test(expected = CircusTrainException.class)
