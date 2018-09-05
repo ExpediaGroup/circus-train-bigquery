@@ -68,43 +68,16 @@ public class PartitionedTableService implements TableService {
 
   @Override
   public List<Partition> getPartitions() {
-    return factory.generate(getPartitionKey(), getPartitionKeyType(), result.iterateAll());
+    Field partitionField = getPartitionField(filteredTable.getDefinition().getSchema());
+    return factory.generate(partitionField.getName(), partitionField.getType().name(), result.iterateAll());
   }
 
-  private String getPartitionKey() {
-    Schema schema = filteredTable.getDefinition().getSchema();
-    if (schema == null) {
-      return "";
-    }
-
-    return sanitisePartitionKey(schema);
-  }
-
-  private String getPartitionKeyType() {
-    if (tableContainsField()) {
-      return filteredTable.getDefinition().getSchema().getFields().get(partitionedBy).getType().name();
+  private Field getPartitionField(Schema schema) {
+    if (filteredTable.getDefinition().getSchema() == null) {
+      throw new IllegalStateException("Could not filter table with the configured filter");
     } else {
-      return "";
+      return filteredTable.getDefinition().getSchema().getFields().get(partitionedBy);
     }
   }
 
-  private boolean tableContainsField() {
-    return filteredTable.getDefinition().getSchema().getFields().size() > 0;
-  }
-
-  private String sanitisePartitionKey(Schema schema) {
-    // Case sensitive in Google Cloud
-    String partitionKey = partitionedBy;
-    for (Field field : schema.getFields()) {
-
-      String trimmedFieldName = field.getName().toLowerCase().trim();
-      String trimmedPartitionKey = partitionKey.toLowerCase().trim();
-
-      if (trimmedFieldName.equals(trimmedPartitionKey)) {
-        partitionKey = field.getName();
-        break;
-      }
-    }
-    return partitionKey;
-  }
 }

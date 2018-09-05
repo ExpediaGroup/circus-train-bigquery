@@ -24,6 +24,8 @@ import com.google.api.client.util.Joiner;
 
 public class PartitionColumnFormatter {
 
+  private static Joiner joiner = Joiner.on(',');
+
   public static String getFormattedListOfColumns(List<FieldSchema> columns) {
     List<String> formattedColumns = new ArrayList<>();
     for (FieldSchema col : columns) {
@@ -45,7 +47,7 @@ public class PartitionColumnFormatter {
   }
 
   private static String stringifyList(List<String> stringList) {
-    return Joiner.on(',').join(stringList);
+    return joiner.join(stringList);
   }
 
 }

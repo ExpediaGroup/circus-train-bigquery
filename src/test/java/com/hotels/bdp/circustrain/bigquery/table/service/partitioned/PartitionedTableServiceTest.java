@@ -45,22 +45,22 @@ import com.hotels.bdp.circustrain.bigquery.partition.HivePartitionKeyAdder;
 @RunWith(MockitoJUnitRunner.class)
 public class PartitionedTableServiceTest {
 
-  private final String partitionBy = "foo";
-
   private @Mock HivePartitionKeyAdder adder;
-  private @Mock HivePartitionGenerator factory;
+  private @Mock HivePartitionGenerator partitionGenerator;
   private @Mock TableResult tableResult;
   private @Mock TableDefinition definition;
   private @Mock com.google.cloud.bigquery.Table filteredTable;
 
+  private final String type = "STRING";
+  private final String partitionBy = "foo";
   private final Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
   private PartitionedTableService partitionedTableService;
   private final List<FieldValueList> rows = new ArrayList<>();
-  private final String type = "STRING";
 
   @Before
   public void init() {
-    partitionedTableService = new PartitionedTableService(partitionBy, adder, factory, tableResult, filteredTable);
+    partitionedTableService = new PartitionedTableService(partitionBy, adder, partitionGenerator, tableResult,
+        filteredTable);
     when(filteredTable.getDefinition()).thenReturn(definition);
     when(definition.getSchema()).thenReturn(schema);
   }
@@ -75,7 +75,8 @@ public class PartitionedTableServiceTest {
   public void getPartitions() {
     when(tableResult.iterateAll()).thenReturn(rows);
     List<Partition> result = partitionedTableService.getPartitions();
-    assertThat(result, is(factory.generate(eq(partitionBy), eq(type), eq(rows))));
+    System.out.println(result);
+    assertThat(result, is(partitionGenerator.generate(eq(partitionBy), eq(type), eq(rows))));
   }
 
   @Test
@@ -85,19 +86,18 @@ public class PartitionedTableServiceTest {
     Schema schemaWithTwoFields = Schema.of(Arrays.asList(barField, fooField));
     when(definition.getSchema()).thenReturn(schemaWithTwoFields);
     when(tableResult.iterateAll()).thenReturn(rows);
-
     List<Partition> result = partitionedTableService.getPartitions();
-    assertThat(result, is(factory.generate(eq(partitionBy), eq(type), eq(rows))));
+    System.out.println(result);
+    assertThat(result, is(partitionGenerator.generate(eq(partitionBy), eq(type), eq(rows))));
   }
 
-  @Test
+  @Test(expected = IllegalStateException.class)
   public void getPartitionFieldsNotFound() {
     Schema schemaWithNoFields = Schema.of(Collections.<Field> emptyList());
     when(definition.getSchema()).thenReturn(schemaWithNoFields);
     when(tableResult.iterateAll()).thenReturn(rows);
 
-    List<Partition> result = partitionedTableService.getPartitions();
-    assertThat(result, is(factory.generate(eq(partitionBy), eq(type), eq(rows))));
+    partitionedTableService.getPartitions();
   }
 
 }

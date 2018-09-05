@@ -47,7 +47,8 @@ class PartitionValueFormatter {
     if (isNumber()) {
       return getTimestampFromNumber();
     } else {
-      throw new IllegalStateException("Expected to get number from BigQuery for timestamp column but did not get it");
+      throw new IllegalStateException(
+          "Expected to get number from BigQuery for timestamp column but got " + partitionFieldValue);
     }
   }
 

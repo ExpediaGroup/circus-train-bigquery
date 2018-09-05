@@ -16,9 +16,10 @@
 package com.hotels.bdp.circustrain.bigquery.partition;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
+
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -33,9 +34,7 @@ public class PartitionValueFormatterTest {
 
   private @Mock FieldValue fieldValue;
 
-  private String value = "value";
-  private String partitionKeyType;
-  private String expected;
+  private final String value = "value";
 
   @Before
   public void setUp() {
@@ -44,53 +43,53 @@ public class PartitionValueFormatterTest {
 
   @Test
   public void formatNotNeeded() {
-    partitionKeyType = "INTEGER";
+    String partitionKeyType = "INTEGER";
     PartitionValueFormatter formatter = new PartitionValueFormatter(fieldValue, partitionKeyType);
-    assertEquals(value, formatter.formatValue());
+    assertThat(formatter.formatValue(), is(value));
   }
 
   @Test
   public void formatStringValue() {
-    partitionKeyType = "STRING";
-    expected = "\"" + value + "\"";
+    String partitionKeyType = "STRING";
+    String expected = "\"" + value + "\"";
     PartitionValueFormatter formatter = new PartitionValueFormatter(fieldValue, partitionKeyType);
     assertThat(formatter.formatValue(), is(expected));
   }
 
   @Test(expected = IllegalStateException.class)
   public void formatTimestampValue() {
-    partitionKeyType = "TIMESTAMP";
+    String partitionKeyType = "TIMESTAMP";
     new PartitionValueFormatter(fieldValue, partitionKeyType).formatValue();
   }
 
   @Test
   public void formatDateValue() {
-    partitionKeyType = "DATE";
-    expected = "\"" + value + "\"";
+    String partitionKeyType = "DATE";
+    String expected = "\"" + value + "\"";
     PartitionValueFormatter formatter = new PartitionValueFormatter(fieldValue, partitionKeyType);
-    assertEquals(expected, formatter.formatValue());
+    assertThat(formatter.formatValue(), is(expected));
   }
 
   @Test
   public void formatTimestampFromUnixTimestampValue() {
-    partitionKeyType = "TIMESTAMP";
-    value = "1483228800.0";
-    expected = "TIMESTAMP_MICROS(1483228800000000)";
-    setTimestampCondition(value);
+    String partitionKeyType = "TIMESTAMP";
+    String timestampValue = "1483228800.0";
+    String expected = "TIMESTAMP_MICROS(1483228800000000)";
+    setTimestampCondition(timestampValue);
 
     PartitionValueFormatter formatter = new PartitionValueFormatter(fieldValue, partitionKeyType);
-    assertEquals(expected, formatter.formatValue());
+    assertThat(formatter.formatValue(), is(expected));
   }
 
   @Test
   public void formatTimestampWithMilliseconds() {
-    partitionKeyType = "TIMESTAMP";
-    value = "1408452095.22";
-    expected = "TIMESTAMP_MICROS(1408452095220000)";
-    setTimestampCondition(value);
+    String partitionKeyType = "TIMESTAMP";
+    String timestampValue = "1408452095.22";
+    String expected = "TIMESTAMP_MICROS(1408452095220000)";
+    setTimestampCondition(timestampValue);
 
     PartitionValueFormatter formatter = new PartitionValueFormatter(fieldValue, partitionKeyType);
-    assertEquals(expected, formatter.formatValue());
+    assertThat(formatter.formatValue(), is(expected));
   }
 
   private void setTimestampCondition(String value) {
@@ -99,7 +98,7 @@ public class PartitionValueFormatterTest {
   }
 
   private long getTimestamp(String value) {
-    int microseconds = 1000000;
+    long microseconds = TimeUnit.SECONDS.toMicros(1L);
     return new Double(Double.valueOf(value) * microseconds).longValue();
   }
 
