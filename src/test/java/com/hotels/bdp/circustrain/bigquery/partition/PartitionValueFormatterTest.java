@@ -44,30 +44,30 @@ public class PartitionValueFormatterTest {
   @Test
   public void formatNotNeeded() {
     String partitionKeyType = "INTEGER";
-    PartitionValueFormatter formatter = new PartitionValueFormatter(fieldValue, partitionKeyType);
-    assertThat(formatter.formatValue(), is(value));
+    String formatted = PartitionValueFormatter.formatValue(fieldValue, partitionKeyType);
+    assertThat(formatted, is(value));
   }
 
   @Test
   public void formatStringValue() {
     String partitionKeyType = "STRING";
     String expected = "\"" + value + "\"";
-    PartitionValueFormatter formatter = new PartitionValueFormatter(fieldValue, partitionKeyType);
-    assertThat(formatter.formatValue(), is(expected));
+    String formatted = PartitionValueFormatter.formatValue(fieldValue, partitionKeyType);
+    assertThat(formatted, is(expected));
   }
 
   @Test(expected = IllegalStateException.class)
   public void formatTimestampValue() {
     String partitionKeyType = "TIMESTAMP";
-    new PartitionValueFormatter(fieldValue, partitionKeyType).formatValue();
+    PartitionValueFormatter.formatValue(fieldValue, partitionKeyType);
   }
 
   @Test
   public void formatDateValue() {
     String partitionKeyType = "DATE";
     String expected = "\"" + value + "\"";
-    PartitionValueFormatter formatter = new PartitionValueFormatter(fieldValue, partitionKeyType);
-    assertThat(formatter.formatValue(), is(expected));
+    String formatted = PartitionValueFormatter.formatValue(fieldValue, partitionKeyType);
+    assertThat(formatted, is(expected));
   }
 
   @Test
@@ -77,8 +77,8 @@ public class PartitionValueFormatterTest {
     String expected = "TIMESTAMP_MICROS(1483228800000000)";
     setTimestampCondition(timestampValue);
 
-    PartitionValueFormatter formatter = new PartitionValueFormatter(fieldValue, partitionKeyType);
-    assertThat(formatter.formatValue(), is(expected));
+    String formatted = PartitionValueFormatter.formatValue(fieldValue, partitionKeyType);
+    assertThat(formatted, is(expected));
   }
 
   @Test
@@ -88,8 +88,8 @@ public class PartitionValueFormatterTest {
     String expected = "TIMESTAMP_MICROS(1408452095220000)";
     setTimestampCondition(timestampValue);
 
-    PartitionValueFormatter formatter = new PartitionValueFormatter(fieldValue, partitionKeyType);
-    assertThat(formatter.formatValue(), is(expected));
+    String formatted = PartitionValueFormatter.formatValue(fieldValue, partitionKeyType);
+    assertThat(formatted, is(expected));
   }
 
   private void setTimestampCondition(String value) {

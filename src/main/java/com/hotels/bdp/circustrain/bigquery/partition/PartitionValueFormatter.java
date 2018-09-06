@@ -19,48 +19,36 @@ import com.google.cloud.bigquery.FieldValue;
 
 class PartitionValueFormatter {
 
-  private final String partitionKeyType;
-  private final FieldValue partitionFieldValue;
+  private PartitionValueFormatter() {}
 
-  PartitionValueFormatter(FieldValue partitionFieldValue, String partitionKeyType) {
-    this.partitionFieldValue = partitionFieldValue;
-    this.partitionKeyType = partitionKeyType.toLowerCase();
-  }
+  static String formatValue(FieldValue partitionFieldValue, String partitionKeyType) {
+    partitionKeyType = partitionKeyType.toLowerCase();
 
-  String formatValue() {
     switch (partitionKeyType) {
     case "string":
     case "date":
-      return getValueWithQuotes();
+      return String.format("\"%s\"", partitionFieldValue.getStringValue());
     case "timestamp":
-      return getTimestampValue();
+      return getTimestampValue(partitionFieldValue);
     default:
       return partitionFieldValue.getStringValue();
     }
   }
 
-  private String getValueWithQuotes() {
-    return String.format("\"%s\"", partitionFieldValue.getStringValue());
-  }
-
-  private String getTimestampValue() {
-    if (isNumber()) {
-      return getTimestampFromNumber();
+  private static String getTimestampValue(FieldValue partitionFieldValue) {
+    if (isDouble(partitionFieldValue)) {
+      return String.format("TIMESTAMP_MICROS(%s)", partitionFieldValue.getTimestampValue());
     } else {
       throw new IllegalStateException(
-          "Expected to get number from BigQuery for timestamp column but got " + partitionFieldValue);
+          "Expected to get a double from BigQuery for timestamp column but got " + partitionFieldValue);
     }
   }
 
-  private String getTimestampFromNumber() {
-    return String.format("TIMESTAMP_MICROS(%s)", partitionFieldValue.getTimestampValue());
-  }
-
-  private boolean isNumber() {
+  private static boolean isDouble(FieldValue partitionFieldValue) {
     try {
       Double.valueOf(partitionFieldValue.getStringValue());
       return true;
-    } catch (Exception e) {
+    } catch (NumberFormatException e) {
       return false;
     }
   }

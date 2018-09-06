@@ -77,9 +77,10 @@ class BigQueryPartitionGenerator {
   }
 
   private String getQueryStatement() {
-    String columnNames = PartitionColumnFormatter.getFormattedListOfColumns(cols);
-    return String.format("select %s from %s.%s where %s = %s", columnNames, sourceDBName, sourceTableName, partitionKey,
-        partitionValue);
+    String columnNames = PartitionColumnFormatter.formatColumns(cols);
+    return String
+        .format("select %s from %s.%s where %s = %s", columnNames, sourceDBName, sourceTableName, partitionKey,
+            partitionValue);
   }
 
   private com.google.cloud.bigquery.Table createPartitionInBigQuery(

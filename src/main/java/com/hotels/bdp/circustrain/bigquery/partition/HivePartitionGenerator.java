@@ -128,8 +128,9 @@ public class HivePartitionGenerator {
       List<FieldSchema> cols) {
     List<GeneratePartitionTask> tasks = new ArrayList<>();
     for (FieldValueList row : rows) {
-      tasks.add(new GeneratePartitionTask(sourceDBName, sourceTableName, partitionKey, partitionKeyType, tableBucket,
-          tableFolder, row, cols));
+      tasks
+          .add(new GeneratePartitionTask(sourceDBName, sourceTableName, partitionKey, partitionKeyType, tableBucket,
+              tableFolder, row, cols));
     }
     return tasks;
   }
@@ -173,7 +174,7 @@ public class HivePartitionGenerator {
       FieldValue partitionFieldValue = row.get(partitionKey);
       if (partitionFieldValue != null) {
         final String originalValue = partitionFieldValue.getValue().toString();
-        String formattedValue = new PartitionValueFormatter(partitionFieldValue, partitionKeyType).formatValue();
+        String formattedValue = PartitionValueFormatter.formatValue(partitionFieldValue, partitionKeyType);
         ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
             sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition();
 
@@ -207,8 +208,13 @@ public class HivePartitionGenerator {
         String location,
         List<FieldSchema> cols,
         List<String> partitionValues) {
-      partition = new BigQueryToHivePartitionConverter().withDatabaseName(databaseName).withTableName(tableName)
-          .withValues(partitionValues).withCols(cols).withLocation(location).convert();
+      partition = new BigQueryToHivePartitionConverter()
+          .withDatabaseName(databaseName)
+          .withTableName(tableName)
+          .withValues(partitionValues)
+          .withCols(cols)
+          .withLocation(location)
+          .convert();
     }
 
     public Partition get() {

@@ -63,7 +63,6 @@ public class PartitionedTableService implements TableService {
 
   @Override
   public Table getTable() {
-
     return adder.add(Objects.requireNonNull(partitionedBy).toLowerCase(), filteredTable.getDefinition().getSchema());
   }
 

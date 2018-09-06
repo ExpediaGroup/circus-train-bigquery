@@ -26,7 +26,9 @@ public class PartitionColumnFormatter {
 
   private static Joiner joiner = Joiner.on(',');
 
-  public static String getFormattedListOfColumns(List<FieldSchema> columns) {
+  private PartitionColumnFormatter() {}
+
+  public static String formatColumns(List<FieldSchema> columns) {
     List<String> formattedColumns = new ArrayList<>();
     for (FieldSchema col : columns) {
       String name = col.getName().trim();
@@ -39,15 +41,13 @@ public class PartitionColumnFormatter {
       }
     }
 
-    return stringifyList(formattedColumns);
+    return joiner.join(formattedColumns);
   }
 
+  // format the timestamp returned by BigQuery to include the timestamp without timezone
+  // if timestamp contains timezone, Hive converts that value to null
   private static String formatTimestampColumn(String name) {
     return "FORMAT_TIMESTAMP(\"%F %H:%M:%E*S\", " + name + ") as " + name;
-  }
-
-  private static String stringifyList(List<String> stringList) {
-    return joiner.join(stringList);
   }
 
 }
