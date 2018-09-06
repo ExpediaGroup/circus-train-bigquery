@@ -63,6 +63,7 @@ public class PartitionedTableService implements TableService {
 
   @Override
   public Table getTable() {
+
     return adder.add(Objects.requireNonNull(partitionedBy).toLowerCase(), filteredTable.getDefinition().getSchema());
   }
 
@@ -74,7 +75,8 @@ public class PartitionedTableService implements TableService {
 
   private Field getPartitionField(Schema schema) {
     if (filteredTable.getDefinition().getSchema() == null) {
-      throw new IllegalStateException("Could not filter table with the configured filter");
+      throw new IllegalStateException(
+          "No schema defined for " + filteredTable.getFriendlyName() + "; cannot generate partitions");
     } else {
       return filteredTable.getDefinition().getSchema().getFields().get(partitionedBy);
     }
