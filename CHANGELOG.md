@@ -2,7 +2,8 @@
 ### Added
 * Support for partition generation upon replication.
 * Support for partition filters.
-* Support for filters in Standard SQL
+* Support for filters in Standard SQL.
+
 ### Fixed
 * Integers from BigQuery are treated as 64 bit (BigInt Hive type) values rather than 32 bit (Int Hive type) values.
 
