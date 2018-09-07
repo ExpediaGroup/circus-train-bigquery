@@ -15,8 +15,6 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +31,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -75,9 +74,12 @@ public class HivePartitionGenerator {
     this.extractionContainerFactory = extractionContainerFactory;
   }
 
-  public List<Partition> generate(final String partitionKey, Iterable<FieldValueList> results) {
+  public List<Partition> generate(
+      final String partitionKey,
+      String partitionKeyType,
+      Iterable<FieldValueList> results) {
     ExecutorService executorService = Executors.newFixedThreadPool(RuntimeConfiguration.DEFAULT.getThreadPoolSize());
-    List<Partition> partitions = generate(executorService, partitionKey, results);
+    List<Partition> partitions = generate(executorService, partitionKey, partitionKeyType, results);
     executorService.shutdownNow();
     return partitions;
   }
@@ -85,6 +87,7 @@ public class HivePartitionGenerator {
   private List<Partition> generate(
       final ExecutorService executorService,
       String partitionKey,
+      String partitionKeyType,
       Iterable<FieldValueList> results) {
     final String sourceTableName = sourceTableAsHive.getTableName();
     final String sourceDBName = sourceTableAsHive.getDbName();
@@ -94,10 +97,9 @@ public class HivePartitionGenerator {
     final String tableFolder = container.getExtractionUri().getFolder();
 
     List<FieldSchema> cols = Collections.unmodifiableList(sourceTableAsHive.getSd().getCols());
-    PartitionValueFormatter formatter = new PartitionValueFormatter(partitionKey, cols);
 
-    List<GeneratePartitionTask> tasks = getTasks(sourceDBName, sourceTableName, partitionKey, tableBucket, tableFolder,
-        results, cols, formatter);
+    List<GeneratePartitionTask> tasks = getTasks(sourceDBName, sourceTableName, partitionKey, partitionKeyType,
+        tableBucket, tableFolder, results, cols);
 
     try {
       List<Future<com.google.common.base.Optional<Partition>>> partitionFutures = executorService.invokeAll(tasks);
@@ -119,15 +121,16 @@ public class HivePartitionGenerator {
       String sourceDBName,
       String sourceTableName,
       String partitionKey,
+      String partitionKeyType,
       String tableBucket,
       String tableFolder,
       Iterable<FieldValueList> rows,
-      List<FieldSchema> cols,
-      PartitionValueFormatter formatter) {
+      List<FieldSchema> cols) {
     List<GeneratePartitionTask> tasks = new ArrayList<>();
     for (FieldValueList row : rows) {
-      tasks.add(new GeneratePartitionTask(sourceDBName, sourceTableName, partitionKey, tableBucket, tableFolder, row,
-          cols, formatter));
+      tasks
+          .add(new GeneratePartitionTask(sourceDBName, sourceTableName, partitionKey, partitionKeyType, tableBucket,
+              tableFolder, row, cols));
     }
     return tasks;
   }
@@ -137,29 +140,29 @@ public class HivePartitionGenerator {
     private final String sourceDBName;
     private final String sourceTableName;
     private final String partitionKey;
+    private final String partitionKeyType;
     private final String tableBucket;
     private final String tableFolder;
     private final FieldValueList row;
     private final List<FieldSchema> cols;
-    private final PartitionValueFormatter formatter;
 
     private GeneratePartitionTask(
         String sourceDBName,
         String sourceTableName,
         String partitionKey,
+        String partitionKeyType,
         String tableBucket,
         String tableFolder,
         FieldValueList row,
-        List<FieldSchema> cols,
-        PartitionValueFormatter formatter) {
+        List<FieldSchema> cols) {
       this.sourceDBName = sourceDBName;
       this.sourceTableName = sourceTableName;
       this.partitionKey = partitionKey;
+      this.partitionKeyType = partitionKeyType;
       this.tableBucket = tableBucket;
       this.tableFolder = tableFolder;
       this.row = row;
       this.cols = cols;
-      this.formatter = formatter;
     }
 
     @Override
@@ -168,12 +171,12 @@ public class HivePartitionGenerator {
     }
 
     private com.google.common.base.Optional<Partition> generatePartition() {
-      Object partitionValue = row.get(partitionKey).getValue();
-      if (partitionValue != null) {
-        final String originalValue = partitionValue.toString();
-        final String formattedValue = formatter.format(objectToHiveString(partitionValue));
+      FieldValue partitionFieldValue = row.get(partitionKey);
+      if (partitionFieldValue != null) {
+        final String originalValue = partitionFieldValue.getValue().toString();
+        String formattedValue = PartitionValueFormatter.formatValue(partitionFieldValue, partitionKeyType);
         ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
-            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder).generatePartition();
+            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition();
 
         Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
             extractionUri.getTableLocation(), cols, originalValue).get();
@@ -184,13 +187,6 @@ public class HivePartitionGenerator {
       return com.google.common.base.Optional.absent();
     }
 
-    private String objectToHiveString(Object partitionValue) {
-      final String originalValue = partitionValue.toString();
-      if (isBlank(originalValue)) {
-        return "__HIVE_DEFAULT_PARTITION__";
-      }
-      return originalValue;
-    }
   }
 
   private class HivePartitionFactory {
@@ -212,8 +208,13 @@ public class HivePartitionGenerator {
         String location,
         List<FieldSchema> cols,
         List<String> partitionValues) {
-      partition = new BigQueryToHivePartitionConverter().withDatabaseName(databaseName).withTableName(tableName)
-          .withValues(partitionValues).withCols(cols).withLocation(location).convert();
+      partition = new BigQueryToHivePartitionConverter()
+          .withDatabaseName(databaseName)
+          .withTableName(tableName)
+          .withValues(partitionValues)
+          .withCols(cols)
+          .withLocation(location)
+          .convert();
     }
 
     public Partition get() {

@@ -19,34 +19,36 @@ public class BigQueryToHiveTypeConverter {
   public String convert(String type) {
     type = type.toUpperCase();
     switch (type) {
-      case "STRING":
-      case "BYTES":
-      case "DATE":
-      case "DATETIME":
-      case "TIME":
-      case "TIMESTAMP": {
-        return "STRING";
-      }
+    case "STRING":
+    case "BYTES":
+    case "DATETIME":
+    case "TIME":
+      return "STRING";
 
-      case "INTEGER":
-      case "INT64": {
-        // BigQuery ints are 8 bytes
-        return "BIGINT";
-      }
+    case "DATE":
+      return "DATE";
 
-      case "FLOAT":
-      case "FLOAT64": {
-        return "DOUBLE";
-      }
+    case "TIMESTAMP":
+      return "TIMESTAMP";
 
-      case "BOOL":
-      case "BOOLEAN": {
-        return "BOOLEAN";
-      }
+    case "INTEGER":
+    case "INT64":
+      return "BIGINT";
 
-      default: {
-        throw new UnsupportedOperationException("BigQuery type " + type + " cannot be converted to Hive");
-      }
+    case "NUMERIC":
+      return "DECIMAL(38,9)";
+
+    case "FLOAT":
+    case "FLOAT64":
+      return "DOUBLE";
+
+    case "BOOL":
+    case "BOOLEAN":
+      return "BOOLEAN";
+
+    default:
+      throw new UnsupportedOperationException("BigQuery type " + type + " cannot be converted to Hive");
+
     }
   }
 }

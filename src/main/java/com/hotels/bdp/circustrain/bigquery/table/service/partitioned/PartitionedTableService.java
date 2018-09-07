@@ -68,27 +68,17 @@ public class PartitionedTableService implements TableService {
 
   @Override
   public List<Partition> getPartitions() {
-    return factory.generate(getPartitionKey(filteredTable), result.iterateAll());
+    Field partitionField = getPartitionField(filteredTable.getDefinition().getSchema());
+    return factory.generate(partitionField.getName(), partitionField.getType().name(), result.iterateAll());
   }
 
-  private String getPartitionKey(com.google.cloud.bigquery.Table table) {
-    Schema schema = table.getDefinition().getSchema();
-    if (schema == null) {
-      return "";
+  private Field getPartitionField(Schema schema) {
+    if (filteredTable.getDefinition().getSchema() == null) {
+      throw new IllegalStateException(
+          "No schema defined for " + filteredTable.getFriendlyName() + "; cannot generate partitions");
+    } else {
+      return filteredTable.getDefinition().getSchema().getFields().get(partitionedBy);
     }
-
-    return sanitisePartitionKey(schema);
   }
 
-  private String sanitisePartitionKey(Schema schema) {
-    // Case sensitive in Google Cloud
-    String partitionKey = partitionedBy;
-    for (Field field : schema.getFields()) {
-      if (field.getName().toLowerCase().trim().equals(partitionKey.toLowerCase().trim())) {
-        partitionKey = field.getName();
-        break;
-      }
-    }
-    return partitionKey;
-  }
 }

@@ -61,9 +61,11 @@ public class BigQueryToHiveTableConverterTest {
     Field bytesField = Field.of("bytes", LegacySQLTypeName.BYTES);
     Field timeStampField = Field.of("timestamp", LegacySQLTypeName.TIMESTAMP);
     Field timeField = Field.of("time", LegacySQLTypeName.TIME);
+    Field numericField = Field.of("numeric", LegacySQLTypeName.valueOf("NUMERIC"));
 
-    Schema schema = Schema.of(integerField, stringField, booleanField, floatField, dateField, dateTimeField, bytesField,
-        timeStampField, timeField);
+    Schema schema = Schema
+        .of(integerField, stringField, booleanField, floatField, dateField, dateTimeField, bytesField, timeStampField,
+            timeField, numericField);
     Table table = new BigQueryToHiveTableConverter().withSchema(schema).convert();
     List<FieldSchema> fields = table.getSd().getCols();
     assertEquals("integer", fields.get(0).getName());
@@ -75,15 +77,17 @@ public class BigQueryToHiveTableConverterTest {
     assertEquals("float", fields.get(3).getName());
     assertEquals("double", fields.get(3).getType());
     assertEquals("date", fields.get(4).getName());
-    assertEquals("string", fields.get(4).getType());
+    assertEquals("date", fields.get(4).getType());
     assertEquals("datetime", fields.get(5).getName());
     assertEquals("string", fields.get(5).getType());
     assertEquals("bytes", fields.get(6).getName());
     assertEquals("string", fields.get(6).getType());
     assertEquals("timestamp", fields.get(7).getName());
-    assertEquals("string", fields.get(7).getType());
+    assertEquals("timestamp", fields.get(7).getType());
     assertEquals("time", fields.get(8).getName());
     assertEquals("string", fields.get(8).getType());
+    assertEquals("numeric", fields.get(9).getName());
+    assertEquals("decimal(38,9)", fields.get(9).getType());
   }
 
   @Test(expected = IllegalArgumentException.class)

@@ -15,36 +15,42 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import java.util.List;
-import java.util.Set;
-
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-
-import com.google.common.collect.ImmutableSet;
+import com.google.cloud.bigquery.FieldValue;
 
 class PartitionValueFormatter {
 
-  private static final Set<String> NEEDS_FORMATTING = ImmutableSet.of("string");
-  private boolean format = false;
+  private PartitionValueFormatter() {}
 
-  PartitionValueFormatter(String partitionKey, List<FieldSchema> cols) {
-    partitionKey = partitionKey.toLowerCase().trim();
-    for (FieldSchema col : cols) {
-      String name = col.getName().toLowerCase().trim();
-      String type = col.getType().toLowerCase().trim();
+  static String formatValue(FieldValue partitionFieldValue, String partitionKeyType) {
+    partitionKeyType = partitionKeyType.toLowerCase();
 
-      if (name.equals(partitionKey) && NEEDS_FORMATTING.contains(type)) {
-        format = true;
-        break;
-      }
+    switch (partitionKeyType) {
+    case "string":
+    case "date":
+      return String.format("\"%s\"", partitionFieldValue.getStringValue());
+    case "timestamp":
+      return getTimestampValue(partitionFieldValue);
+    default:
+      return partitionFieldValue.getStringValue();
     }
   }
 
-  String format(String partitionValue) {
-    partitionValue = partitionValue.trim();
-    if (!format) {
-      return partitionValue;
+  private static String getTimestampValue(FieldValue partitionFieldValue) {
+    if (isDouble(partitionFieldValue)) {
+      return String.format("TIMESTAMP_MICROS(%s)", partitionFieldValue.getTimestampValue());
+    } else {
+      throw new IllegalStateException(
+          "Expected to get a double from BigQuery for timestamp column but got " + partitionFieldValue);
     }
-    return "\"" + partitionValue + "\"";
   }
+
+  private static boolean isDouble(FieldValue partitionFieldValue) {
+    try {
+      Double.valueOf(partitionFieldValue.getStringValue());
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
 }
