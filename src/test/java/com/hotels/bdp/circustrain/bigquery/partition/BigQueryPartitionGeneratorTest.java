@@ -15,8 +15,10 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
@@ -60,8 +62,8 @@ public class BigQueryPartitionGeneratorTest {
   public void generatePart() {
     ExtractionUri uri = generator.generatePartition();
     assertEquals(destinationBucket, uri.getBucket());
-    assertTrue(uri.getFolder().startsWith(destinationFolder));
-    assertTrue(uri.getKey().endsWith(String.format("%s=%s.%s", partitionKey, partitionValue, uri.getFormat())));
+    assertThat(uri.getFolder(), startsWith(destinationFolder));
+    assertThat(uri.getKey(), endsWith(String.format("%s=%s.%s", partitionKey, partitionValue, uri.getExtension())));
     ArgumentCaptor<ExtractionContainer> extractionContainerCaptor = ArgumentCaptor.forClass(ExtractionContainer.class);
     verify(extractionService).register(extractionContainerCaptor.capture());
     assertEquals(extractionContainerCaptor.getValue().getExtractionUri(), uri);

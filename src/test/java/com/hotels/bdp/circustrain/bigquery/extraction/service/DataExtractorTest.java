@@ -112,7 +112,7 @@ public class DataExtractorTest {
     List<ExtractionContainer> extracted = extractor.extract(executorService);
 
     verify(storage).create(any(BucketInfo.class));
-    verify(table).extract(eq("csv"), eq(data.getUri()));
+    verify(table).extract(eq("AVRO"), eq(data.getUri()));
     assertThat(extracted.size(), is(1));
   }
 

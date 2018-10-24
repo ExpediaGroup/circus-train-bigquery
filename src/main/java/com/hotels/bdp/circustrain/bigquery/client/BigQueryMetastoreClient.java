@@ -149,14 +149,24 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
     com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
 
+    log.info("BIGQUERY TABLE DEFINITION ====== " + bigQueryTable.getDefinition());
+    log.info("BIGQUERY TABLE SCHEMA ====== " + bigQueryTable.getDefinition().getSchema());
     ExtractionUri extractionUri = new ExtractionUri();
     ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, PostExtractionAction.RETAIN);
     extractionService.register(container);
 
-    Table hiveTable = tableServiceFactory.newInstance(new BigQueryToHiveTableConverter().withDatabaseName(databaseName)
-        .withTableName(tableName).withSchema(bigQueryTable.getDefinition().getSchema())
-        .withCols(bigQueryTable.getDefinition().getSchema()).withLocation(extractionUri.getTableLocation()).convert())
+    Table hiveTable = tableServiceFactory
+        .newInstance(new BigQueryToHiveTableConverter()
+            .withDatabaseName(databaseName)
+            .withTableName(tableName)
+            .withSchema(bigQueryTable.getDefinition().getSchema())
+            .withCols(bigQueryTable.getDefinition().getSchema())
+            .withLocation(extractionUri.getTableLocation())
+            .convert())
         .getTable();
+    log.info("HIVE TABLE STORAGE DESCRIPTOR ====== " + hiveTable.getSd());
+    log.info("HIVE TABLE TABLE TYPE ====== " + hiveTable.getTableType());
+    log.info("HIVE TABLE SCHEMA ====== " + bigQueryTable.getDefinition().getSchema());
 
     cache.put(hiveTable);
     return hiveTable;

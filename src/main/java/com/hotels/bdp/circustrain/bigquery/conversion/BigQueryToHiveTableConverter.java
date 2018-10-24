@@ -17,9 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.conversion;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
@@ -50,18 +48,20 @@ public class BigQueryToHiveTableConverter {
     sd.setBucketCols(Collections.<String> emptyList());
     sd.setSortCols(Collections.<Order> emptyList());
     sd.setCols(new ArrayList<FieldSchema>());
-    sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
-    sd.setOutputFormat("org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat");
+    sd.setInputFormat("org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat");
+    sd.setOutputFormat("org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat");
     sd.setCompressed(false);
     sd.setStoredAsSubDirectories(false);
     sd.setNumBuckets(-1);
+
     SerDeInfo serDeInfo = new SerDeInfo();
-    serDeInfo.setSerializationLib("org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe");
-    Map<String, String> serDeParameters = new HashMap<>();
-    serDeParameters.put("serialization.format", "1");
-    serDeParameters.put("field.delim", ",");
-    serDeParameters.put("skip.header.line.count", "1");
-    serDeInfo.setParameters(serDeParameters);
+    serDeInfo.setSerializationLib("org.apache.hadoop.hive.serde2.avro.AvroSerDe");
+    // Map<String, String> serDeParameters = new HashMap<>();
+    // serDeParameters.put("serialization.format", "1");
+    // serDeParameters.put("field.delim", ",");
+    // serDeParameters.put("skip.header.line.count", "1");
+    // serDeInfo.setParameters(serDeParameters);
+
     SkewedInfo si = new SkewedInfo();
     si.setSkewedColNames(Collections.<String> emptyList());
     si.setSkewedColValueLocationMaps(Collections.<List<String>, String> emptyMap());
