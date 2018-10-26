@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +41,8 @@ import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 @Component
 public class TableServiceFactory {
+
+  private static final Logger log = LoggerFactory.getLogger(PartitionedTableService.class);
 
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
@@ -78,6 +82,7 @@ public class TableServiceFactory {
     TableService tableService = null;
 
     if (configuration.isPartitioningConfigured(hiveTable)) {
+      log.info("Creating a partitioned table..............");
       final String partitionBy = configuration.getPartitionByFor(hiveTable);
       final String partitionFilter = configuration.getPartitionFilterFor(hiveTable);
       final String sqlFilterQuery = partitionQueryFactory.newInstance(hiveTable, partitionBy, partitionFilter);
@@ -91,6 +96,7 @@ public class TableServiceFactory {
           extractionService);
       tableService = new PartitionedTableService(partitionBy, filterer, adder, hivePartitionGenerator);
     } else {
+      log.info("Creating an unpartitioned table.............");
       tableService = new UnpartitionedTableService(hiveTable);
     }
     cache.put(hiveTable, tableService);

@@ -34,11 +34,12 @@ public class PartitionColumnFormatter {
       String name = col.getName().trim();
       String type = col.getType().toLowerCase().trim();
 
-      if (type.equals("timestamp")) {
-        formattedColumns.add(formatTimestampColumn(name));
-      } else {
-        formattedColumns.add(name);
-      }
+      // if (type.equals("timestamp")) {
+      // formattedColumns.add(formatTimestampColumn(name));
+      // } else {
+      // formattedColumns.add(name);
+      // }
+      formattedColumns.add(name);
     }
 
     return joiner.join(formattedColumns);

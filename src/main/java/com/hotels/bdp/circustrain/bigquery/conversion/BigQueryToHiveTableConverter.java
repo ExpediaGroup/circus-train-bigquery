@@ -25,6 +25,8 @@ import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
@@ -32,6 +34,7 @@ import com.google.cloud.bigquery.Schema;
 public class BigQueryToHiveTableConverter {
 
   private final Table table = new Table();
+  private static final Logger log = LoggerFactory.getLogger(BigQueryToHiveTableConverter.class);
 
   public BigQueryToHiveTableConverter() {
     table.setDbName("default");
@@ -56,6 +59,7 @@ public class BigQueryToHiveTableConverter {
 
     SerDeInfo serDeInfo = new SerDeInfo();
     serDeInfo.setSerializationLib("org.apache.hadoop.hive.serde2.avro.AvroSerDe");
+    log.info("SERDE INFO ========" + serDeInfo);
     // Map<String, String> serDeParameters = new HashMap<>();
     // serDeParameters.put("serialization.format", "1");
     // serDeParameters.put("field.delim", ",");

@@ -19,18 +19,28 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PartitionQueryFactory {
 
+  private static final Logger log = LoggerFactory.getLogger(PartitionQueryFactory.class);
+
   public String newInstance(Table hiveTable, String partitionBy, String partitionFilter) {
     if (isNotBlank(partitionBy) && isNotBlank(partitionFilter)) {
-      return String.format("select %s from %s.%s where %s group by %s order by %s", partitionBy, hiveTable.getDbName(),
-          hiveTable.getTableName(), partitionFilter, partitionBy, partitionBy);
+      String query = String
+          .format("select distinct(%s) from %s.%s where %s order by %s", partitionBy, hiveTable.getDbName(),
+              hiveTable.getTableName(), partitionFilter, partitionBy);
+      log.info("Partitioned and filtered table query ============== {}", query);
+      return query;
     } else if (isNotBlank(partitionBy) && isBlank(partitionFilter)) {
-      return String.format("select %s from %s.%s group by %s order by %s", partitionBy, hiveTable.getDbName(),
-          hiveTable.getTableName(), partitionBy, partitionBy);
+      String query = String
+          .format("select distinct(%s) from %s.%s order by %s", partitionBy, hiveTable.getDbName(),
+              hiveTable.getTableName(), partitionBy);
+      log.info("Partitioned and UNfiltered table query ============== {}", query);
+      return query;
     } else {
       throw new IllegalStateException(
           "Cannot create a partition filter query if neither partitionBy nor partitionFilter are provided");

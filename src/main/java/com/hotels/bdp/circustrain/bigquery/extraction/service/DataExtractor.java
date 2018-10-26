@@ -109,8 +109,6 @@ public class DataExtractor {
   private void extractDataFromBigQuery(ExtractionUri extractionUri, Table table) {
     String format = extractionUri.getFormat();
     String dataUri = extractionUri.getUri();
-    log.info("FORMAT ======== " + format);
-    log.info("DATA URI ======== " + dataUri);
 
     try {
       Job job = table.extract(format, dataUri);

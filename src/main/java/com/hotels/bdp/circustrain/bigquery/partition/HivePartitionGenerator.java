@@ -174,6 +174,8 @@ public class HivePartitionGenerator {
       FieldValue partitionFieldValue = row.get(partitionKey);
       if (partitionFieldValue != null) {
         final String originalValue = partitionFieldValue.getValue().toString();
+        log.info("Partition type =========== {}", partitionKeyType);
+        log.info("Partition value ============= {}", partitionFieldValue);
         String formattedValue = PartitionValueFormatter.formatValue(partitionFieldValue, partitionKeyType);
         ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
             sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition();
