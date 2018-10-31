@@ -22,10 +22,12 @@ import java.util.List;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
+import com.google.cloud.storage.Blob;
 
 public class BigQueryToHiveTableConverterTest {
 
@@ -66,7 +68,8 @@ public class BigQueryToHiveTableConverterTest {
     Schema schema = Schema
         .of(integerField, stringField, booleanField, floatField, dateField, dateTimeField, bytesField, timeStampField,
             timeField, numericField);
-    Table table = new BigQueryToHiveTableConverter().withSchema(schema).convert();
+    Blob file = Mockito.mock(Blob.class);
+    Table table = new BigQueryToHiveTableConverter().withSchema(file).convert();
     List<FieldSchema> fields = table.getSd().getCols();
     assertEquals("integer", fields.get(0).getName());
     assertEquals("bigint", fields.get(0).getType());
@@ -94,7 +97,8 @@ public class BigQueryToHiveTableConverterTest {
   public void unsupportedTypeThrowsException() {
     Field unsupportedField = Field.of("record", LegacySQLTypeName.RECORD);
     Schema schema = Schema.of(unsupportedField);
-    new BigQueryToHiveTableConverter().withSchema(schema).convert();
+    Blob file = Mockito.mock(Blob.class);
+    new BigQueryToHiveTableConverter().withSchema(file).convert();
   }
 
 }

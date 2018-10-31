@@ -112,7 +112,6 @@ public class DataExtractor {
 
     try {
       Job job = table.extract(format, dataUri);
-      log.info("CONFIGURATION ======" + job.getConfiguration());
       Job completedJob = job.waitFor();
       if (completedJob == null) {
         throw new CircusTrainException("Error extracting BigQuery table data to Google storage, job no longer exists");

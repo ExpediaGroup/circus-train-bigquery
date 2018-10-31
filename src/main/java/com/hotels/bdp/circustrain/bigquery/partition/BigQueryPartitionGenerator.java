@@ -77,11 +77,10 @@ class BigQueryPartitionGenerator {
   }
 
   private String getQueryStatement() {
-    String columnNames = PartitionColumnFormatter.formatColumns(cols);
+    // String columnNames = PartitionColumnFormatter.formatColumns(cols);
     String query = String
-        .format("select %s from %s.%s where %s = %s", columnNames, sourceDBName, sourceTableName, partitionKey,
-            partitionValue);
-    log.info("${AnsiColor.CYAN}Query statement is ============ {}${AnsiColor.DEFAULT}", query);
+        .format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey, partitionValue);
+    log.info("Query statement is ============ {}", query);
     return query;
   }
 
@@ -99,6 +98,7 @@ class BigQueryPartitionGenerator {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
     ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri, PostExtractionAction.DELETE);
     extractionService.register(toRegister);
+    extractionService.extract();
     return extractionUri;
   }
 

@@ -90,6 +90,10 @@ import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.api.gax.paging.Page;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Storage.BlobListOption;
+
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
@@ -148,25 +152,39 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     }
 
     com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
+    // com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.executeIntoDestinationTable(databaseName,
+    // tableName, );
 
-    log.info("BIGQUERY TABLE DEFINITION ====== " + bigQueryTable.getDefinition());
-    log.info("BIGQUERY TABLE SCHEMA ====== " + bigQueryTable.getDefinition().getSchema());
+    // log.info("BIGQUERY TABLE DEFINITION ====== " + bigQueryTable.getDefinition());
+    // log.info("BIGQUERY TABLE SCHEMA ====== " + bigQueryTable.getDefinition().getSchema());
     ExtractionUri extractionUri = new ExtractionUri();
     ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, PostExtractionAction.RETAIN);
     extractionService.register(container);
+    extractionService.extract();
+
+    com.google.cloud.storage.Storage storage = extractionService.getStorage();
+    log.info("Before getting file, bucket = {}, foler = {}", extractionUri.getBucket(), extractionUri.getFolder());
+
+    Page<Blob> blobs = storage
+        .list(extractionUri.getBucket(), BlobListOption.currentDirectory(),
+            BlobListOption.prefix(extractionUri.getFolder() + "/"));
+    Blob firstFile = blobs.iterateAll().iterator().next();
+    log.info("First file ======== {}", firstFile);
+    for (Blob blob : blobs.iterateAll()) {
+      log.info("BLOB EXISTS ========== {}", blob.getName());
+    }
 
     Table hiveTable = tableServiceFactory
         .newInstance(new BigQueryToHiveTableConverter()
             .withDatabaseName(databaseName)
             .withTableName(tableName)
-            .withSchema(bigQueryTable.getDefinition().getSchema())
-            .withCols(bigQueryTable.getDefinition().getSchema())
+            .withSchema(firstFile)
             .withLocation(extractionUri.getTableLocation())
             .convert())
         .getTable();
-    log.info("HIVE TABLE STORAGE DESCRIPTOR ====== " + hiveTable.getSd());
-    log.info("HIVE TABLE TABLE TYPE ====== " + hiveTable.getTableType());
-    log.info("HIVE TABLE SCHEMA ====== " + bigQueryTable.getDefinition().getSchema());
+    // log.info("HIVE TABLE STORAGE DESCRIPTOR ====== " + hiveTable.getSd());
+    // log.info("HIVE TABLE TABLE TYPE ====== " + hiveTable.getTableType());
+    // log.info("HIVE TABLE SCHEMA ====== " + bigQueryTable.getDefinition().getSchema());
 
     cache.put(hiveTable);
     return hiveTable;

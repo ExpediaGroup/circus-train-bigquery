@@ -15,10 +15,16 @@
  */
 package com.hotels.bdp.circustrain.bigquery.conversion;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.SeekableByteArrayInput;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumReader;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
@@ -28,8 +34,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Schema;
+import com.google.cloud.storage.Blob;
 
 public class BigQueryToHiveTableConverter {
 
@@ -59,8 +64,9 @@ public class BigQueryToHiveTableConverter {
 
     SerDeInfo serDeInfo = new SerDeInfo();
     serDeInfo.setSerializationLib("org.apache.hadoop.hive.serde2.avro.AvroSerDe");
-    log.info("SERDE INFO ========" + serDeInfo);
+    // log.info("SERDE INFO ========" + serDeInfo);
     // Map<String, String> serDeParameters = new HashMap<>();
+    // serDeParameters.put("avro.schema.literal", "<<get schema>>");
     // serDeParameters.put("serialization.format", "1");
     // serDeParameters.put("field.delim", ",");
     // serDeParameters.put("skip.header.line.count", "1");
@@ -94,24 +100,30 @@ public class BigQueryToHiveTableConverter {
     return this;
   }
 
-  public BigQueryToHiveTableConverter withCols(Schema schema) {
-    return this.withCols(BigQueryToHiveFieldConverter.convert(schema));
-  }
-
   public BigQueryToHiveTableConverter withLocation(String location) {
     table.getSd().setLocation(location);
     return this;
   }
 
-  public BigQueryToHiveTableConverter withSchema(Schema schema) {
-    BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
-    for (Field field : schema.getFields()) {
-      FieldSchema fieldSchema = new FieldSchema();
-      fieldSchema.setName(field.getName().toLowerCase());
-      fieldSchema.setType(typeConverter.convert(field.getType().name()).toLowerCase());
-      table.getSd().addToCols(fieldSchema);
-    }
+  public BigQueryToHiveTableConverter withSchema(Blob file) {
+    String schema = getSchemaFromFile(file);
+    table.getSd().getSerdeInfo().putToParameters("avro.schema.literal", schema);
+    log.info("SERDEINFO PARAMETERS ============== {}", table.getSd().getSerdeInfo().getParameters());
     return this;
+  }
+
+  public static String getSchemaFromFile(Blob file) {
+    try {
+      SeekableByteArrayInput input = new SeekableByteArrayInput(file.getContent());
+      DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
+      DataFileReader<GenericRecord> dataFileReader = new DataFileReader<>(input, datumReader);
+      org.apache.avro.Schema schema = dataFileReader.getSchema();
+      dataFileReader.close();
+      return schema.toString();
+    } catch (IOException e) {
+      log.info("ERROOOOOOOOOOOOR {}", e.getMessage());
+      return null;
+    }
   }
 
 }

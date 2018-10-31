@@ -33,10 +33,12 @@ public class ExtractionService {
   private final DataExtractor extractor;
   private final DataCleaner cleaner;
   private final Map<Table, ExtractionContainer> registry;
+  private Storage storage;
 
   @Autowired
   ExtractionService(Storage storage) {
     this(new DataExtractor(storage), new DataCleaner(storage), new HashMap<Table, ExtractionContainer>());
+    this.storage = storage;
   }
 
   @VisibleForTesting
@@ -62,5 +64,9 @@ public class ExtractionService {
 
   public ExtractionContainer retrieve(Table table) {
     return registry.get(table);
+  }
+
+  public Storage getStorage() {
+    return storage;
   }
 }
