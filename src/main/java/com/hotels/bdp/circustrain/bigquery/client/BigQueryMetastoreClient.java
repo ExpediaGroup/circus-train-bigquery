@@ -90,10 +90,6 @@ import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.api.gax.paging.Page;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.Storage.BlobListOption;
-
 import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConverter;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
@@ -101,6 +97,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAc
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
 class BigQueryMetastoreClient implements CloseableMetaStoreClient {
@@ -157,24 +154,13 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, PostExtractionAction.RETAIN);
     extractionService.register(container);
     extractionService.extract();
-
-    com.google.cloud.storage.Storage storage = extractionService.getStorage();
-    log.info("Before getting file, bucket = {}, foler = {}", extractionUri.getBucket(), extractionUri.getFolder());
-
-    Page<Blob> blobs = storage
-        .list(extractionUri.getBucket(), BlobListOption.currentDirectory(),
-            BlobListOption.prefix(extractionUri.getFolder() + "/"));
-    Blob firstFile = blobs.iterateAll().iterator().next();
-    log.info("First file ======== {}", firstFile);
-    for (Blob blob : blobs.iterateAll()) {
-      log.info("BLOB EXISTS ========== {}", blob.getName());
-    }
+    String schema = SchemaExtractor.getSchemaFromStorage(extractionService.getStorage(), extractionUri);
 
     Table hiveTable = tableServiceFactory
         .newInstance(new BigQueryToHiveTableConverter()
             .withDatabaseName(databaseName)
             .withTableName(tableName)
-            .withSchema(firstFile)
+            .withSchema(schema)
             .withLocation(extractionUri.getTableLocation())
             .convert())
         .getTable();

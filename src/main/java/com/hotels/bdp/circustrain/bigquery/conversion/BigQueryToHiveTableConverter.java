@@ -15,26 +15,16 @@
  */
 package com.hotels.bdp.circustrain.bigquery.conversion;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.avro.file.DataFileReader;
-import org.apache.avro.file.SeekableByteArrayInput;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.DatumReader;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
-
-import com.google.cloud.storage.Blob;
-
-import com.hotels.bdp.circustrain.api.CircusTrainException;
 
 public class BigQueryToHiveTableConverter {
 
@@ -95,23 +85,9 @@ public class BigQueryToHiveTableConverter {
     return this;
   }
 
-  public BigQueryToHiveTableConverter withSchema(Blob file) {
-    String schema = getSchemaFromFile(file);
+  public BigQueryToHiveTableConverter withSchema(String schema) {
     table.getSd().getSerdeInfo().putToParameters("avro.schema.literal", schema);
     return this;
-  }
-
-  public static String getSchemaFromFile(Blob file) {
-    try {
-      SeekableByteArrayInput input = new SeekableByteArrayInput(file.getContent());
-      DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
-      DataFileReader<GenericRecord> dataFileReader = new DataFileReader<>(input, datumReader);
-      org.apache.avro.Schema schema = dataFileReader.getSchema();
-      dataFileReader.close();
-      return schema.toString();
-    } catch (IOException e) {
-      throw new CircusTrainException("Error getting schema from table: " + e.getMessage());
-    }
   }
 
 }

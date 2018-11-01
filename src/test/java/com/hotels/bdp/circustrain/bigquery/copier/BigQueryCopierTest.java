@@ -32,7 +32,6 @@ public class BigQueryCopierTest {
     Copier delegate = mock(Copier.class);
     BigQueryCopier bigQueryCopier = new BigQueryCopier(delegate, service);
     bigQueryCopier.copy();
-    verify(service).extract();
     verifyNoMoreInteractions(service);
     verify(delegate).copy();
   }

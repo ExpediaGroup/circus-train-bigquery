@@ -31,12 +31,8 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.api.gax.paging.Page;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.Storage.BlobListOption;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 
@@ -48,6 +44,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContai
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 public class HivePartitionGenerator {
 
@@ -101,14 +98,10 @@ public class HivePartitionGenerator {
     final String tableFolder = container.getExtractionUri().getFolder();
 
     List<FieldSchema> cols = Collections.unmodifiableList(sourceTableAsHive.getSd().getCols());
-
-    Storage storage = extractionService.getStorage();
-    Page<Blob> blobs = storage
-        .list(tableBucket, BlobListOption.currentDirectory(), BlobListOption.prefix(tableFolder + "/"));
-    Blob firstFile = blobs.iterateAll().iterator().next();
+    String schema = SchemaExtractor.getSchemaFromStorage(extractionService.getStorage(), container.getExtractionUri());
 
     List<GeneratePartitionTask> tasks = getTasks(sourceDBName, sourceTableName, partitionKey, partitionKeyType,
-        tableBucket, tableFolder, results, cols, firstFile);
+        tableBucket, tableFolder, results, cols, schema);
 
     try {
       List<Future<com.google.common.base.Optional<Partition>>> partitionFutures = executorService.invokeAll(tasks);
@@ -135,12 +128,12 @@ public class HivePartitionGenerator {
       String tableFolder,
       Iterable<FieldValueList> rows,
       List<FieldSchema> cols,
-      Blob file) {
+      String schema) {
     List<GeneratePartitionTask> tasks = new ArrayList<>();
     for (FieldValueList row : rows) {
       tasks
           .add(new GeneratePartitionTask(sourceDBName, sourceTableName, partitionKey, partitionKeyType, tableBucket,
-              tableFolder, row, cols, file));
+              tableFolder, row, cols, schema));
     }
     return tasks;
   }
@@ -155,7 +148,7 @@ public class HivePartitionGenerator {
     private final String tableFolder;
     private final FieldValueList row;
     private final List<FieldSchema> cols;
-    private final Blob file;
+    private final String schema;
 
     private GeneratePartitionTask(
         String sourceDBName,
@@ -166,7 +159,7 @@ public class HivePartitionGenerator {
         String tableFolder,
         FieldValueList row,
         List<FieldSchema> cols,
-        Blob file) {
+        String schema) {
       this.sourceDBName = sourceDBName;
       this.sourceTableName = sourceTableName;
       this.partitionKey = partitionKey;
@@ -175,7 +168,7 @@ public class HivePartitionGenerator {
       this.tableFolder = tableFolder;
       this.row = row;
       this.cols = cols;
-      this.file = file;
+      this.schema = schema;
     }
 
     @Override
@@ -192,7 +185,7 @@ public class HivePartitionGenerator {
             sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition();
 
         Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
-            extractionUri.getTableLocation(), file, originalValue).get();
+            extractionUri.getTableLocation(), schema, originalValue).get();
         log.info("Generated partition {}={}", partitionKey, formattedValue);
         log.debug("{}", partition);
         return com.google.common.base.Optional.of(partition);
@@ -206,21 +199,26 @@ public class HivePartitionGenerator {
 
     private final Partition partition;
 
-    HivePartitionFactory(String databaseName, String tableName, String location, Blob file, String... partitionValues) {
-      this(databaseName, tableName, location, file, Arrays.asList(partitionValues));
+    HivePartitionFactory(
+        String databaseName,
+        String tableName,
+        String location,
+        String schema,
+        String... partitionValues) {
+      this(databaseName, tableName, location, schema, Arrays.asList(partitionValues));
     }
 
     private HivePartitionFactory(
         String databaseName,
         String tableName,
         String location,
-        Blob file,
+        String schema,
         List<String> partitionValues) {
       partition = new BigQueryToHivePartitionConverter()
           .withDatabaseName(databaseName)
           .withTableName(tableName)
           .withValues(partitionValues)
-          .withCols(file)
+          .withCols(schema)
           .withLocation(location)
           .convert();
     }

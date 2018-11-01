@@ -27,8 +27,6 @@ import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 
-import com.google.cloud.storage.Blob;
-
 public class BigQueryToHivePartitionConverter {
 
   private final Partition partition = new Partition();
@@ -85,8 +83,7 @@ public class BigQueryToHivePartitionConverter {
     return this;
   }
 
-  public BigQueryToHivePartitionConverter withCols(Blob file) {
-    String schema = BigQueryToHiveTableConverter.getSchemaFromFile(file);
+  public BigQueryToHivePartitionConverter withCols(String schema) {
     partition.getSd().getSerdeInfo().putToParameters("avro.schema.literal", schema);
     return this;
   }
