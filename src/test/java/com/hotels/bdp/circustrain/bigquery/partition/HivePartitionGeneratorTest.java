@@ -20,14 +20,11 @@ import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
@@ -50,6 +47,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContai
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractorTest;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HivePartitionGeneratorTest {
@@ -120,19 +118,12 @@ public class HivePartitionGeneratorTest {
   }
 
   private void setUpSchema() throws IOException {
-    byte[] content = getContentFromFileName("usa_names.avro");
+    byte[] content = SchemaExtractorTest.getContentFromFileName("usa_names.avro");
     when(service.getStorage()).thenReturn(storage);
     when(storage.list(bucket, BlobListOption.currentDirectory(), BlobListOption.prefix(folder + "/")))
         .thenReturn(blobs);
     when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));
     when(blob.getContent()).thenReturn(content);
-    schema = new String(getContentFromFileName("usa_names_schema.avsc"));
-  }
-
-  private byte[] getContentFromFileName(String name) throws IOException {
-    File file = new File("src/test/resources/" + name);
-    FileInputStream fStream = new FileInputStream(file);
-    byte[] content = IOUtils.toByteArray(fStream);
-    return content;
+    schema = new String(SchemaExtractorTest.getContentFromFileName("usa_names_schema.avsc"));
   }
 }

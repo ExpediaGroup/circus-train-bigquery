@@ -19,13 +19,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.junit.Test;
+
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractorTest;
 
 public class BigQueryToHiveTableConverterTest {
 
@@ -52,16 +51,9 @@ public class BigQueryToHiveTableConverterTest {
 
   @Test
   public void withSchema() throws IOException {
-    String schema = getSchemaFromResources();
+    String schema = new String(SchemaExtractorTest.getContentFromFileName("usa_names_schema.avsc"));
     Table table = new BigQueryToHiveTableConverter().withSchema(schema).convert();
     assertThat(table.getSd().getSerdeInfo().getParameters().get("avro.schema.literal"), is(schema));
-  }
-
-  private String getSchemaFromResources() throws IOException {
-    File file = new File("src/test/resources/usa_names_schema.avsc");
-    FileInputStream fStream = new FileInputStream(file);
-    byte[] content = IOUtils.toByteArray(fStream);
-    return new String(content);
   }
 
 }

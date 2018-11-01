@@ -43,7 +43,6 @@ public class PartitionColumnFormatter {
   // format the timestamp returned by BigQuery to transform it into a long
   // avro represents timestamps as long
   private static String formatTimestampColumn(String name) {
-    // return "FORMAT_TIMESTAMP(\"%F %H:%M:%E*S\", " + name + ") as " + name;
     return "UNIX_MILLIS(" + name + ") as " + name;
   }
 
