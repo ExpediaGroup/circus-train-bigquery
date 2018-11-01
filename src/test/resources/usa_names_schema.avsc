@@ -1,0 +1,1 @@
+{"type":"record","name":"Root","fields":[{"name":"state","type":["null","string"]},{"name":"gender","type":["null","string"]},{"name":"year","type":["null","long"]},{"name":"name","type":["null","string"]},{"name":"number","type":["null","long"]}]}

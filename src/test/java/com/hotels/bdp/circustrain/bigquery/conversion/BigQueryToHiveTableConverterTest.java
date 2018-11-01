@@ -15,17 +15,17 @@
  */
 package com.hotels.bdp.circustrain.bigquery.conversion;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
-import java.util.List;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.junit.Test;
-
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.LegacySQLTypeName;
-import com.google.cloud.bigquery.Schema;
 
 public class BigQueryToHiveTableConverterTest {
 
@@ -51,50 +51,17 @@ public class BigQueryToHiveTableConverterTest {
   }
 
   @Test
-  public void withSchema() {
-    Field integerField = Field.of("integer", LegacySQLTypeName.INTEGER);
-    Field stringField = Field.of("string", LegacySQLTypeName.STRING);
-    Field booleanField = Field.of("boolean", LegacySQLTypeName.BOOLEAN);
-    Field floatField = Field.of("float", LegacySQLTypeName.FLOAT);
-    Field dateField = Field.of("date", LegacySQLTypeName.DATE);
-    Field dateTimeField = Field.of("datetime", LegacySQLTypeName.DATETIME);
-    Field bytesField = Field.of("bytes", LegacySQLTypeName.BYTES);
-    Field timeStampField = Field.of("timestamp", LegacySQLTypeName.TIMESTAMP);
-    Field timeField = Field.of("time", LegacySQLTypeName.TIME);
-    Field numericField = Field.of("numeric", LegacySQLTypeName.valueOf("NUMERIC"));
-
-    Schema schema = Schema
-        .of(integerField, stringField, booleanField, floatField, dateField, dateTimeField, bytesField, timeStampField,
-            timeField, numericField);
-    Table table = new BigQueryToHiveTableConverter().withSchema(schema.toString()).convert();
-    List<FieldSchema> fields = table.getSd().getCols();
-    assertEquals("integer", fields.get(0).getName());
-    assertEquals("bigint", fields.get(0).getType());
-    assertEquals("string", fields.get(1).getName());
-    assertEquals("string", fields.get(1).getType());
-    assertEquals("boolean", fields.get(2).getName());
-    assertEquals("boolean", fields.get(2).getType());
-    assertEquals("float", fields.get(3).getName());
-    assertEquals("double", fields.get(3).getType());
-    assertEquals("date", fields.get(4).getName());
-    assertEquals("date", fields.get(4).getType());
-    assertEquals("datetime", fields.get(5).getName());
-    assertEquals("string", fields.get(5).getType());
-    assertEquals("bytes", fields.get(6).getName());
-    assertEquals("string", fields.get(6).getType());
-    assertEquals("timestamp", fields.get(7).getName());
-    assertEquals("timestamp", fields.get(7).getType());
-    assertEquals("time", fields.get(8).getName());
-    assertEquals("string", fields.get(8).getType());
-    assertEquals("numeric", fields.get(9).getName());
-    assertEquals("decimal(38,9)", fields.get(9).getType());
+  public void withSchema() throws IOException {
+    String schema = getSchemaFromResources();
+    Table table = new BigQueryToHiveTableConverter().withSchema(schema).convert();
+    assertThat(table.getSd().getSerdeInfo().getParameters().get("avro.schema.literal"), is(schema));
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void unsupportedTypeThrowsException() {
-    Field unsupportedField = Field.of("record", LegacySQLTypeName.RECORD);
-    Schema schema = Schema.of(unsupportedField);
-    new BigQueryToHiveTableConverter().withSchema(schema.toString()).convert();
+  private String getSchemaFromResources() throws IOException {
+    File file = new File("src/test/resources/usa_names_schema.avsc");
+    FileInputStream fStream = new FileInputStream(file);
+    byte[] content = IOUtils.toByteArray(fStream);
+    return new String(content);
   }
 
 }

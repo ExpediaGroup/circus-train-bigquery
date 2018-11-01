@@ -26,9 +26,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
@@ -39,6 +44,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.google.api.gax.paging.Page;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.Job;
@@ -46,6 +52,9 @@ import com.google.cloud.bigquery.JobStatus;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableDefinition;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Storage.BlobListOption;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
@@ -70,11 +79,16 @@ public class BigQueryMetastoreClientTest {
   private @Mock Dataset dataset;
   private @Mock Table table;
   private @Mock TableDefinition tableDefinition;
+  private @Mock Storage storage;
+  private @Mock Blob blob;
+  private @Mock Page<Blob> blobs;
 
+  String schema;
   private BigQueryMetastoreClient bigQueryMetastoreClient;
 
   @Before
-  public void init() {
+  public void init() throws IOException {
+    setUpSchema();
     bigQueryMetastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, extractionService, cache, factory);
   }
 
@@ -254,5 +268,22 @@ public class BigQueryMetastoreClientTest {
     List<Partition> results = bigQueryMetastoreClient.listPartitions(databaseName, tableName, (short) -1);
     assertEquals(10, results.size());
     verify(cache).get(databaseName, tableName);
+  }
+
+  private void setUpSchema() throws IOException {
+    byte[] content = getContentFromFileName("usa_names.avro");
+
+    when(extractionService.getStorage()).thenReturn(storage);
+    when(storage.list(anyString(), any(BlobListOption.class), any(BlobListOption.class))).thenReturn(blobs);
+    when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));
+    when(blob.getContent()).thenReturn(content);
+    schema = new String(getContentFromFileName("usa_names_schema.avsc"));
+  }
+
+  private byte[] getContentFromFileName(String name) throws IOException {
+    File file = new File("src/test/resources/" + name);
+    FileInputStream fStream = new FileInputStream(file);
+    byte[] content = IOUtils.toByteArray(fStream);
+    return content;
   }
 }

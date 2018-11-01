@@ -20,9 +20,14 @@ import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
@@ -33,10 +38,13 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.google.api.gax.paging.Page;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Storage.BlobListOption;
 
-import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
@@ -53,6 +61,9 @@ public class HivePartitionGeneratorTest {
   private @Mock ExtractionUri uri;
   private @Mock FieldValue fieldValue;
   private @Mock FieldValueList row;
+  private @Mock Storage storage;
+  private @Mock Blob blob;
+  private @Mock Page<Blob> blobs;
 
   private HivePartitionGenerator hivePartitionGenerator;
   private final Table table = new Table();
@@ -63,14 +74,15 @@ public class HivePartitionGeneratorTest {
   private final String tableName = "table";
   private final String partitionKey = "foo";
   private final String filePartialLocation = String.format("gs://%s/%s/", bucket, folder);
-  private String value = "value";
-  private String type = "string";
+  private final String value = "value";
+  private final String type = "string";
   private final FieldSchema fieldSchema = new FieldSchema();
   private final List<FieldValueList> rows = new ArrayList<>();
   private final List<FieldSchema> cols = new ArrayList<>();
+  private String schema;
 
   @Before
-  public void init() {
+  public void init() throws IOException {
     table.setDbName(databaseName);
     table.setTableName(tableName);
     table.setSd(storageDescriptor);
@@ -85,6 +97,8 @@ public class HivePartitionGeneratorTest {
 
     when(row.get(partitionKey)).thenReturn(fieldValue);
     when(fieldValue.getValue()).thenReturn(value);
+
+    setUpSchema();
   }
 
   @Test
@@ -101,41 +115,24 @@ public class HivePartitionGeneratorTest {
     Partition partition = partitions.get(0);
     assertThat(partition.getDbName(), is(databaseName));
     assertThat(partition.getTableName(), is(tableName));
-    assertThat(partition.getSd().getCols().size(), is(1));
-    assertThat(partition.getSd().getCols().get(0), is(cols.get(0)));
     assertThat(partition.getSd().getLocation(), startsWith(filePartialLocation));
+    assertThat(partition.getSd().getSerdeInfo().getParameters().get("avro.schema.literal"), is(schema));
   }
 
-  @Test
-  public void partitionsForTimestampColumn() {
-    type = "timestamp";
-    value = "1419984005.0";
-    when(fieldValue.getValue()).thenReturn(value);
-    when(fieldValue.getStringValue()).thenReturn(value);
-    fieldSchema.setType(type);
-    cols.add(fieldSchema);
-    storageDescriptor.setCols(cols);
-
-    rows.add(row);
-    List<Partition> partitions = hivePartitionGenerator.generate(partitionKey, type, rows);
-    assertThat(partitions.size(), is(1));
-    Partition partition = partitions.get(0);
-    assertThat(partition.getDbName(), is(databaseName));
-    assertThat(partition.getTableName(), is(tableName));
-    assertThat(partition.getSd().getCols().size(), is(1));
-    assertThat(partition.getSd().getCols().get(0), is(cols.get(0)));
-    assertThat(partition.getSd().getLocation(), startsWith(filePartialLocation));
+  private void setUpSchema() throws IOException {
+    byte[] content = getContentFromFileName("usa_names.avro");
+    when(service.getStorage()).thenReturn(storage);
+    when(storage.list(bucket, BlobListOption.currentDirectory(), BlobListOption.prefix(folder + "/")))
+        .thenReturn(blobs);
+    when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));
+    when(blob.getContent()).thenReturn(content);
+    schema = new String(getContentFromFileName("usa_names_schema.avsc"));
   }
 
-  @Test(expected = CircusTrainException.class)
-  public void partitionForWrongValueForTimestamp() {
-    type = "timestamp";
-    fieldSchema.setType(type);
-    cols.add(fieldSchema);
-    storageDescriptor.setCols(cols);
-
-    rows.add(row);
-    hivePartitionGenerator.generate(partitionKey, type, rows);
+  private byte[] getContentFromFileName(String name) throws IOException {
+    File file = new File("src/test/resources/" + name);
+    FileInputStream fStream = new FileInputStream(file);
+    byte[] content = IOUtils.toByteArray(fStream);
+    return content;
   }
-
 }
