@@ -35,6 +35,7 @@ import com.google.api.gax.paging.Page;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.Storage.BlobListOption;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -101,18 +102,10 @@ public class HivePartitionGenerator {
 
     List<FieldSchema> cols = Collections.unmodifiableList(sourceTableAsHive.getSd().getCols());
 
-    /////
-    com.google.cloud.storage.Storage storage = extractionService.getStorage();
-    log.info("Before getting file, bucket = {}, foler = {}", tableBucket, tableFolder);
-
+    Storage storage = extractionService.getStorage();
     Page<Blob> blobs = storage
         .list(tableBucket, BlobListOption.currentDirectory(), BlobListOption.prefix(tableFolder + "/"));
     Blob firstFile = blobs.iterateAll().iterator().next();
-    log.info("First file ======== {}", firstFile);
-    for (Blob blob : blobs.iterateAll()) {
-      log.info("BLOB EXISTS ========== {}", blob.getName());
-    }
-    ////
 
     List<GeneratePartitionTask> tasks = getTasks(sourceDBName, sourceTableName, partitionKey, partitionKeyType,
         tableBucket, tableFolder, results, cols, firstFile);
@@ -194,14 +187,12 @@ public class HivePartitionGenerator {
       FieldValue partitionFieldValue = row.get(partitionKey);
       if (partitionFieldValue != null) {
         final String originalValue = partitionFieldValue.getValue().toString();
-        log.info("Partition type =========== {}", partitionKeyType);
-        log.info("Partition value ============= {}", partitionFieldValue);
         String formattedValue = PartitionValueFormatter.formatValue(partitionFieldValue, partitionKeyType);
         ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
             sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition();
 
         Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
-            extractionUri.getTableLocation(), cols, file, originalValue).get();
+            extractionUri.getTableLocation(), file, originalValue).get();
         log.info("Generated partition {}={}", partitionKey, formattedValue);
         log.debug("{}", partition);
         return com.google.common.base.Optional.of(partition);
@@ -215,21 +206,14 @@ public class HivePartitionGenerator {
 
     private final Partition partition;
 
-    HivePartitionFactory(
-        String databaseName,
-        String tableName,
-        String location,
-        List<FieldSchema> cols,
-        Blob file,
-        String... partitionValues) {
-      this(databaseName, tableName, location, cols, file, Arrays.asList(partitionValues));
+    HivePartitionFactory(String databaseName, String tableName, String location, Blob file, String... partitionValues) {
+      this(databaseName, tableName, location, file, Arrays.asList(partitionValues));
     }
 
     private HivePartitionFactory(
         String databaseName,
         String tableName,
         String location,
-        List<FieldSchema> cols,
         Blob file,
         List<String> partitionValues) {
       partition = new BigQueryToHivePartitionConverter()

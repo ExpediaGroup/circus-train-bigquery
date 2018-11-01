@@ -77,10 +77,9 @@ class BigQueryPartitionGenerator {
   }
 
   private String getQueryStatement() {
-    // String columnNames = PartitionColumnFormatter.formatColumns(cols);
     String query = String
         .format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey, partitionValue);
-    log.info("Query statement is ============ {}", query);
+    log.debug("Query statement is: {}", query);
     return query;
   }
 

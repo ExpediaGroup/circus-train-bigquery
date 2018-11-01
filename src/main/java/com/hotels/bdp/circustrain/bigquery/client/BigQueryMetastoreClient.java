@@ -152,11 +152,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     }
 
     com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
-    // com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.executeIntoDestinationTable(databaseName,
-    // tableName, );
 
-    // log.info("BIGQUERY TABLE DEFINITION ====== " + bigQueryTable.getDefinition());
-    // log.info("BIGQUERY TABLE SCHEMA ====== " + bigQueryTable.getDefinition().getSchema());
     ExtractionUri extractionUri = new ExtractionUri();
     ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, PostExtractionAction.RETAIN);
     extractionService.register(container);
@@ -182,9 +178,6 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
             .withLocation(extractionUri.getTableLocation())
             .convert())
         .getTable();
-    // log.info("HIVE TABLE STORAGE DESCRIPTOR ====== " + hiveTable.getSd());
-    // log.info("HIVE TABLE TABLE TYPE ====== " + hiveTable.getTableType());
-    // log.info("HIVE TABLE SCHEMA ====== " + bigQueryTable.getDefinition().getSchema());
 
     cache.put(hiveTable);
     return hiveTable;

@@ -31,15 +31,14 @@ import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.cloud.storage.Blob;
+
+import com.hotels.bdp.circustrain.api.CircusTrainException;
 
 public class BigQueryToHiveTableConverter {
 
   private final Table table = new Table();
-  private static final Logger log = LoggerFactory.getLogger(BigQueryToHiveTableConverter.class);
 
   public BigQueryToHiveTableConverter() {
     table.setDbName("default");
@@ -61,17 +60,8 @@ public class BigQueryToHiveTableConverter {
     sd.setCompressed(false);
     sd.setStoredAsSubDirectories(false);
     sd.setNumBuckets(-1);
-
     SerDeInfo serDeInfo = new SerDeInfo();
     serDeInfo.setSerializationLib("org.apache.hadoop.hive.serde2.avro.AvroSerDe");
-    // log.info("SERDE INFO ========" + serDeInfo);
-    // Map<String, String> serDeParameters = new HashMap<>();
-    // serDeParameters.put("avro.schema.literal", "<<get schema>>");
-    // serDeParameters.put("serialization.format", "1");
-    // serDeParameters.put("field.delim", ",");
-    // serDeParameters.put("skip.header.line.count", "1");
-    // serDeInfo.setParameters(serDeParameters);
-
     SkewedInfo si = new SkewedInfo();
     si.setSkewedColNames(Collections.<String> emptyList());
     si.setSkewedColValueLocationMaps(Collections.<List<String>, String> emptyMap());
@@ -108,7 +98,6 @@ public class BigQueryToHiveTableConverter {
   public BigQueryToHiveTableConverter withSchema(Blob file) {
     String schema = getSchemaFromFile(file);
     table.getSd().getSerdeInfo().putToParameters("avro.schema.literal", schema);
-    log.info("SERDEINFO PARAMETERS ============== {}", table.getSd().getSerdeInfo().getParameters());
     return this;
   }
 
@@ -121,8 +110,7 @@ public class BigQueryToHiveTableConverter {
       dataFileReader.close();
       return schema.toString();
     } catch (IOException e) {
-      log.info("ERROOOOOOOOOOOOR {}", e.getMessage());
-      return null;
+      throw new CircusTrainException("Error getting schema from table: " + e.getMessage());
     }
   }
 

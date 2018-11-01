@@ -25,7 +25,7 @@ public class ExtractionUri {
   // Wildcard key enables sharding of exported data > 1GB - https://cloud.google.com/bigquery/docs/exporting-data
   private static final String SHARD_DATA_POSTFIX = "-*";
   private static final String DEFAULT_FORMAT = "AVRO";
-  private static final String DEFAULT_EXTENSION = "avsc";
+  private static final String DEFAULT_EXTENSION = "avro";
 
   private final String dataFormat;
   private final String dataExtension;

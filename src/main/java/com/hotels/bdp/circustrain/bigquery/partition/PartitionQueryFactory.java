@@ -33,13 +33,13 @@ public class PartitionQueryFactory {
       String query = String
           .format("select distinct(%s) from %s.%s where %s order by %s", partitionBy, hiveTable.getDbName(),
               hiveTable.getTableName(), partitionFilter, partitionBy);
-      log.info("Partitioned and filtered table query ============== {}", query);
+      log.debug("Query for partitioning and filtering table: {}", query);
       return query;
     } else if (isNotBlank(partitionBy) && isBlank(partitionFilter)) {
       String query = String
           .format("select distinct(%s) from %s.%s order by %s", partitionBy, hiveTable.getDbName(),
               hiveTable.getTableName(), partitionBy);
-      log.info("Partitioned and UNfiltered table query ============== {}", query);
+      log.debug("Query for partitioning table: {}", query);
       return query;
     } else {
       throw new IllegalStateException(

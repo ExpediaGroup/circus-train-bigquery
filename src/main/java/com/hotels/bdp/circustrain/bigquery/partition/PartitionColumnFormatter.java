@@ -34,19 +34,14 @@ public class PartitionColumnFormatter {
       String name = col.getName().trim();
       String type = col.getType().toLowerCase().trim();
 
-      // if (type.equals("timestamp")) {
-      // formattedColumns.add(formatTimestampColumn(name));
-      // } else {
-      // formattedColumns.add(name);
-      // }
       formattedColumns.add(name);
     }
 
     return joiner.join(formattedColumns);
   }
 
-  // format the timestamp returned by BigQuery to include the timestamp without timezone
-  // if timestamp contains timezone, Hive converts that value to null
+  // format the timestamp returned by BigQuery to transform it into a long
+  // avro represents timestamps as long
   private static String formatTimestampColumn(String name) {
     // return "FORMAT_TIMESTAMP(\"%F %H:%M:%E*S\", " + name + ") as " + name;
     return "UNIX_MILLIS(" + name + ") as " + name;

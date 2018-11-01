@@ -26,15 +26,10 @@ import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.cloud.bigquery.Schema;
 import com.google.cloud.storage.Blob;
 
 public class BigQueryToHivePartitionConverter {
-
-  private static final Logger log = LoggerFactory.getLogger(BigQueryToHivePartitionConverter.class);
 
   private final Partition partition = new Partition();
 
@@ -50,7 +45,6 @@ public class BigQueryToHivePartitionConverter {
     sd.setNumBuckets(-1);
     sd.setBucketCols(Collections.<String> emptyList());
     sd.setSortCols(Collections.<Order> emptyList());
-    // sd.setCols(new ArrayList<FieldSchema>());
     sd.setInputFormat("org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat");
     sd.setOutputFormat("org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat");
     sd.setCompressed(false);
@@ -87,20 +81,12 @@ public class BigQueryToHivePartitionConverter {
   }
 
   public BigQueryToHivePartitionConverter withValues(List<String> values) {
-    log.info("WITH VALUES ======= {} ", values);
     partition.setValues(values);
-    return this;
-  }
-
-  public BigQueryToHivePartitionConverter withCols(Schema schema) {
-    log.info("THE OTHER COLS IS BEING USED ----------------");
-    // return this.withCols(BigQueryToHiveFieldConverter.convert(schema));
     return this;
   }
 
   public BigQueryToHivePartitionConverter withCols(Blob file) {
     String schema = BigQueryToHiveTableConverter.getSchemaFromFile(file);
-    log.info("WITH COLS ======= {}", schema);
     partition.getSd().getSerdeInfo().putToParameters("avro.schema.literal", schema);
     return this;
   }

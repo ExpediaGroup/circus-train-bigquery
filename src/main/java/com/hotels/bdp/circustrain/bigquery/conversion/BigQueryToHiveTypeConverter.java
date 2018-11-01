@@ -16,7 +16,6 @@
 package com.hotels.bdp.circustrain.bigquery.conversion;
 
 public class BigQueryToHiveTypeConverter {
-
   public String convert(String type) {
     type = type.toUpperCase();
     switch (type) {

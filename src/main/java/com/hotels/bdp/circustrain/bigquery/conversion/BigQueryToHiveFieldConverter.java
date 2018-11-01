@@ -15,20 +15,30 @@
  */
 package com.hotels.bdp.circustrain.bigquery.conversion;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.Schema;
+
 final class BigQueryToHiveFieldConverter {
 
-  // private BigQueryToHiveFieldConverter() {}
-  //
-  // static List<FieldSchema> convert(Schema schema) {
-  // BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
-  // Set<FieldSchema> partitionKeys = new LinkedHashSet<>();
-  //
-  // for (Field field : schema.getFields()) {
-  // FieldSchema fieldSchema = new FieldSchema();
-  // fieldSchema.setName(field.getName().toLowerCase().trim());
-  // fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
-  // partitionKeys.add(fieldSchema);
-  // }
-  // return new ArrayList<>(partitionKeys);
-  // }
+  private BigQueryToHiveFieldConverter() {}
+
+  static List<FieldSchema> convert(Schema schema) {
+    BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
+    Set<FieldSchema> partitionKeys = new LinkedHashSet<>();
+
+    for (Field field : schema.getFields()) {
+      FieldSchema fieldSchema = new FieldSchema();
+      fieldSchema.setName(field.getName().toLowerCase().trim());
+      fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
+      partitionKeys.add(fieldSchema);
+    }
+    return new ArrayList<>(partitionKeys);
+  }
 }

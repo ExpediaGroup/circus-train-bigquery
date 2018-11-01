@@ -23,12 +23,12 @@ public class ExtractionUriTest {
 
   @Test
   public void constructionTest() {
-    ExtractionUri data = new ExtractionUri("bucket", "folder", "file", "avro", "avsc");
+    ExtractionUri data = new ExtractionUri("bucket", "folder", "file", "AVRO", "avro");
     assertEquals("bucket", data.getBucket());
     assertEquals("folder", data.getFolder());
-    assertEquals("avro", data.getFormat());
-    assertEquals("folder/file.avsc", data.getKey());
-    assertEquals("gs://bucket/folder/file.avsc", data.getUri());
+    assertEquals("AVRO", data.getFormat());
+    assertEquals("folder/file.avro", data.getKey());
+    assertEquals("gs://bucket/folder/file.avro", data.getUri());
   }
 
 }
