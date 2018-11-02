@@ -53,7 +53,7 @@ public class SchemaExtractor {
       dataFileReader.close();
       return schema.toString();
     } catch (IOException e) {
-      throw new CircusTrainException("Error getting schema from table: " + e.getMessage());
+      throw new CircusTrainException("Error getting schema from table", e);
     }
   }
 }

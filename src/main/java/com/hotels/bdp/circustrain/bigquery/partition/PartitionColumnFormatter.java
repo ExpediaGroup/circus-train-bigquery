@@ -32,18 +32,10 @@ public class PartitionColumnFormatter {
     List<String> formattedColumns = new ArrayList<>();
     for (FieldSchema col : columns) {
       String name = col.getName().trim();
-      String type = col.getType().toLowerCase().trim();
-
       formattedColumns.add(name);
     }
 
     return joiner.join(formattedColumns);
-  }
-
-  // format the timestamp returned by BigQuery to transform it into a long
-  // avro represents timestamps as long
-  private static String formatTimestampColumn(String name) {
-    return "UNIX_MILLIS(" + name + ") as " + name;
   }
 
 }

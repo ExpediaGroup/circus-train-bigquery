@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.junit.Test;
 
-import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractorTest;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaUtils;
 
 public class BigQueryToHiveTableConverterTest {
 
@@ -51,7 +51,7 @@ public class BigQueryToHiveTableConverterTest {
 
   @Test
   public void withSchema() throws IOException {
-    String schema = new String(SchemaExtractorTest.getContentFromFileName("usa_names_schema.avsc"));
+    String schema = SchemaUtils.getTestSchema();
     Table table = new BigQueryToHiveTableConverter().withSchema(schema).convert();
     assertThat(table.getSd().getSerdeInfo().getParameters().get("avro.schema.literal"), is(schema));
   }

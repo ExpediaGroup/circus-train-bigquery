@@ -43,8 +43,8 @@ import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
-import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 public class HivePartitionGenerator {
 
@@ -98,7 +98,7 @@ public class HivePartitionGenerator {
     final String tableFolder = container.getExtractionUri().getFolder();
 
     List<FieldSchema> cols = Collections.unmodifiableList(sourceTableAsHive.getSd().getCols());
-    String schema = SchemaExtractor.getSchemaFromStorage(extractionService.getStorage(), container.getExtractionUri());
+    String schema = sourceTableAsHive.getSd().getSerdeInfo().getParameters().get(AvroConstants.SCHEMA_PARAMETER);
 
     List<GeneratePartitionTask> tasks = getTasks(sourceDBName, sourceTableName, partitionKey, partitionKeyType,
         tableBucket, tableFolder, results, cols, schema);

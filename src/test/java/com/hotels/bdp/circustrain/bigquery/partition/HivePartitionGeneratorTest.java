@@ -22,11 +22,11 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.junit.Before;
@@ -40,14 +40,14 @@ import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.Storage.BlobListOption;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
+import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
-import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractorTest;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaUtils;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HivePartitionGeneratorTest {
@@ -81,9 +81,12 @@ public class HivePartitionGeneratorTest {
 
   @Before
   public void init() throws IOException {
+    schema = SchemaUtils.getTestSchema();
     table.setDbName(databaseName);
     table.setTableName(tableName);
     table.setSd(storageDescriptor);
+    table.getSd().setSerdeInfo(new SerDeInfo());
+    table.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
 
     fieldSchema.setName(partitionKey);
 
@@ -95,8 +98,6 @@ public class HivePartitionGeneratorTest {
 
     when(row.get(partitionKey)).thenReturn(fieldValue);
     when(fieldValue.getValue()).thenReturn(value);
-
-    setUpSchema();
   }
 
   @Test
@@ -117,13 +118,4 @@ public class HivePartitionGeneratorTest {
     assertThat(partition.getSd().getSerdeInfo().getParameters().get("avro.schema.literal"), is(schema));
   }
 
-  private void setUpSchema() throws IOException {
-    byte[] content = SchemaExtractorTest.getContentFromFileName("usa_names.avro");
-    when(service.getStorage()).thenReturn(storage);
-    when(storage.list(bucket, BlobListOption.currentDirectory(), BlobListOption.prefix(folder + "/")))
-        .thenReturn(blobs);
-    when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));
-    when(blob.getContent()).thenReturn(content);
-    schema = new String(SchemaExtractorTest.getContentFromFileName("usa_names_schema.avsc"));
-  }
 }

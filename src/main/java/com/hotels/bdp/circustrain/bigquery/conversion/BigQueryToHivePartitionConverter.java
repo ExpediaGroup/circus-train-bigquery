@@ -27,6 +27,8 @@ import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 
+import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
+
 public class BigQueryToHivePartitionConverter {
 
   private final Partition partition = new Partition();
@@ -43,13 +45,13 @@ public class BigQueryToHivePartitionConverter {
     sd.setNumBuckets(-1);
     sd.setBucketCols(Collections.<String> emptyList());
     sd.setSortCols(Collections.<Order> emptyList());
-    sd.setInputFormat("org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat");
-    sd.setOutputFormat("org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat");
+    sd.setInputFormat(AvroConstants.INPUT_FORMAT);
+    sd.setOutputFormat(AvroConstants.OUTPUT_FORMAT);
     sd.setCompressed(false);
     sd.setStoredAsSubDirectories(false);
     sd.setNumBuckets(-1);
     SerDeInfo serDeInfo = new SerDeInfo();
-    serDeInfo.setSerializationLib("org.apache.hadoop.hive.serde2.avro.AvroSerDe");
+    serDeInfo.setSerializationLib(AvroConstants.SERIALIZATION_LIB);
     SkewedInfo si = new SkewedInfo();
     si.setSkewedColNames(Collections.<String> emptyList());
     si.setSkewedColValueLocationMaps(Collections.<List<String>, String> emptyMap());
@@ -84,7 +86,7 @@ public class BigQueryToHivePartitionConverter {
   }
 
   public BigQueryToHivePartitionConverter withCols(String schema) {
-    partition.getSd().getSerdeInfo().putToParameters("avro.schema.literal", schema);
+    partition.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
     return this;
   }
 

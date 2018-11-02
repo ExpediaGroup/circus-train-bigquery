@@ -26,14 +26,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
@@ -60,6 +57,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.table.service.partitioned.PartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaUtils;
 import com.hotels.bdp.circustrain.bigquery.util.TableNameFactory;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -271,19 +269,12 @@ public class BigQueryMetastoreClientTest {
   }
 
   private void setUpSchema() throws IOException {
-    byte[] content = getContentFromFileName("usa_names.avro");
-
+    byte[] content = SchemaUtils.getTestData();
     when(extractionService.getStorage()).thenReturn(storage);
     when(storage.list(anyString(), any(BlobListOption.class), any(BlobListOption.class))).thenReturn(blobs);
     when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));
     when(blob.getContent()).thenReturn(content);
-    schema = new String(getContentFromFileName("usa_names_schema.avsc"));
+    schema = SchemaUtils.getTestSchema();
   }
 
-  private byte[] getContentFromFileName(String name) throws IOException {
-    File file = new File("src/test/resources/" + name);
-    FileInputStream fStream = new FileInputStream(file);
-    byte[] content = IOUtils.toByteArray(fStream);
-    return content;
-  }
 }
