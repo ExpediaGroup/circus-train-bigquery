@@ -28,7 +28,6 @@ import java.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.cloud.bigquery.Table;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
@@ -37,7 +36,6 @@ import com.google.cloud.storage.StorageException;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.RuntimeConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
 public class DataCleaner {
 
@@ -71,13 +69,12 @@ public class DataCleaner {
     while (!cleanupQueue.isEmpty()) {
       ExtractionContainer container = cleanupQueue.poll();
       log.info("Cleaning data at location {}", container.getExtractionUri());
-
-      Table table = container.getTable();
-      PostExtractionAction deleteTable = container.getPostExtractionAction();
-      if (deleteTable == PostExtractionAction.DELETE) {
-        table.delete();
-        log.debug("Deleted table. {}", container.getTable().getTableId());
-      }
+      // Table table = container.getTable();
+      // PostExtractionAction deleteTable = container.getPostExtractionAction();
+      // if (deleteTable == PostExtractionAction.DELETE) {
+      // table.delete();
+      // log.debug("Deleted table. {}", container.getTable().getTableId());
+      // }
       deleteBucketAndContents(executorService, container);
     }
     return deleted;

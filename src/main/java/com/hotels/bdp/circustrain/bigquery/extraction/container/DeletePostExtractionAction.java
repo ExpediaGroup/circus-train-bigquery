@@ -15,8 +15,25 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction.container;
 
-public interface PostExtractionAction {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-  public void run();
+import com.google.cloud.bigquery.Table;
+
+public class DeletePostExtractionAction implements PostExtractionAction {
+  private static final Logger log = LoggerFactory.getLogger(DeletePostExtractionAction.class);
+
+  private Table table;
+
+  public DeletePostExtractionAction(Table table) {
+    this.table = table;
+
+  }
+
+  @Override
+  public void run() {
+    table.delete();
+    log.info("Deleted table. {}", table.getTableId());
+  }
 
 }

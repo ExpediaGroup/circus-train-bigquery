@@ -15,18 +15,33 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction.container;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import com.google.cloud.bigquery.Table;
 
 public class ExtractionContainer {
 
   private final Table table;
   private final ExtractionUri extractionUri;
-  private final PostExtractionAction postExtractionAction;
+  private List<PostExtractionAction> postExtractionActions = Collections.emptyList();
 
-  public ExtractionContainer(Table table, ExtractionUri extractionUri, PostExtractionAction postExtractionAction) {
+  public ExtractionContainer(Table table, ExtractionUri extractionUri,
+      List<PostExtractionAction> postExtractionActions) {
     this.table = table;
     this.extractionUri = extractionUri;
-    this.postExtractionAction = postExtractionAction;
+    this.postExtractionActions = postExtractionActions;
+  }
+
+  public ExtractionContainer(Table table, ExtractionUri extractionUri,
+      PostExtractionAction postExtractionAction) {
+    this(table, extractionUri, Arrays.asList(postExtractionAction));
+  }
+
+  public ExtractionContainer(Table table, ExtractionUri extractionUri) {
+    this.table = table;
+    this.extractionUri = extractionUri;
   }
 
   public Table getTable() {
@@ -37,8 +52,9 @@ public class ExtractionContainer {
     return extractionUri;
   }
 
-  public PostExtractionAction getPostExtractionAction() {
-    return postExtractionAction;
+  // TODO: immutable list
+  public List<PostExtractionAction> getPostExtractionActions() {
+    return postExtractionActions;
   }
 
 }

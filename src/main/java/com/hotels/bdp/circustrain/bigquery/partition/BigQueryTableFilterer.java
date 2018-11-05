@@ -17,9 +17,9 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 
 import com.google.cloud.bigquery.TableResult;
 
+import com.hotels.bdp.circustrain.bigquery.extraction.container.DeletePostExtractionAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
@@ -52,7 +52,8 @@ public class BigQueryTableFilterer {
     com.google.cloud.bigquery.Table filteredTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();
-    ExtractionContainer container = new ExtractionContainer(filteredTable, extractionUri, PostExtractionAction.DELETE);
+    ExtractionContainer container = new ExtractionContainer(filteredTable, extractionUri,
+        new DeletePostExtractionAction(filteredTable));
     service.register(container);
     return filteredTable;
   }

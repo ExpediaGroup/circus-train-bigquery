@@ -16,6 +16,7 @@
 package com.hotels.bdp.circustrain.bigquery.extraction.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import com.google.cloud.storage.Storage;
 import com.google.common.annotations.VisibleForTesting;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
 @Component
 public class ExtractionService {
@@ -55,7 +57,13 @@ public class ExtractionService {
   }
 
   public void extract() {
-    extractor.extract();
+    List<ExtractionContainer> extracted = extractor.extract();
+    for (ExtractionContainer container : extracted) {
+      List<PostExtractionAction> actions = container.getPostExtractionActions();
+      for (PostExtractionAction action : actions) {
+        action.run();
+      }
+    }
   }
 
   public void cleanup() {

@@ -24,24 +24,24 @@ import org.slf4j.LoggerFactory;
 
 import com.hotels.bdp.circustrain.bigquery.util.TableNameFactory;
 
-class HiveTableCache {
+public class HiveTableCache {
 
   private static final Logger log = LoggerFactory.getLogger(HiveTableCache.class);
 
   private final Map<String, Table> tableCache = new HashMap<>();
 
-  boolean contains(String databaseName, String tableName) {
+  public boolean contains(String databaseName, String tableName) {
     String key = TableNameFactory.newInstance(databaseName, tableName);
     return tableCache.containsKey(key);
   }
 
-  Table get(String databaseName, String tableName) {
+  public Table get(String databaseName, String tableName) {
     String key = TableNameFactory.newInstance(databaseName, tableName);
     log.debug("Getting table {} from cache", key);
     return tableCache.get(key);
   }
 
-  void put(Table table) {
+  public void put(Table table) {
     String key = TableNameFactory.newInstance(table);
     log.debug("Adding table {} to cache", key);
     tableCache.put(key, table);

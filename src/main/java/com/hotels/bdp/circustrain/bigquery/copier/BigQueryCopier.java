@@ -28,15 +28,17 @@ public class BigQueryCopier implements Copier {
   private static final Logger log = LoggerFactory.getLogger(BigQueryCopier.class);
 
   private final Copier copier;
-  private final ExtractionService service;
+  private final ExtractionService extractionService;
 
-  BigQueryCopier(Copier copier, ExtractionService service) {
+  BigQueryCopier(Copier copier, ExtractionService extractionService) {
     this.copier = copier;
-    this.service = service;
+    this.extractionService = extractionService;
   }
 
   @Override
   public Metrics copy() throws CircusTrainException {
+    log.info("Extracting table data for copying by {}", copier.getClass().getName());
+    extractionService.extract();
     log.info("Delegating to {} to execute copying of the data", copier.getClass().getName());
     return copier.copy();
   }

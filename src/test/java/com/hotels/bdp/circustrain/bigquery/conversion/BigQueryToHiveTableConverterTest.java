@@ -15,16 +15,10 @@
  */
 package com.hotels.bdp.circustrain.bigquery.conversion;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-
-import java.io.IOException;
 
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.junit.Test;
-
-import com.hotels.bdp.circustrain.bigquery.util.SchemaUtils;
 
 public class BigQueryToHiveTableConverterTest {
 
@@ -49,11 +43,12 @@ public class BigQueryToHiveTableConverterTest {
     assertEquals(table.getSd().getLocation(), location);
   }
 
-  @Test
-  public void withSchema() throws IOException {
-    String schema = SchemaUtils.getTestSchema();
-    Table table = new BigQueryToHiveTableConverter().withSchema(schema).convert();
-    assertThat(table.getSd().getSerdeInfo().getParameters().get("avro.schema.literal"), is(schema));
-  }
+  // @Test
+  // public void withSchema() throws IOException {
+  // String schema = SchemaUtils.getTestSchema();
+  // Table table = new BigQueryToHiveTableConverter().withSchema(schema).convert();
+  // assertThat(table.getSd().getSerdeInfo().getParameters().get("avro.schema.literal"),
+  // is(schema));
+  // }
 
 }

@@ -25,9 +25,9 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hotels.bdp.circustrain.bigquery.extraction.container.DeletePostExtractionAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
@@ -43,8 +43,6 @@ class BigQueryPartitionGenerator {
   private final String partitionValue;
   private final String destinationBucket;
   private final String destinationFolder;
-  private final List<FieldSchema> cols;
-
   BigQueryPartitionGenerator(
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
@@ -63,7 +61,6 @@ class BigQueryPartitionGenerator {
     this.partitionKey = partitionKey;
     this.destinationBucket = destinationBucket;
     this.destinationFolder = destinationFolder;
-    this.cols = cols;
   }
 
   ExtractionUri generatePartition() {
@@ -95,9 +92,9 @@ class BigQueryPartitionGenerator {
 
   private ExtractionUri scheduleForExtraction(com.google.cloud.bigquery.Table table) {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
-    ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri, PostExtractionAction.DELETE);
+    ExtractionContainer toRegister =
+        new ExtractionContainer(table, extractionUri, new DeletePostExtractionAction(table));
     extractionService.register(toRegister);
-    extractionService.extract();
     return extractionUri;
   }
 
