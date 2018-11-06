@@ -43,7 +43,6 @@ import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
 public class HivePartitionGenerator {
@@ -98,10 +97,9 @@ public class HivePartitionGenerator {
     final String tableFolder = container.getExtractionUri().getFolder();
 
     List<FieldSchema> cols = Collections.unmodifiableList(sourceTableAsHive.getSd().getCols());
-    String schema = sourceTableAsHive.getSd().getSerdeInfo().getParameters().get(AvroConstants.SCHEMA_PARAMETER);
 
     List<GeneratePartitionTask> tasks = getTasks(sourceDBName, sourceTableName, partitionKey, partitionKeyType,
-        tableBucket, tableFolder, results, cols, schema);
+        tableBucket, tableFolder, results, cols);
 
     try {
       List<Future<com.google.common.base.Optional<Partition>>> partitionFutures = executorService.invokeAll(tasks);
@@ -127,13 +125,12 @@ public class HivePartitionGenerator {
       String tableBucket,
       String tableFolder,
       Iterable<FieldValueList> rows,
-      List<FieldSchema> cols,
-      String schema) {
+      List<FieldSchema> cols) {
     List<GeneratePartitionTask> tasks = new ArrayList<>();
     for (FieldValueList row : rows) {
       tasks
           .add(new GeneratePartitionTask(sourceDBName, sourceTableName, partitionKey, partitionKeyType, tableBucket,
-              tableFolder, row, cols, schema));
+              tableFolder, row, cols));
     }
     return tasks;
   }
@@ -148,7 +145,6 @@ public class HivePartitionGenerator {
     private final String tableFolder;
     private final FieldValueList row;
     private final List<FieldSchema> cols;
-    private final String schema;
 
     private GeneratePartitionTask(
         String sourceDBName,
@@ -158,8 +154,7 @@ public class HivePartitionGenerator {
         String tableBucket,
         String tableFolder,
         FieldValueList row,
-        List<FieldSchema> cols,
-        String schema) {
+        List<FieldSchema> cols) {
       this.sourceDBName = sourceDBName;
       this.sourceTableName = sourceTableName;
       this.partitionKey = partitionKey;
@@ -168,7 +163,6 @@ public class HivePartitionGenerator {
       this.tableFolder = tableFolder;
       this.row = row;
       this.cols = cols;
-      this.schema = schema;
     }
 
     @Override
@@ -181,50 +175,30 @@ public class HivePartitionGenerator {
       if (partitionFieldValue != null) {
         final String originalValue = partitionFieldValue.getValue().toString();
         String formattedValue = PartitionValueFormatter.formatValue(partitionFieldValue, partitionKeyType);
-        ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
-            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition();
 
-        Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
-            extractionUri.getTableLocation(), schema, originalValue).get();
-        log.info("Generated partition {}={}", partitionKey, formattedValue);
+        Partition partition = new BigQueryToHivePartitionConverter().convert();
+        ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
+            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition(partition);
+        setPartitionParameters(partition, sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
+            extractionUri.getTableLocation(), originalValue);
+
+        log.info("Generated partition {}={}", partitionKey, originalValue);
         log.debug("{}", partition);
         return com.google.common.base.Optional.of(partition);
       }
       return com.google.common.base.Optional.absent();
     }
 
-  }
-
-  private class HivePartitionFactory {
-
-    private final Partition partition;
-
-    HivePartitionFactory(
+    private void setPartitionParameters(
+        Partition partition,
         String databaseName,
         String tableName,
         String location,
-        String schema,
         String... partitionValues) {
-      this(databaseName, tableName, location, schema, Arrays.asList(partitionValues));
-    }
-
-    private HivePartitionFactory(
-        String databaseName,
-        String tableName,
-        String location,
-        String schema,
-        List<String> partitionValues) {
-      partition = new BigQueryToHivePartitionConverter()
-          .withDatabaseName(databaseName)
-          .withTableName(tableName)
-          .withValues(partitionValues)
-          .withCols(schema)
-          .withLocation(location)
-          .convert();
-    }
-
-    public Partition get() {
-      return partition;
+      partition.setDbName(databaseName);
+      partition.setTableName(tableName);
+      partition.getSd().setLocation(location);
+      partition.setValues(Arrays.asList(partitionValues));
     }
   }
 

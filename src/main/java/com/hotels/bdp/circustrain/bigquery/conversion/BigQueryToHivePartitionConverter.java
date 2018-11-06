@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.hadoop.hive.common.StatsSetupConst;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
@@ -50,6 +51,7 @@ public class BigQueryToHivePartitionConverter {
     sd.setCompressed(false);
     sd.setStoredAsSubDirectories(false);
     sd.setNumBuckets(-1);
+    sd.setCols(new ArrayList<FieldSchema>());
     SerDeInfo serDeInfo = new SerDeInfo();
     serDeInfo.setSerializationLib(AvroConstants.SERIALIZATION_LIB);
     SkewedInfo si = new SkewedInfo();
@@ -63,36 +65,6 @@ public class BigQueryToHivePartitionConverter {
 
   public Partition convert() {
     return new Partition(partition);
-  }
-
-  public BigQueryToHivePartitionConverter withDatabaseName(String dbName) {
-    partition.setDbName(dbName);
-    return this;
-  }
-
-  public BigQueryToHivePartitionConverter withTableName(String tableName) {
-    partition.setTableName(tableName);
-    return this;
-  }
-
-  public BigQueryToHivePartitionConverter withLocation(String location) {
-    partition.getSd().setLocation(location);
-    return this;
-  }
-
-  public BigQueryToHivePartitionConverter withValues(List<String> values) {
-    partition.setValues(values);
-    return this;
-  }
-
-  public BigQueryToHivePartitionConverter withCols(String schema) {
-    partition.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
-    return this;
-  }
-
-  public BigQueryToHivePartitionConverter withValue(String value) {
-    partition.addToValues(value);
-    return this;
   }
 
   // Work around for issue: https://issues.apache.org/jira/browse/HIVE-18767

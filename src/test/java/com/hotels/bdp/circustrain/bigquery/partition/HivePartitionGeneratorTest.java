@@ -115,7 +115,6 @@ public class HivePartitionGeneratorTest {
     assertThat(partition.getDbName(), is(databaseName));
     assertThat(partition.getTableName(), is(tableName));
     assertThat(partition.getSd().getLocation(), startsWith(filePartialLocation));
-    assertThat(partition.getSd().getSerdeInfo().getParameters().get("avro.schema.literal"), is(schema));
   }
 
 }

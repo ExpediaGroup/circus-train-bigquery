@@ -37,7 +37,7 @@ public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClien
       BigQueryMetastore bigQueryMetastore,
       ExtractionService service,
       TableServiceFactory tableServiceFactory) {
-    this.metastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, service, new HiveTableCache(),
+    metastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, service, new HiveTableCache(),
         tableServiceFactory);
   }
 

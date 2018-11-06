@@ -95,7 +95,7 @@ import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConvert
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdateSchemaPostExtractionAction;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdateTableSchemaPostExtractionAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
@@ -152,7 +152,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
     ExtractionUri extractionUri = new ExtractionUri();
     List<PostExtractionAction> extractionActions = new ArrayList<>();
-    extractionActions.add(new UpdateSchemaPostExtractionAction(databaseName, tableName, cache,
+    extractionActions.add(new UpdateTableSchemaPostExtractionAction(databaseName, tableName, cache,
         extractionService.getStorage(), extractionUri));
     ExtractionContainer container =
         new ExtractionContainer(bigQueryTable, extractionUri, extractionActions);

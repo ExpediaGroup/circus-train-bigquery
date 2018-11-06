@@ -159,8 +159,10 @@ public class DataCleanerTest {
     BlobId firstCall = BlobId.of(extractionUri.getBucket(), extractionUri.getKey() + 1);
     BlobId thirdCall = BlobId.of(extractionUri.getBucket(), extractionUri.getKey() + 3);
     when(storage.delete(any(BlobId.class))).thenReturn(true);
-    when(blob.getBlobId()).thenReturn(firstCall).thenThrow(new StorageException(new IOException()))
-    .thenReturn(thirdCall);
+    when(blob.getBlobId())
+        .thenReturn(firstCall)
+        .thenThrow(new StorageException(new IOException()))
+        .thenReturn(thirdCall);
     when(pages.iterateAll()).thenReturn(Arrays.asList(blob, blob, blob));
 
     cleaner.add(extractionContainer);
@@ -197,15 +199,6 @@ public class DataCleanerTest {
     cleaner.add(extractionContainer);
     List<ExtractionContainer> cleaned = cleaner.cleanup();
     assertThat(cleaned.get(0), is(extractionContainer));
-  }
-
-  @Test
-  public void cleanupTable() {
-    ExtractionContainer container = new ExtractionContainer(table, extractionUri);
-    cleaner.add(container);
-    List<ExtractionContainer> cleaned = cleaner.cleanup();
-    verify(table).delete();
-    assertThat(cleaned.get(0), is(container));
   }
 
   @Test
