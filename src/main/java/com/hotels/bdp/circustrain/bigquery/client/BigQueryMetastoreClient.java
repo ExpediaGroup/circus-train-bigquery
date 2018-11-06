@@ -111,8 +111,11 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   private final TableServiceFactory tableServiceFactory;
   private final HiveTableCache cache;
 
-  BigQueryMetastoreClient(BigQueryMetastore bigQueryMetastore, ExtractionService extractionService,
-      HiveTableCache cache, TableServiceFactory tableServiceFactory) {
+  BigQueryMetastoreClient(
+      BigQueryMetastore bigQueryMetastore,
+      ExtractionService extractionService,
+      HiveTableCache cache,
+      TableServiceFactory tableServiceFactory) {
     this.bigQueryMetastore = bigQueryMetastore;
     this.extractionService = extractionService;
     this.tableServiceFactory = tableServiceFactory;
@@ -125,8 +128,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public void close() {
-  }
+  public void close() {}
 
   @Override
   public Database getDatabase(String databaseName) throws TException {
@@ -147,20 +149,22 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
       return cache.get(databaseName, tableName);
     }
 
-    com.google.cloud.bigquery.Table bigQueryTable =
-        bigQueryMetastore.getTable(databaseName, tableName);
+    com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();
     List<PostExtractionAction> extractionActions = new ArrayList<>();
-    extractionActions.add(new UpdateTableSchemaPostExtractionAction(databaseName, tableName, cache,
-        extractionService.getStorage(), extractionUri));
-    ExtractionContainer container =
-        new ExtractionContainer(bigQueryTable, extractionUri, extractionActions);
+    extractionActions
+        .add(new UpdateTableSchemaPostExtractionAction(databaseName, tableName, cache, extractionService.getStorage(),
+            extractionUri));
+    ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, extractionActions);
     extractionService.register(container);
 
     Table hiveTable = tableServiceFactory
-        .newInstance(new BigQueryToHiveTableConverter().withDatabaseName(databaseName)
-            .withTableName(tableName).withLocation(extractionUri.getTableLocation()).convert())
+        .newInstance(new BigQueryToHiveTableConverter()
+            .withDatabaseName(databaseName)
+            .withTableName(tableName)
+            .withLocation(extractionUri.getTableLocation())
+            .convert())
         .getTable();
 
     cache.put(hiveTable);
@@ -169,7 +173,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public List<Partition> listPartitions(String dbName, String tblName, short max)
-      throws NoSuchObjectException, MetaException, TException {
+    throws NoSuchObjectException, MetaException, TException {
     log.info("Listing partitions for table {}.{}", dbName, tblName);
     Table hiveTable = cache.get(dbName, tblName);
     if (hiveTable == null) {
@@ -185,21 +189,24 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public Map<String, List<ColumnStatisticsObj>> getPartitionColumnStatistics(String dbName,
-      String tableName, List<String> partNames, List<String> colNames)
-          throws NoSuchObjectException, MetaException, TException {
+  public Map<String, List<ColumnStatisticsObj>> getPartitionColumnStatistics(
+      String dbName,
+      String tableName,
+      List<String> partNames,
+      List<String> colNames)
+    throws NoSuchObjectException, MetaException, TException {
     return Collections.emptyMap();
   }
 
   @Override
-  public List<ColumnStatisticsObj> getTableColumnStatistics(String dbName, String tableName,
-      List<String> colNames) throws NoSuchObjectException, MetaException, TException {
+  public List<ColumnStatisticsObj> getTableColumnStatistics(String dbName, String tableName, List<String> colNames)
+    throws NoSuchObjectException, MetaException, TException {
     return Collections.emptyList();
   }
 
   @Override
   public void alter_table(String s, String s1, Table table)
-      throws InvalidOperationException, MetaException, TException {
+    throws InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "alter_table"));
   }
 
@@ -249,20 +256,19 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public List<String> getTables(String s, String s1)
-      throws MetaException, TException, UnknownDBException {
+  public List<String> getTables(String s, String s1) throws MetaException, TException, UnknownDBException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getTables"));
   }
 
   @Override
   public List<String> getTables(String s, String s1, TableType tableType)
-      throws MetaException, TException, UnknownDBException {
+    throws MetaException, TException, UnknownDBException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getTables"));
   }
 
   @Override
   public List<TableMeta> getTableMeta(String s, String s1, List<String> list)
-      throws MetaException, TException, UnknownDBException {
+    throws MetaException, TException, UnknownDBException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getTableMeta"));
   }
 
@@ -273,31 +279,30 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public List<String> listTableNamesByFilter(String s, String s1, short i)
-      throws MetaException, TException, InvalidOperationException, UnknownDBException {
+    throws MetaException, TException, InvalidOperationException, UnknownDBException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listTableNamesByFilter"));
   }
 
   @Override
   public void dropTable(String s, String s1, boolean b, boolean b1)
-      throws MetaException, TException, NoSuchObjectException {
+    throws MetaException, TException, NoSuchObjectException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropTable"));
   }
 
   @Override
   public void dropTable(String s, String s1, boolean b, boolean b1, boolean b2)
-      throws MetaException, TException, NoSuchObjectException {
+    throws MetaException, TException, NoSuchObjectException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropTable"));
   }
 
   @Override
   public void dropTable(String s, boolean b)
-      throws MetaException, UnknownTableException, TException, NoSuchObjectException {
+    throws MetaException, UnknownTableException, TException, NoSuchObjectException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropTable"));
   }
 
   @Override
-  public void dropTable(String s, String s1)
-      throws MetaException, TException, NoSuchObjectException {
+  public void dropTable(String s, String s1) throws MetaException, TException, NoSuchObjectException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropTable"));
   }
 
@@ -308,77 +313,74 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public List<Table> getTableObjectsByName(String s, List<String> list)
-      throws MetaException, InvalidOperationException, UnknownDBException, TException {
+    throws MetaException, InvalidOperationException, UnknownDBException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getTableObjectsByName"));
   }
 
   @Override
   public Partition appendPartition(String s, String s1, List<String> list)
-      throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
+    throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "appendPartition"));
   }
 
   @Override
   public Partition appendPartition(String s, String s1, String s2)
-      throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
+    throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "appendPartition"));
   }
 
   @Override
   public Partition add_partition(Partition partition)
-      throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
+    throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "add_partition"));
   }
 
   @Override
   public int add_partitions(List<Partition> list)
-      throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
+    throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "add_partitions"));
   }
 
   @Override
   public int add_partitions_pspec(PartitionSpecProxy partitionSpecProxy)
-      throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
+    throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "add_partitions_pspec"));
   }
 
   @Override
   public List<Partition> add_partitions(List<Partition> list, boolean b, boolean b1)
-      throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
+    throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "add_partitions"));
   }
 
   @Override
   public Partition getPartition(String s, String s1, List<String> list)
-      throws NoSuchObjectException, MetaException, TException {
+    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getPartition"));
   }
 
   @Override
-  public Partition exchange_partition(Map<String, String> map, String s, String s1, String s2,
-      String s3) throws MetaException, NoSuchObjectException, InvalidObjectException, TException {
+  public Partition exchange_partition(Map<String, String> map, String s, String s1, String s2, String s3)
+    throws MetaException, NoSuchObjectException, InvalidObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "exchange_partition"));
   }
 
   @Override
-  public List<Partition> exchange_partitions(Map<String, String> map, String s, String s1,
-      String s2, String s3)
-          throws MetaException, NoSuchObjectException, InvalidObjectException, TException {
+  public List<Partition> exchange_partitions(Map<String, String> map, String s, String s1, String s2, String s3)
+    throws MetaException, NoSuchObjectException, InvalidObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "exchange_partitions"));
   }
 
   @Override
   public Partition getPartition(String s, String s1, String s2)
-      throws MetaException, UnknownTableException, NoSuchObjectException, TException {
+    throws MetaException, UnknownTableException, NoSuchObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getPartition"));
   }
 
   @Override
-  public Partition getPartitionWithAuthInfo(String s, String s1, List<String> list, String s2,
-      List<String> list1)
-          throws MetaException, UnknownTableException, NoSuchObjectException, TException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "getPartitionWithAuthInfo"));
+  public Partition getPartitionWithAuthInfo(String s, String s1, List<String> list, String s2, List<String> list1)
+    throws MetaException, UnknownTableException, NoSuchObjectException, TException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getPartitionWithAuthInfo"));
   }
 
   @Override
@@ -388,218 +390,233 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public List<Partition> listPartitions(String s, String s1, List<String> list, short i)
-      throws NoSuchObjectException, MetaException, TException {
+    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listPartitions"));
   }
 
   @Override
-  public List<String> listPartitionNames(String s, String s1, short i)
-      throws MetaException, TException {
+  public List<String> listPartitionNames(String s, String s1, short i) throws MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listPartitionNames"));
   }
 
   @Override
   public List<String> listPartitionNames(String s, String s1, List<String> list, short i)
-      throws MetaException, TException, NoSuchObjectException {
+    throws MetaException, TException, NoSuchObjectException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listPartitionNames"));
   }
 
   @Override
   public int getNumPartitionsByFilter(String s, String s1, String s2)
-      throws MetaException, NoSuchObjectException, TException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "getNumPartitionsByFilter"));
+    throws MetaException, NoSuchObjectException, TException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getNumPartitionsByFilter"));
   }
 
   @Override
   public List<Partition> listPartitionsByFilter(String s, String s1, String s2, short i)
-      throws MetaException, NoSuchObjectException, TException {
+    throws MetaException, NoSuchObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listPartitionsByFilter"));
   }
 
   @Override
   public PartitionSpecProxy listPartitionSpecsByFilter(String s, String s1, String s2, int i)
-      throws MetaException, NoSuchObjectException, TException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "listPartitionSpecsByFilter"));
+    throws MetaException, NoSuchObjectException, TException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listPartitionSpecsByFilter"));
   }
 
   @Override
-  public boolean listPartitionsByExpr(String s, String s1, byte[] bytes, String s2, short i,
-      List<Partition> list) throws TException {
+  public boolean listPartitionsByExpr(String s, String s1, byte[] bytes, String s2, short i, List<Partition> list)
+    throws TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listPartitionsByExpr"));
   }
 
   @Override
-  public List<Partition> listPartitionsWithAuthInfo(String s, String s1, short i, String s2,
-      List<String> list) throws MetaException, TException, NoSuchObjectException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "listPartitionsWithAuthInfo"));
+  public List<Partition> listPartitionsWithAuthInfo(String s, String s1, short i, String s2, List<String> list)
+    throws MetaException, TException, NoSuchObjectException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listPartitionsWithAuthInfo"));
   }
 
   @Override
   public List<Partition> getPartitionsByNames(String s, String s1, List<String> list)
-      throws NoSuchObjectException, MetaException, TException {
+    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getPartitionsByNames"));
   }
 
   @Override
-  public List<Partition> listPartitionsWithAuthInfo(String s, String s1, List<String> list, short i,
-      String s2, List<String> list1) throws MetaException, TException, NoSuchObjectException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "listPartitionsWithAuthInfo"));
+  public List<Partition> listPartitionsWithAuthInfo(
+      String s,
+      String s1,
+      List<String> list,
+      short i,
+      String s2,
+      List<String> list1)
+    throws MetaException, TException, NoSuchObjectException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listPartitionsWithAuthInfo"));
   }
 
   @Override
-  public void markPartitionForEvent(String s, String s1, Map<String, String> map,
-      PartitionEventType partitionEventType)
-          throws MetaException, NoSuchObjectException, TException, UnknownTableException,
-          UnknownDBException, UnknownPartitionException, InvalidPartitionException {
+  public void markPartitionForEvent(String s, String s1, Map<String, String> map, PartitionEventType partitionEventType)
+    throws MetaException, NoSuchObjectException, TException, UnknownTableException, UnknownDBException,
+    UnknownPartitionException, InvalidPartitionException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "markPartitionForEvent"));
   }
 
   @Override
-  public boolean isPartitionMarkedForEvent(String s, String s1, Map<String, String> map,
+  public boolean isPartitionMarkedForEvent(
+      String s,
+      String s1,
+      Map<String, String> map,
       PartitionEventType partitionEventType)
-          throws MetaException, NoSuchObjectException, TException, UnknownTableException,
-          UnknownDBException, UnknownPartitionException, InvalidPartitionException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "isPartitionMarkedForEvent"));
+    throws MetaException, NoSuchObjectException, TException, UnknownTableException, UnknownDBException,
+    UnknownPartitionException, InvalidPartitionException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "isPartitionMarkedForEvent"));
   }
 
   @Override
   public void validatePartitionNameCharacters(List<String> list) throws TException, MetaException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "validatePartitionNameCharacters"));
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "validatePartitionNameCharacters"));
   }
 
   @Override
-  public void createTable(Table table) throws AlreadyExistsException, InvalidObjectException,
-  MetaException, NoSuchObjectException, TException {
+  public void createTable(Table table)
+    throws AlreadyExistsException, InvalidObjectException, MetaException, NoSuchObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "createTable"));
   }
 
   @Override
   public void alter_table(String s, String s1, Table table, boolean b)
-      throws InvalidOperationException, MetaException, TException {
+    throws InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "alter_table"));
   }
 
   @Override
-  public void alter_table_with_environmentContext(String s, String s1, Table table,
+  public void alter_table_with_environmentContext(
+      String s,
+      String s1,
+      Table table,
       EnvironmentContext environmentContext)
-          throws InvalidOperationException, MetaException, TException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "alter_table_with_environmentContext"));
+    throws InvalidOperationException, MetaException, TException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "alter_table_with_environmentContext"));
   }
 
   @Override
   public void createDatabase(Database database)
-      throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
+    throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "createDatabase"));
   }
 
   @Override
   public void dropDatabase(String s)
-      throws NoSuchObjectException, InvalidOperationException, MetaException, TException {
+    throws NoSuchObjectException, InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropDatabase"));
   }
 
   @Override
   public void dropDatabase(String s, boolean b, boolean b1)
-      throws NoSuchObjectException, InvalidOperationException, MetaException, TException {
+    throws NoSuchObjectException, InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropDatabase"));
   }
 
   @Override
   public void dropDatabase(String s, boolean b, boolean b1, boolean b2)
-      throws NoSuchObjectException, InvalidOperationException, MetaException, TException {
+    throws NoSuchObjectException, InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropDatabase"));
   }
 
   @Override
-  public void alterDatabase(String s, Database database)
-      throws NoSuchObjectException, MetaException, TException {
+  public void alterDatabase(String s, Database database) throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "alterDatabase"));
   }
 
   @Override
   public boolean dropPartition(String s, String s1, List<String> list, boolean b)
-      throws NoSuchObjectException, MetaException, TException {
+    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropPartition"));
   }
 
   @Override
-  public boolean dropPartition(String s, String s1, List<String> list,
-      PartitionDropOptions partitionDropOptions) throws TException {
+  public boolean dropPartition(String s, String s1, List<String> list, PartitionDropOptions partitionDropOptions)
+    throws TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropPartition"));
   }
 
   @Override
-  public List<Partition> dropPartitions(String s, String s1, List<ObjectPair<Integer, byte[]>> list,
-      boolean b, boolean b1) throws NoSuchObjectException, MetaException, TException {
+  public List<Partition> dropPartitions(
+      String s,
+      String s1,
+      List<ObjectPair<Integer, byte[]>> list,
+      boolean b,
+      boolean b1)
+    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropPartitions"));
   }
 
   @Override
-  public List<Partition> dropPartitions(String s, String s1, List<ObjectPair<Integer, byte[]>> list,
-      boolean b, boolean b1, boolean b2) throws NoSuchObjectException, MetaException, TException {
+  public List<Partition> dropPartitions(
+      String s,
+      String s1,
+      List<ObjectPair<Integer, byte[]>> list,
+      boolean b,
+      boolean b1,
+      boolean b2)
+    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropPartitions"));
   }
 
   @Override
-  public List<Partition> dropPartitions(String s, String s1, List<ObjectPair<Integer, byte[]>> list,
-      PartitionDropOptions partitionDropOptions) throws TException {
+  public List<Partition> dropPartitions(
+      String s,
+      String s1,
+      List<ObjectPair<Integer, byte[]>> list,
+      PartitionDropOptions partitionDropOptions)
+    throws TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropPartitions"));
   }
 
   @Override
   public boolean dropPartition(String s, String s1, String s2, boolean b)
-      throws NoSuchObjectException, MetaException, TException {
+    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropPartition"));
   }
 
   @Override
   public void alter_partition(String s, String s1, Partition partition)
-      throws InvalidOperationException, MetaException, TException {
+    throws InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "alter_partition"));
   }
 
   @Override
-  public void alter_partition(String s, String s1, Partition partition,
-      EnvironmentContext environmentContext)
-          throws InvalidOperationException, MetaException, TException {
+  public void alter_partition(String s, String s1, Partition partition, EnvironmentContext environmentContext)
+    throws InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "alter_partition"));
   }
 
   @Override
   public void alter_partitions(String s, String s1, List<Partition> list)
-      throws InvalidOperationException, MetaException, TException {
+    throws InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "alter_partitions"));
   }
 
   @Override
-  public void alter_partitions(String s, String s1, List<Partition> list,
-      EnvironmentContext environmentContext)
-          throws InvalidOperationException, MetaException, TException {
+  public void alter_partitions(String s, String s1, List<Partition> list, EnvironmentContext environmentContext)
+    throws InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "alter_partitions"));
   }
 
   @Override
   public void renamePartition(String s, String s1, List<String> list, Partition partition)
-      throws InvalidOperationException, MetaException, TException {
+    throws InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "renamePartition"));
   }
 
   @Override
   public List<FieldSchema> getFields(String s, String s1)
-      throws MetaException, TException, UnknownTableException, UnknownDBException {
+    throws MetaException, TException, UnknownTableException, UnknownDBException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getFields"));
   }
 
   @Override
   public List<FieldSchema> getSchema(String s, String s1)
-      throws MetaException, TException, UnknownTableException, UnknownDBException {
+    throws MetaException, TException, UnknownTableException, UnknownDBException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getSchema"));
   }
 
@@ -619,71 +636,61 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public void createIndex(Index index, Table table) throws InvalidObjectException, MetaException,
-  NoSuchObjectException, TException, AlreadyExistsException {
+  public void createIndex(Index index, Table table)
+    throws InvalidObjectException, MetaException, NoSuchObjectException, TException, AlreadyExistsException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "createIndex"));
   }
 
   @Override
   public void alter_index(String s, String s1, String s2, Index index)
-      throws InvalidOperationException, MetaException, TException {
+    throws InvalidOperationException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "alter_index"));
   }
 
   @Override
   public Index getIndex(String s, String s1, String s2)
-      throws MetaException, UnknownTableException, NoSuchObjectException, TException {
+    throws MetaException, UnknownTableException, NoSuchObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getIndex"));
   }
 
   @Override
-  public List<Index> listIndexes(String s, String s1, short i)
-      throws NoSuchObjectException, MetaException, TException {
+  public List<Index> listIndexes(String s, String s1, short i) throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listIndexes"));
   }
 
   @Override
-  public List<String> listIndexNames(String s, String s1, short i)
-      throws MetaException, TException {
+  public List<String> listIndexNames(String s, String s1, short i) throws MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listIndexNames"));
   }
 
   @Override
   public boolean dropIndex(String s, String s1, String s2, boolean b)
-      throws NoSuchObjectException, MetaException, TException {
+    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropIndex"));
   }
 
   @Override
   public boolean updateTableColumnStatistics(ColumnStatistics columnStatistics)
-      throws NoSuchObjectException, InvalidObjectException, MetaException, TException,
-      InvalidInputException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "updateTableColumnStatistics"));
+    throws NoSuchObjectException, InvalidObjectException, MetaException, TException, InvalidInputException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "updateTableColumnStatistics"));
   }
 
   @Override
   public boolean updatePartitionColumnStatistics(ColumnStatistics columnStatistics)
-      throws NoSuchObjectException, InvalidObjectException, MetaException, TException,
-      InvalidInputException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "updatePartitionColumnStatistics"));
+    throws NoSuchObjectException, InvalidObjectException, MetaException, TException, InvalidInputException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "updatePartitionColumnStatistics"));
   }
 
   @Override
   public boolean deletePartitionColumnStatistics(String s, String s1, String s2, String s3)
-      throws NoSuchObjectException, MetaException, InvalidObjectException, TException,
-      InvalidInputException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "deletePartitionColumnStatistics"));
+    throws NoSuchObjectException, MetaException, InvalidObjectException, TException, InvalidInputException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "deletePartitionColumnStatistics"));
   }
 
   @Override
   public boolean deleteTableColumnStatistics(String s, String s1, String s2)
-      throws NoSuchObjectException, MetaException, InvalidObjectException, TException,
-      InvalidInputException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "deleteTableColumnStatistics"));
+    throws NoSuchObjectException, MetaException, InvalidObjectException, TException, InvalidInputException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "deleteTableColumnStatistics"));
   }
 
   @Override
@@ -702,32 +709,37 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public boolean grant_role(String s, String s1, PrincipalType principalType, String s2,
-      PrincipalType principalType1, boolean b) throws MetaException, TException {
+  public boolean grant_role(
+      String s,
+      String s1,
+      PrincipalType principalType,
+      String s2,
+      PrincipalType principalType1,
+      boolean b)
+    throws MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "grant_role"));
   }
 
   @Override
   public boolean revoke_role(String s, String s1, PrincipalType principalType, boolean b)
-      throws MetaException, TException {
+    throws MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "revoke_role"));
   }
 
   @Override
-  public List<Role> list_roles(String s, PrincipalType principalType)
-      throws MetaException, TException {
+  public List<Role> list_roles(String s, PrincipalType principalType) throws MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "list_roles"));
   }
 
   @Override
-  public PrincipalPrivilegeSet get_privilege_set(HiveObjectRef hiveObjectRef, String s,
-      List<String> list) throws MetaException, TException {
+  public PrincipalPrivilegeSet get_privilege_set(HiveObjectRef hiveObjectRef, String s, List<String> list)
+    throws MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "get_privilege_set"));
   }
 
   @Override
-  public List<HiveObjectPrivilege> list_privileges(String s, PrincipalType principalType,
-      HiveObjectRef hiveObjectRef) throws MetaException, TException {
+  public List<HiveObjectPrivilege> list_privileges(String s, PrincipalType principalType, HiveObjectRef hiveObjectRef)
+    throws MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "list_privileges"));
   }
 
@@ -737,8 +749,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public boolean revoke_privileges(PrivilegeBag privilegeBag, boolean b)
-      throws MetaException, TException {
+  public boolean revoke_privileges(PrivilegeBag privilegeBag, boolean b) throws MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "revoke_privileges"));
   }
 
@@ -788,8 +799,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public void updateMasterKey(Integer integer, String s)
-      throws NoSuchObjectException, MetaException, TException {
+  public void updateMasterKey(Integer integer, String s) throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "updateMasterKey"));
   }
 
@@ -804,20 +814,19 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public void createFunction(Function function)
-      throws InvalidObjectException, MetaException, TException {
+  public void createFunction(Function function) throws InvalidObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "createFunction"));
   }
 
   @Override
   public void alterFunction(String s, String s1, Function function)
-      throws InvalidObjectException, MetaException, TException {
+    throws InvalidObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "alterFunction"));
   }
 
   @Override
-  public void dropFunction(String s, String s1) throws MetaException, NoSuchObjectException,
-  InvalidObjectException, InvalidInputException, TException {
+  public void dropFunction(String s, String s1)
+    throws MetaException, NoSuchObjectException, InvalidObjectException, InvalidInputException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropFunction"));
   }
 
@@ -877,14 +886,13 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public LockResponse lock(LockRequest lockRequest)
-      throws NoSuchTxnException, TxnAbortedException, TException {
+  public LockResponse lock(LockRequest lockRequest) throws NoSuchTxnException, TxnAbortedException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "lock"));
   }
 
   @Override
   public LockResponse checkLock(long l)
-      throws NoSuchTxnException, TxnAbortedException, NoSuchLockException, TException {
+    throws NoSuchTxnException, TxnAbortedException, NoSuchLockException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "checkLock"));
   }
 
@@ -905,7 +913,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public void heartbeat(long l, long l1)
-      throws NoSuchLockException, NoSuchTxnException, TxnAbortedException, TException {
+    throws NoSuchLockException, NoSuchTxnException, TxnAbortedException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "heartbeat"));
   }
 
@@ -915,20 +923,24 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public void compact(String s, String s1, String s2, CompactionType compactionType)
-      throws TException {
+  public void compact(String s, String s1, String s2, CompactionType compactionType) throws TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "compact"));
   }
 
   @Override
-  public void compact(String s, String s1, String s2, CompactionType compactionType,
-      Map<String, String> map) throws TException {
+  public void compact(String s, String s1, String s2, CompactionType compactionType, Map<String, String> map)
+    throws TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "compact"));
   }
 
   @Override
-  public CompactionResponse compact2(String s, String s1, String s2, CompactionType compactionType,
-      Map<String, String> map) throws TException {
+  public CompactionResponse compact2(
+      String s,
+      String s1,
+      String s2,
+      CompactionType compactionType,
+      Map<String, String> map)
+    throws TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "compact2"));
   }
 
@@ -938,14 +950,13 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public void addDynamicPartitions(long l, String s, String s1, List<String> list)
-      throws TException {
+  public void addDynamicPartitions(long l, String s, String s1, List<String> list) throws TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "addDynamicPartitions"));
   }
 
   @Override
-  public void addDynamicPartitions(long l, String s, String s1, List<String> list,
-      DataOperationType dataOperationType) throws TException {
+  public void addDynamicPartitions(long l, String s, String s1, List<String> list, DataOperationType dataOperationType)
+    throws TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "addDynamicPartitions"));
   }
 
@@ -955,15 +966,14 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public NotificationEventResponse getNextNotification(long l, int i,
-      NotificationFilter notificationFilter) throws TException {
+  public NotificationEventResponse getNextNotification(long l, int i, NotificationFilter notificationFilter)
+    throws TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getNextNotification"));
   }
 
   @Override
   public CurrentNotificationEventId getCurrentNotificationEventId() throws TException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "getCurrentNotificationEventId"));
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getCurrentNotificationEventId"));
   }
 
   @Override
@@ -972,31 +982,28 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public GetPrincipalsInRoleResponse get_principals_in_role(
-      GetPrincipalsInRoleRequest getPrincipalsInRoleRequest) throws MetaException, TException {
+  public GetPrincipalsInRoleResponse get_principals_in_role(GetPrincipalsInRoleRequest getPrincipalsInRoleRequest)
+    throws MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "get_principals_in_role"));
   }
 
   @Override
   public GetRoleGrantsForPrincipalResponse get_role_grants_for_principal(
       GetRoleGrantsForPrincipalRequest getRoleGrantsForPrincipalRequest)
-          throws MetaException, TException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "get_role_grants_for_principal"));
+    throws MetaException, TException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "get_role_grants_for_principal"));
   }
 
   @Override
   public AggrStats getAggrColStatsFor(String s, String s1, List<String> list, List<String> list1)
-      throws NoSuchObjectException, MetaException, TException {
+    throws NoSuchObjectException, MetaException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getAggrColStatsFor"));
   }
 
   @Override
   public boolean setPartitionColumnStatistics(SetPartitionsStatsRequest setPartitionsStatsRequest)
-      throws NoSuchObjectException, InvalidObjectException, MetaException, TException,
-      InvalidInputException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "setPartitionColumnStatistics"));
+    throws NoSuchObjectException, InvalidObjectException, MetaException, TException, InvalidInputException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "setPartitionColumnStatistics"));
   }
 
   @Override
@@ -1010,8 +1017,11 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   }
 
   @Override
-  public Iterable<Map.Entry<Long, MetadataPpdResult>> getFileMetadataBySarg(List<Long> list,
-      ByteBuffer byteBuffer, boolean b) throws TException {
+  public Iterable<Map.Entry<Long, MetadataPpdResult>> getFileMetadataBySarg(
+      List<Long> list,
+      ByteBuffer byteBuffer,
+      boolean b)
+    throws TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getFileMetadataBySarg"));
   }
 
@@ -1037,39 +1047,34 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   @Override
   public List<SQLPrimaryKey> getPrimaryKeys(PrimaryKeysRequest primaryKeysRequest)
-      throws MetaException, NoSuchObjectException, TException {
+    throws MetaException, NoSuchObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getPrimaryKeys"));
   }
 
   @Override
   public List<SQLForeignKey> getForeignKeys(ForeignKeysRequest foreignKeysRequest)
-      throws MetaException, NoSuchObjectException, TException {
+    throws MetaException, NoSuchObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "getForeignKeys"));
   }
 
   @Override
-  public void createTableWithConstraints(Table table, List<SQLPrimaryKey> list,
-      List<SQLForeignKey> list1) throws AlreadyExistsException, InvalidObjectException,
-  MetaException, NoSuchObjectException, TException {
-    throw new UnsupportedOperationException(
-        String.format(ERROR_MESSAGE, "createTableWithConstraints"));
+  public void createTableWithConstraints(Table table, List<SQLPrimaryKey> list, List<SQLForeignKey> list1)
+    throws AlreadyExistsException, InvalidObjectException, MetaException, NoSuchObjectException, TException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "createTableWithConstraints"));
   }
 
   @Override
-  public void dropConstraint(String s, String s1, String s2)
-      throws MetaException, NoSuchObjectException, TException {
+  public void dropConstraint(String s, String s1, String s2) throws MetaException, NoSuchObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "dropConstraint"));
   }
 
   @Override
-  public void addPrimaryKey(List<SQLPrimaryKey> list)
-      throws MetaException, NoSuchObjectException, TException {
+  public void addPrimaryKey(List<SQLPrimaryKey> list) throws MetaException, NoSuchObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "addPrimaryKey"));
   }
 
   @Override
-  public void addForeignKey(List<SQLForeignKey> list)
-      throws MetaException, NoSuchObjectException, TException {
+  public void addForeignKey(List<SQLForeignKey> list) throws MetaException, NoSuchObjectException, TException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "addForeignKey"));
   }
 }

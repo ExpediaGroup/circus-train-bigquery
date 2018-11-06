@@ -100,7 +100,8 @@ class BigQueryPartitionGenerator {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
     List<PostExtractionAction> actions = new ArrayList<>();
     actions.add(new DeletePostExtractionAction(table));
-    actions.add(new UpdatePartitionSchemaPostExtractionAction(partition, extractionService.getStorage(), extractionUri));
+    actions
+        .add(new UpdatePartitionSchemaPostExtractionAction(partition, extractionService.getStorage(), extractionUri));
     ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri, actions);
     extractionService.register(toRegister);
     return extractionUri;

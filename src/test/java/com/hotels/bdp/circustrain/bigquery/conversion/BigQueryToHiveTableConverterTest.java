@@ -43,12 +43,4 @@ public class BigQueryToHiveTableConverterTest {
     assertEquals(table.getSd().getLocation(), location);
   }
 
-  // @Test
-  // public void withSchema() throws IOException {
-  // String schema = SchemaUtils.getTestSchema();
-  // Table table = new BigQueryToHiveTableConverter().withSchema(schema).convert();
-  // assertThat(table.getSd().getSerdeInfo().getParameters().get("avro.schema.literal"),
-  // is(schema));
-  // }
-
 }
