@@ -59,10 +59,14 @@ public class ExtractionService {
   public void extract() {
     List<ExtractionContainer> extracted = extractor.extract();
     for (ExtractionContainer container : extracted) {
-      List<PostExtractionAction> actions = container.getPostExtractionActions();
-      for (PostExtractionAction action : actions) {
-        action.run();
-      }
+      runActions(container);
+    }
+  }
+
+  private void runActions(ExtractionContainer extractionContainer) {
+    List<PostExtractionAction> actions = extractionContainer.getPostExtractionActions();
+    for (PostExtractionAction action : actions) {
+      action.run();
     }
   }
 
@@ -77,4 +81,5 @@ public class ExtractionService {
   public Storage getStorage() {
     return storage;
   }
+
 }

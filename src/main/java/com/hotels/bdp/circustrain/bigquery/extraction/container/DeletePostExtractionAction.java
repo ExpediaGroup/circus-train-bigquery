@@ -23,17 +23,16 @@ import com.google.cloud.bigquery.Table;
 public class DeletePostExtractionAction implements PostExtractionAction {
   private static final Logger log = LoggerFactory.getLogger(DeletePostExtractionAction.class);
 
-  private Table table;
+  private final Table table;
 
   public DeletePostExtractionAction(Table table) {
     this.table = table;
-
   }
 
   @Override
   public void run() {
     table.delete();
-    log.info("Deleted table. {}", table.getTableId());
+    log.debug("Deleted table. {}", table.getTableId());
   }
 
 }

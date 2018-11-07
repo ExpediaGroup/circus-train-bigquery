@@ -17,7 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.client;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -152,11 +152,10 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();
-    List<PostExtractionAction> extractionActions = new ArrayList<>();
-    extractionActions
-        .add(new UpdateTableSchemaPostExtractionAction(databaseName, tableName, cache, extractionService.getStorage(),
-            extractionUri));
-    ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, extractionActions);
+    PostExtractionAction postExtractionAction = new UpdateTableSchemaPostExtractionAction(databaseName, tableName,
+        cache, extractionService.getStorage(), extractionUri);
+    ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri,
+        Arrays.asList(postExtractionAction));
     extractionService.register(container);
 
     Table hiveTable = tableServiceFactory

@@ -15,9 +15,14 @@
  */
 package com.hotels.bdp.circustrain.bigquery.util;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 import org.junit.Rule;
 import org.slf4j.Logger;
@@ -26,6 +31,10 @@ import org.slf4j.LoggerFactory;
 import fm.last.commons.test.file.DataFolder;
 import fm.last.commons.test.file.RootDataFolder;
 
+import com.google.api.gax.paging.Page;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Storage.BlobListOption;
 import com.google.common.io.Files;
 
 public class SchemaUtils {
@@ -68,6 +77,13 @@ public class SchemaUtils {
       log.error("Could not get test folder", e);
       return null;
     }
+  }
+
+  public static void setUpSchemaMocks(Storage storage, Blob blob, Page<Blob> blobs) {
+    byte[] content = SchemaUtils.getTestData();
+    when(storage.list(anyString(), any(BlobListOption.class), any(BlobListOption.class))).thenReturn(blobs);
+    when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));
+    when(blob.getContent()).thenReturn(content);
   }
 
 }

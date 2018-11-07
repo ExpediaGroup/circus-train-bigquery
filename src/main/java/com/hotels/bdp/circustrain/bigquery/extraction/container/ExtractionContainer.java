@@ -27,15 +27,16 @@ public class ExtractionContainer {
   private final ExtractionUri extractionUri;
   private List<PostExtractionAction> postExtractionActions = Collections.emptyList();
 
-  public ExtractionContainer(Table table, ExtractionUri extractionUri,
+  public ExtractionContainer(
+      Table table,
+      ExtractionUri extractionUri,
       List<PostExtractionAction> postExtractionActions) {
     this.table = table;
     this.extractionUri = extractionUri;
-    this.postExtractionActions = postExtractionActions;
+    this.postExtractionActions = Collections.unmodifiableList(postExtractionActions);
   }
 
-  public ExtractionContainer(Table table, ExtractionUri extractionUri,
-      PostExtractionAction postExtractionAction) {
+  public ExtractionContainer(Table table, ExtractionUri extractionUri, PostExtractionAction postExtractionAction) {
     this(table, extractionUri, Arrays.asList(postExtractionAction));
   }
 
@@ -52,7 +53,6 @@ public class ExtractionContainer {
     return extractionUri;
   }
 
-  // TODO: immutable list
   public List<PostExtractionAction> getPostExtractionActions() {
     return postExtractionActions;
   }

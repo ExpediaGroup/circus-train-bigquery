@@ -16,10 +16,10 @@
 package com.hotels.bdp.circustrain.bigquery.extraction.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,25 +32,28 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.cloud.bigquery.Table;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ExtractionServiceTest {
 
   private @Mock DataExtractor extractor;
   private @Mock DataCleaner cleaner;
+  private @Mock Table table;
+  private @Mock ExtractionContainer container;
+  private @Mock PostExtractionAction postExtractionAction;
+
   private ExtractionService service;
-  private Map<Table, ExtractionContainer> registry = new HashMap<>();
+  private final Map<Table, ExtractionContainer> registry = new HashMap<>();
 
   @Before
   public void init() {
+    when(container.getTable()).thenReturn(table);
     service = new ExtractionService(extractor, cleaner, registry);
   }
 
   @Test
   public void register() {
-    ExtractionContainer container = mock(ExtractionContainer.class);
-    Table table = mock(Table.class);
-    when(container.getTable()).thenReturn(table);
     service.register(container);
     verify(extractor).add(container);
     verify(cleaner).add(container);
@@ -72,11 +75,17 @@ public class ExtractionServiceTest {
 
   @Test
   public void retrieve() {
-    ExtractionContainer container = mock(ExtractionContainer.class);
-    Table table = mock(Table.class);
-    when(container.getTable()).thenReturn(table);
     service.register(container);
     assertEquals(container, service.retrieve(table));
+  }
+
+  @Test
+  public void runActions() {
+    when(container.getPostExtractionActions()).thenReturn(Arrays.asList(postExtractionAction));
+    when(extractor.extract()).thenReturn(Arrays.asList(container));
+    service.register(container);
+    service.extract();
+    verify(postExtractionAction).run();
   }
 
 }

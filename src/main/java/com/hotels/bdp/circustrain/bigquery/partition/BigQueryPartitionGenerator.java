@@ -18,7 +18,7 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomTableName;
 import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomUri;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -98,11 +98,11 @@ class BigQueryPartitionGenerator {
 
   private ExtractionUri scheduleForExtraction(com.google.cloud.bigquery.Table table, Partition partition) {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
-    List<PostExtractionAction> actions = new ArrayList<>();
-    actions.add(new DeletePostExtractionAction(table));
-    actions
-        .add(new UpdatePartitionSchemaPostExtractionAction(partition, extractionService.getStorage(), extractionUri));
-    ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri, actions);
+    PostExtractionAction deleteAction = new DeletePostExtractionAction(table);
+    PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaPostExtractionAction(partition,
+        extractionService.getStorage(), extractionUri);
+    ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri,
+        Arrays.asList(deleteAction, updatePartitionSchemaAction));
     extractionService.register(toRegister);
     return extractionUri;
   }
