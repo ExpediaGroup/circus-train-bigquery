@@ -32,7 +32,7 @@ public class DeletePostExtractionAction implements PostExtractionAction {
   @Override
   public void run() {
     table.delete();
-    log.debug("Deleted table. {}", table.getTableId());
+    log.debug("Deleted table '{}'", table.getTableId());
   }
 
 }
