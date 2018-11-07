@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.junit.Before;
@@ -35,19 +34,14 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.google.api.gax.paging.Page;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.Storage;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
-import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
-import com.hotels.bdp.circustrain.bigquery.util.SchemaUtils;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HivePartitionGeneratorTest {
@@ -59,9 +53,6 @@ public class HivePartitionGeneratorTest {
   private @Mock ExtractionUri uri;
   private @Mock FieldValue fieldValue;
   private @Mock FieldValueList row;
-  private @Mock Storage storage;
-  private @Mock Blob blob;
-  private @Mock Page<Blob> blobs;
 
   private HivePartitionGenerator hivePartitionGenerator;
   private final Table table = new Table();
@@ -77,16 +68,12 @@ public class HivePartitionGeneratorTest {
   private final FieldSchema fieldSchema = new FieldSchema();
   private final List<FieldValueList> rows = new ArrayList<>();
   private final List<FieldSchema> cols = new ArrayList<>();
-  private String schema;
 
   @Before
   public void init() throws IOException {
-    schema = SchemaUtils.getTestSchema();
     table.setDbName(databaseName);
     table.setTableName(tableName);
     table.setSd(storageDescriptor);
-    table.getSd().setSerdeInfo(new SerDeInfo());
-    table.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
 
     fieldSchema.setName(partitionKey);
 
@@ -105,7 +92,6 @@ public class HivePartitionGeneratorTest {
     fieldSchema.setType(type);
     cols.add(fieldSchema);
     storageDescriptor.setCols(cols);
-
     rows.add(row);
 
     List<Partition> partitions = hivePartitionGenerator.generate(partitionKey, type, rows);

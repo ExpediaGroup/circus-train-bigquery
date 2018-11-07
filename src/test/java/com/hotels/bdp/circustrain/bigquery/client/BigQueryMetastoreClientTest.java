@@ -281,11 +281,7 @@ public class BigQueryMetastoreClientTest {
   }
 
   private void setUpSchema() throws IOException {
-    // byte[] content = SchemaUtils.getTestData();
     when(extractionService.getStorage()).thenReturn(storage);
-    // when(storage.list(anyString(), any(BlobListOption.class), any(BlobListOption.class))).thenReturn(blobs);
-    // when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));
-    // when(blob.getContent()).thenReturn(content);
     SchemaUtils.setUpSchemaMocks(storage, blob, blobs);
     schema = SchemaUtils.getTestSchema();
   }

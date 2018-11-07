@@ -87,9 +87,4 @@ public class BigQueryToHiveTableConverter {
     return this;
   }
 
-  // public BigQueryToHiveTableConverter withSchema(String schema) {
-  // table.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
-  // return this;
-  // }
-
 }
