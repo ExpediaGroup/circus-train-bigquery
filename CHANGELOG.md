@@ -1,7 +1,7 @@
 # TBD
 ### Changed
-* Replicated tables are now exported as AVRO files instead of CVS files. This allows BigQuery tables to be replicated without any schema or data change. See [#18](https://github.com/HotelsDotCom/circus-train-bigquery/issues/17).
-* This is not a backwards compatible change with previous versions. Users who have used version 3.0.0 to replicate partitioned tables will need to redo the replications to avoid data corruption.
+* Replicated tables are now exported as AVRO files instead of CSV files. This allows BigQuery tables to be replicated without any schema or data change. See [#18](https://github.com/HotelsDotCom/circus-train-bigquery/issues/17). 
+* Please note that this version is _not_ backwards compatible for partitioned tables that have been replicated using an earlier version - in this case all the previously replicated partitions will need to be replicated again from scratch.
 
 # [3.0.0] - 2018-09-07
 ### Added
