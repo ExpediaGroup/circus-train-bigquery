@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import org.junit.Rule;
-
 import fm.last.commons.test.file.DataFolder;
 import fm.last.commons.test.file.RootDataFolder;
 
@@ -37,7 +35,7 @@ import com.google.common.io.Files;
 
 public class SchemaUtils {
 
-  private @Rule static DataFolder dataFolder = new RootDataFolder();
+  private static DataFolder dataFolder = new RootDataFolder();
 
   private SchemaUtils() {}
 
