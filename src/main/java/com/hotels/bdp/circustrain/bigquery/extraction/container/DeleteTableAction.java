@@ -20,12 +20,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.Table;
 
-public class DeletePostExtractionAction implements PostExtractionAction {
-  private static final Logger log = LoggerFactory.getLogger(DeletePostExtractionAction.class);
+public class DeleteTableAction implements PostExtractionAction {
+  private static final Logger log = LoggerFactory.getLogger(DeleteTableAction.class);
 
   private final Table table;
 
-  public DeletePostExtractionAction(Table table) {
+  public DeleteTableAction(Table table) {
     this.table = table;
   }
 

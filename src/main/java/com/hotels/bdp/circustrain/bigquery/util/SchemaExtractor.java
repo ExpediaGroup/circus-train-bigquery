@@ -45,15 +45,20 @@ public class SchemaExtractor {
   }
 
   private static String getSchemaFromFile(Blob file) {
-    try {
-      SeekableByteArrayInput input = new SeekableByteArrayInput(file.getContent());
-      DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
-      DataFileReader<GenericRecord> dataFileReader = new DataFileReader<>(input, datumReader);
-      Schema schema = dataFileReader.getSchema();
-      dataFileReader.close();
+    try (SeekableByteArrayInput input = new SeekableByteArrayInput(file.getContent())) {
+      Schema schema = getAvroSchema(input);
       return schema.toString();
     } catch (IOException e) {
-      throw new CircusTrainException("Error getting schema from table", e);
+      throw new CircusTrainException("Error reading from file", e);
+    }
+  }
+
+  private static Schema getAvroSchema(SeekableByteArrayInput input) {
+    DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
+    try (DataFileReader<GenericRecord> dataFileReader = new DataFileReader<>(input, datumReader)) {
+      return dataFileReader.getSchema();
+    } catch (IOException e) {
+      throw new CircusTrainException("Error getting schema from file", e);
     }
   }
 }

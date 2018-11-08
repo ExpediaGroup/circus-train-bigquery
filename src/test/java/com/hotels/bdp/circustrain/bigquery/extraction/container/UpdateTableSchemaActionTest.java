@@ -18,6 +18,8 @@ package com.hotels.bdp.circustrain.bigquery.extraction.container;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.io.IOException;
+
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -37,14 +39,14 @@ import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
 import com.hotels.bdp.circustrain.bigquery.util.SchemaUtils;
 
 @RunWith(MockitoJUnitRunner.class)
-public class UpdateTableSchemaPostExtractionActionTest {
+public class UpdateTableSchemaActionTest {
 
   private @Mock Storage storage;
   private @Mock Blob blob;
   private @Mock Page<Blob> blobs;
   private @Mock ExtractionUri extractionUri;
 
-  private UpdateTableSchemaPostExtractionAction updateTableSchemaAction;
+  private UpdateTableSchemaAction updateTableSchemaAction;
   private final String databaseName = "database";
   private final String tableName = "table";
   private final HiveTableCache cache = new HiveTableCache();
@@ -52,12 +54,12 @@ public class UpdateTableSchemaPostExtractionActionTest {
 
   @Before
   public void setUp() {
-    updateTableSchemaAction = new UpdateTableSchemaPostExtractionAction(databaseName, tableName, cache, storage,
+    updateTableSchemaAction = new UpdateTableSchemaAction(databaseName, tableName, cache, storage,
         extractionUri);
   }
 
   @Test
-  public void typical() {
+  public void typical() throws IOException {
     setUpTable();
     cache.put(table);
     SchemaUtils.setUpSchemaMocks(storage, blob, blobs);

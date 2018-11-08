@@ -209,6 +209,7 @@
       <groupId>fm.last.commons</groupId>
       <artifactId>lastcommons-test</artifactId>
       <version>${lastcommons-test.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

@@ -27,11 +27,11 @@ import org.apache.hadoop.hive.metastore.api.Partition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hotels.bdp.circustrain.bigquery.extraction.container.DeletePostExtractionAction;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.DeleteTableAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdatePartitionSchemaPostExtractionAction;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdatePartitionSchemaAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
@@ -98,11 +98,11 @@ class BigQueryPartitionGenerator {
 
   private ExtractionUri scheduleForExtraction(com.google.cloud.bigquery.Table table, Partition partition) {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
-    PostExtractionAction deleteAction = new DeletePostExtractionAction(table);
-    PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaPostExtractionAction(partition,
+    PostExtractionAction deleteTableAction = new DeleteTableAction(table);
+    PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition,
         extractionService.getStorage(), extractionUri);
     ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri,
-        Arrays.asList(deleteAction, updatePartitionSchemaAction));
+        Arrays.asList(deleteTableAction, updatePartitionSchemaAction));
     extractionService.register(toRegister);
     return extractionUri;
   }

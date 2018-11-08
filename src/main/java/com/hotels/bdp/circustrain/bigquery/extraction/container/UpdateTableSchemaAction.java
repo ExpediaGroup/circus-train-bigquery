@@ -15,29 +15,44 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction.container;
 
-import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.google.cloud.storage.Storage;
 
+import com.hotels.bdp.circustrain.api.CircusTrainException;
+import com.hotels.bdp.circustrain.bigquery.client.HiveTableCache;
 import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
 import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
-public class UpdatePartitionSchemaPostExtractionAction implements PostExtractionAction {
+public class UpdateTableSchemaAction implements PostExtractionAction {
 
-  private final Partition partition;
+  private final String databaseName;
+  private final String tableName;
+  private final HiveTableCache cache;
   private final Storage storage;
   private final ExtractionUri extractionUri;
 
-  public UpdatePartitionSchemaPostExtractionAction(Partition partition, Storage storage, ExtractionUri extractionUri) {
-    this.partition = partition;
+  public UpdateTableSchemaAction(
+      String databaseName,
+      String tableName,
+      HiveTableCache cache,
+      Storage storage,
+      ExtractionUri extractionUri) {
+    this.databaseName = databaseName;
+    this.tableName = tableName;
+    this.cache = cache;
     this.storage = storage;
     this.extractionUri = extractionUri;
   }
 
   @Override
   public void run() {
+    Table table = cache.get(databaseName, tableName);
+    if (table == null) {
+      throw new CircusTrainException("Unable to find pre-cached table: " + databaseName + "." + tableName);
+    }
     String schema = SchemaExtractor.getSchemaFromStorage(storage, extractionUri);
-    partition.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
+    table.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
   }
 
 }

@@ -25,14 +25,14 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.cloud.bigquery.Table;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DeletePostExtractionActionTest {
+public class DeleteTableActionTest {
 
   private @Mock Table table;
 
   @Test
   public void typical() {
-    PostExtractionAction deleteAction = new DeletePostExtractionAction(table);
-    deleteAction.run();
+    DeleteTableAction deleteTableAction = new DeleteTableAction(table);
+    deleteTableAction.run();
     verify(table).delete();
   }
 

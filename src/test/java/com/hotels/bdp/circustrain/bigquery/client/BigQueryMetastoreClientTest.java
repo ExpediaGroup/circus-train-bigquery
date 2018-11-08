@@ -16,6 +16,7 @@
 package com.hotels.bdp.circustrain.bigquery.client;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -32,6 +33,7 @@ import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.thrift.TException;
 import org.junit.Before;
@@ -46,7 +48,6 @@ import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobStatus;
 import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
@@ -56,7 +57,6 @@ import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.table.service.partitioned.PartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.table.service.unpartitioned.UnpartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
-import com.hotels.bdp.circustrain.bigquery.util.SchemaUtils;
 import com.hotels.bdp.circustrain.bigquery.util.TableNameFactory;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -75,19 +75,17 @@ public class BigQueryMetastoreClientTest {
   private @Mock BigQueryMetastore bigQueryMetastore;
   private @Mock JobStatus jobStatus;
   private @Mock Dataset dataset;
-  private @Mock Table table;
+  private @Mock com.google.cloud.bigquery.Table table;
   private @Mock TableDefinition tableDefinition;
   private @Mock Storage storage;
   private @Mock Blob blob;
   private @Mock Page<Blob> blobs;
 
-  String schema;
   private BigQueryMetastoreClient bigQueryMetastoreClient;
-  private final org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table();
+  private final Table hiveTable = new Table();
 
   @Before
   public void init() throws IOException {
-    setUpSchema();
     hiveTable.setTableName(tableName);
     hiveTable.setDbName(databaseName);
     bigQueryMetastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, extractionService, cache, factory);
@@ -129,17 +127,21 @@ public class BigQueryMetastoreClientTest {
   @Test
   public void getTableWithCachedTable() throws TException, IOException {
     HiveTableCache cache = new HiveTableCache();
-    setUpSchema();
     bigQueryMetastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, extractionService, cache, factory);
-
-    when(bigQueryMetastore.getTable(databaseName, tableName)).thenReturn(table);
-    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class)))
-        .thenReturn(unpartitionedTableService);
+    when(factory.newInstance(any(Table.class))).thenReturn(unpartitionedTableService);
     when(unpartitionedTableService.getTable()).thenReturn(hiveTable);
-    org.apache.hadoop.hive.metastore.api.Table result = bigQueryMetastoreClient.getTable(databaseName, tableName);
+
+    // check that the cache has been populated after the first run
+    Table result = bigQueryMetastoreClient.getTable(databaseName, tableName);
     assertThat(cache.contains(databaseName, tableName), is(true));
     assertThat(cache.get(databaseName, tableName), is(result));
+
+    // check that the object from cache is returned for the second run
+    Table differentTable = new Table();
+    when(unpartitionedTableService.getTable()).thenReturn(differentTable);
     result = bigQueryMetastoreClient.getTable(databaseName, tableName);
+    assertThat(result, is(hiveTable));
+    assertThat(result, not(is(differentTable)));
   }
 
   @Test
@@ -148,16 +150,15 @@ public class BigQueryMetastoreClientTest {
     when(tableDefinition.getSchema()).thenReturn(Schema.of());
     when(bigQueryMetastore.getTable(databaseName, tableName)).thenReturn(table);
 
-    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class)))
-        .thenReturn(partitionedTableService);
+    when(factory.newInstance(any(Table.class))).thenReturn(partitionedTableService);
     when(partitionedTableService.getTable()).thenReturn(hiveTable);
 
-    org.apache.hadoop.hive.metastore.api.Table result = bigQueryMetastoreClient.getTable(databaseName, tableName);
+    Table result = bigQueryMetastoreClient.getTable(databaseName, tableName);
 
     verify(cache).contains(databaseName, tableName);
     verify(bigQueryMetastore).getTable(databaseName, tableName);
-    verify(cache).put(any(org.apache.hadoop.hive.metastore.api.Table.class));
-    verify(factory).newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class));
+    verify(cache).put(any(Table.class));
+    verify(factory).newInstance(any(Table.class));
     verify(partitionedTableService).getTable();
     assertThat(result, is(hiveTable));
   }
@@ -200,8 +201,7 @@ public class BigQueryMetastoreClientTest {
     when(mockTableDefinition.getSchema()).thenReturn(Schema.of());
     when(bigQueryMetastore.getTable(databaseName, tableName)).thenReturn(table);
 
-    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class)))
-        .thenReturn(partitionedTableService);
+    when(factory.newInstance(any(Table.class))).thenReturn(partitionedTableService);
     when(partitionedTableService.getTable()).thenReturn(hiveTable);
 
     when(factory.newInstance(hiveTable)).thenReturn(partitionedTableService);
@@ -224,8 +224,7 @@ public class BigQueryMetastoreClientTest {
     when(tableDefinition.getSchema()).thenReturn(Schema.of());
     when(bigQueryMetastore.getTable(databaseName, tableName)).thenReturn(table);
 
-    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class)))
-        .thenReturn(partitionedTableService);
+    when(factory.newInstance(any(Table.class))).thenReturn(partitionedTableService);
     when(partitionedTableService.getTable()).thenReturn(hiveTable);
 
     when(factory.newInstance(hiveTable)).thenReturn(partitionedTableService);
@@ -264,8 +263,7 @@ public class BigQueryMetastoreClientTest {
     when(tableDefinition.getSchema()).thenReturn(Schema.of());
     when(bigQueryMetastore.getTable(databaseName, tableName)).thenReturn(table);
 
-    when(factory.newInstance(any(org.apache.hadoop.hive.metastore.api.Table.class)))
-        .thenReturn(partitionedTableService);
+    when(factory.newInstance(any(Table.class))).thenReturn(partitionedTableService);
     when(partitionedTableService.getTable()).thenReturn(hiveTable);
 
     when(factory.newInstance(hiveTable)).thenReturn(partitionedTableService);
@@ -278,12 +276,6 @@ public class BigQueryMetastoreClientTest {
     List<Partition> results = bigQueryMetastoreClient.listPartitions(databaseName, tableName, (short) -1);
     assertEquals(10, results.size());
     verify(cache).get(databaseName, tableName);
-  }
-
-  private void setUpSchema() throws IOException {
-    when(extractionService.getStorage()).thenReturn(storage);
-    SchemaUtils.setUpSchemaMocks(storage, blob, blobs);
-    schema = SchemaUtils.getTestSchema();
   }
 
 }

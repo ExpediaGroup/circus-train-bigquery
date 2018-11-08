@@ -21,12 +21,10 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.junit.Rule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import fm.last.commons.test.file.DataFolder;
 import fm.last.commons.test.file.RootDataFolder;
@@ -39,47 +37,23 @@ import com.google.common.io.Files;
 
 public class SchemaUtils {
 
-  private static final Logger log = LoggerFactory.getLogger(SchemaUtils.class);
-
   private @Rule static DataFolder dataFolder = new RootDataFolder();
 
   private SchemaUtils() {}
 
-  public static String getTestSchema() {
-    File file = getFile("usa_names_schema.avsc");
-    try {
-      String content = Files.asCharSource(file, Charset.forName("UTF-8")).read();
-      return content;
-    } catch (IOException e) {
-      log.error("Could not get string for usa_names_schema.avsc", e);
-      return null;
-    }
+  public static String getTestSchema() throws IOException {
+    File file = dataFolder.getFile("usa_names_schema.avsc");
+    String content = Files.asCharSource(file, StandardCharsets.UTF_8).read();
+    return content;
   }
 
-  public static byte[] getTestData() {
-    File file = getFile("usa_names.avro");
-    try {
-      byte[] content = Files.asByteSource(file).read();
-      return content;
-    } catch (IOException e) {
-      log.error("Could not get bytes for test file usa_names.avro", e);
-      return null;
-    }
+  public static byte[] getTestData() throws IOException {
+    File file = dataFolder.getFile("usa_names.avro");
+    byte[] content = Files.asByteSource(file).read();
+    return content;
   }
 
-  private static File getFile(String name) {
-    try {
-      File folder = dataFolder.getFolder();
-      String path = folder.getPath() + "/" + name;
-      File file = new File(path);
-      return file;
-    } catch (IOException e) {
-      log.error("Could not get test folder", e);
-      return null;
-    }
-  }
-
-  public static void setUpSchemaMocks(Storage storage, Blob blob, Page<Blob> blobs) {
+  public static void setUpSchemaMocks(Storage storage, Blob blob, Page<Blob> blobs) throws IOException {
     byte[] content = SchemaUtils.getTestData();
     when(storage.list(anyString(), any(BlobListOption.class), any(BlobListOption.class))).thenReturn(blobs);
     when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));

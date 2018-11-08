@@ -95,7 +95,7 @@ import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConvert
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdateTableSchemaPostExtractionAction;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdateTableSchemaAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
@@ -152,7 +152,7 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();
-    PostExtractionAction postExtractionAction = new UpdateTableSchemaPostExtractionAction(databaseName, tableName,
+    PostExtractionAction postExtractionAction = new UpdateTableSchemaAction(databaseName, tableName,
         cache, extractionService.getStorage(), extractionUri);
     ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri,
         Arrays.asList(postExtractionAction));
