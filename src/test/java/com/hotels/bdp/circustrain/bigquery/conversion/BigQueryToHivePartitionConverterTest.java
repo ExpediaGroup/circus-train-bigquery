@@ -18,42 +18,23 @@ package com.hotels.bdp.circustrain.bigquery.conversion;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.util.Collections;
-
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
+
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryToHivePartitionConverterTest {
 
   @Test
-  public void withDatabaseName() {
-    String dbName = "database";
-    Partition partition = new BigQueryToHivePartitionConverter().withDatabaseName(dbName).convert();
-    assertThat(partition.getDbName(), is(dbName));
+  public void typical() {
+    Partition partition = new BigQueryToHivePartitionConverter().convert();
+    assertThat(partition.getSd().getLocation(), is(""));
+    assertThat(partition.getSd().getInputFormat(), is(AvroConstants.INPUT_FORMAT));
+    assertThat(partition.getSd().getOutputFormat(), is(AvroConstants.OUTPUT_FORMAT));
+    assertThat(partition.getSd().getSerdeInfo().getSerializationLib(), is(AvroConstants.SERIALIZATION_LIB));
   }
 
-  @Test
-  public void withpartitionName() {
-    String partitionName = "table";
-    Partition partition = new BigQueryToHivePartitionConverter().withTableName(partitionName).convert();
-    assertThat(partition.getTableName(), is(partitionName));
-  }
-
-  @Test
-  public void withLocation() {
-    String location = "getExtractedDataBaseLocation";
-    Partition partition = new BigQueryToHivePartitionConverter().withLocation(location).convert();
-    assertThat(partition.getSd().getLocation(), is(location));
-  }
-
-  @Test
-  public void withValues() {
-    String values = "foo=baz";
-    Partition partition = new BigQueryToHivePartitionConverter().withValues(Collections.singletonList(values))
-        .convert();
-    assertThat(partition.getValues().get(0), is(values));
-  }
 }

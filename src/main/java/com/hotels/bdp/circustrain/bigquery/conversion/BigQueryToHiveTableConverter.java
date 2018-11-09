@@ -17,9 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.conversion;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
@@ -28,8 +26,7 @@ import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Schema;
+import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
 
 public class BigQueryToHiveTableConverter {
 
@@ -50,18 +47,13 @@ public class BigQueryToHiveTableConverter {
     sd.setBucketCols(Collections.<String> emptyList());
     sd.setSortCols(Collections.<Order> emptyList());
     sd.setCols(new ArrayList<FieldSchema>());
-    sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
-    sd.setOutputFormat("org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat");
+    sd.setInputFormat(AvroConstants.INPUT_FORMAT);
+    sd.setOutputFormat(AvroConstants.OUTPUT_FORMAT);
     sd.setCompressed(false);
     sd.setStoredAsSubDirectories(false);
     sd.setNumBuckets(-1);
     SerDeInfo serDeInfo = new SerDeInfo();
-    serDeInfo.setSerializationLib("org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe");
-    Map<String, String> serDeParameters = new HashMap<>();
-    serDeParameters.put("serialization.format", "1");
-    serDeParameters.put("field.delim", ",");
-    serDeParameters.put("skip.header.line.count", "1");
-    serDeInfo.setParameters(serDeParameters);
+    serDeInfo.setSerializationLib(AvroConstants.SERIALIZATION_LIB);
     SkewedInfo si = new SkewedInfo();
     si.setSkewedColNames(Collections.<String> emptyList());
     si.setSkewedColValueLocationMaps(Collections.<List<String>, String> emptyMap());
@@ -90,23 +82,8 @@ public class BigQueryToHiveTableConverter {
     return this;
   }
 
-  public BigQueryToHiveTableConverter withCols(Schema schema) {
-    return this.withCols(BigQueryToHiveFieldConverter.convert(schema));
-  }
-
   public BigQueryToHiveTableConverter withLocation(String location) {
     table.getSd().setLocation(location);
-    return this;
-  }
-
-  public BigQueryToHiveTableConverter withSchema(Schema schema) {
-    BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
-    for (Field field : schema.getFields()) {
-      FieldSchema fieldSchema = new FieldSchema();
-      fieldSchema.setName(field.getName().toLowerCase());
-      fieldSchema.setType(typeConverter.convert(field.getType().name()).toLowerCase());
-      table.getSd().addToCols(fieldSchema);
-    }
     return this;
   }
 

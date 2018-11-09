@@ -19,18 +19,16 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
-
 public class ExtractionUriTest {
 
   @Test
   public void constructionTest() {
-    ExtractionUri data = new ExtractionUri("bucket", "folder", "file", "csv");
+    ExtractionUri data = new ExtractionUri("bucket", "folder", "file", "AVRO", "avro");
     assertEquals("bucket", data.getBucket());
     assertEquals("folder", data.getFolder());
-    assertEquals("csv", data.getFormat());
-    assertEquals("folder/file.csv", data.getKey());
-    assertEquals("gs://bucket/folder/file.csv", data.getUri());
+    assertEquals("AVRO", data.getFormat());
+    assertEquals("folder/file.avro", data.getKey());
+    assertEquals("gs://bucket/folder/file.avro", data.getUri());
   }
 
 }

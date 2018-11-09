@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>circus-train-bigquery</artifactId>
-  <version>3.0.1-SNAPSHOT</version>
+  <version>4.0.0-SNAPSHOT</version>
   <name>Bigquery Client</name>
   <inceptionYear>2018</inceptionYear>
 
@@ -26,6 +26,7 @@
     <hive.version>2.3.3</hive.version>
     <shade.prefix>${project.groupId}.circustrain.bigquery.shaded</shade.prefix>
     <spring-platform.version>2.0.8.RELEASE</spring-platform.version>
+    <lastcommons-test.version>5.2.1</lastcommons-test.version>
   </properties>
 
   <dependencyManagement>
@@ -202,6 +203,12 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fm.last.commons</groupId>
+      <artifactId>lastcommons-test</artifactId>
+      <version>${lastcommons-test.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

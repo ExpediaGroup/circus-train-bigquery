@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.Partition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,6 +41,7 @@ public class BigQueryPartitionGeneratorTest {
 
   private @Mock BigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService extractionService;
+  private @Mock Partition partition;
   private final String sourceDBName = "db";
   private final String sourceTableName = "tbl";
   private final String partitionKey = "foo";
@@ -58,10 +60,10 @@ public class BigQueryPartitionGeneratorTest {
 
   @Test
   public void generatePart() {
-    ExtractionUri uri = generator.generatePartition();
+    ExtractionUri uri = generator.generatePartition(partition);
     assertEquals(destinationBucket, uri.getBucket());
     assertTrue(uri.getFolder().startsWith(destinationFolder));
-    assertTrue(uri.getKey().endsWith(String.format("%s=%s.%s", partitionKey, partitionValue, uri.getFormat())));
+    assertTrue(uri.getKey().endsWith(String.format("%s=%s.%s", partitionKey, partitionValue, uri.getExtension())));
     ArgumentCaptor<ExtractionContainer> extractionContainerCaptor = ArgumentCaptor.forClass(ExtractionContainer.class);
     verify(extractionService).register(extractionContainerCaptor.capture());
     assertEquals(extractionContainerCaptor.getValue().getExtractionUri(), uri);

@@ -175,50 +175,30 @@ public class HivePartitionGenerator {
       if (partitionFieldValue != null) {
         final String originalValue = partitionFieldValue.getValue().toString();
         String formattedValue = PartitionValueFormatter.formatValue(partitionFieldValue, partitionKeyType);
-        ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
-            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition();
 
-        Partition partition = new HivePartitionFactory(sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
-            extractionUri.getTableLocation(), cols, originalValue).get();
-        log.info("Generated partition {}={}", partitionKey, formattedValue);
+        Partition partition = new BigQueryToHivePartitionConverter().convert();
+        ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
+            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, cols).generatePartition(partition);
+        setPartitionParameters(partition, sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
+            extractionUri.getTableLocation(), originalValue);
+
+        log.info("Generated partition {}={}", partitionKey, originalValue);
         log.debug("{}", partition);
         return com.google.common.base.Optional.of(partition);
       }
       return com.google.common.base.Optional.absent();
     }
 
-  }
-
-  private class HivePartitionFactory {
-
-    private final Partition partition;
-
-    HivePartitionFactory(
+    private void setPartitionParameters(
+        Partition partition,
         String databaseName,
         String tableName,
         String location,
-        List<FieldSchema> cols,
         String... partitionValues) {
-      this(databaseName, tableName, location, cols, Arrays.asList(partitionValues));
-    }
-
-    private HivePartitionFactory(
-        String databaseName,
-        String tableName,
-        String location,
-        List<FieldSchema> cols,
-        List<String> partitionValues) {
-      partition = new BigQueryToHivePartitionConverter()
-          .withDatabaseName(databaseName)
-          .withTableName(tableName)
-          .withValues(partitionValues)
-          .withCols(cols)
-          .withLocation(location)
-          .convert();
-    }
-
-    public Partition get() {
-      return partition;
+      partition.setDbName(databaseName);
+      partition.setTableName(tableName);
+      partition.getSd().setLocation(location);
+      partition.setValues(Arrays.asList(partitionValues));
     }
   }
 

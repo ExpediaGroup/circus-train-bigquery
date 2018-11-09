@@ -55,7 +55,6 @@ import com.google.cloud.storage.StorageException;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DataCleanerTest {
@@ -77,7 +76,7 @@ public class DataCleanerTest {
     initExecutor();
 
     cleaner = new DataCleaner(storage);
-    extractionContainer = new ExtractionContainer(table, extractionUri, PostExtractionAction.RETAIN);
+    extractionContainer = new ExtractionContainer(table, extractionUri);
 
     when(table.getTableId()).thenReturn(tableId);
     when(future.get()).thenReturn(null);
@@ -160,7 +159,9 @@ public class DataCleanerTest {
     BlobId firstCall = BlobId.of(extractionUri.getBucket(), extractionUri.getKey() + 1);
     BlobId thirdCall = BlobId.of(extractionUri.getBucket(), extractionUri.getKey() + 3);
     when(storage.delete(any(BlobId.class))).thenReturn(true);
-    when(blob.getBlobId()).thenReturn(firstCall).thenThrow(new StorageException(new IOException()))
+    when(blob.getBlobId())
+        .thenReturn(firstCall)
+        .thenThrow(new StorageException(new IOException()))
         .thenReturn(thirdCall);
     when(pages.iterateAll()).thenReturn(Arrays.asList(blob, blob, blob));
 
@@ -198,15 +199,6 @@ public class DataCleanerTest {
     cleaner.add(extractionContainer);
     List<ExtractionContainer> cleaned = cleaner.cleanup();
     assertThat(cleaned.get(0), is(extractionContainer));
-  }
-
-  @Test
-  public void cleanupTable() {
-    ExtractionContainer container = new ExtractionContainer(table, extractionUri, PostExtractionAction.DELETE);
-    cleaner.add(container);
-    List<ExtractionContainer> cleaned = cleaner.cleanup();
-    verify(table).delete();
-    assertThat(cleaned.get(0), is(container));
   }
 
   @Test

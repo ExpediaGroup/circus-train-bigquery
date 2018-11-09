@@ -20,17 +20,22 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.hadoop.fs.Path;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.hotels.bdp.circustrain.api.copier.Copier;
 import com.hotels.bdp.circustrain.api.copier.CopierFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 
@@ -39,6 +44,7 @@ public class BigQueryCopierFactoryTest {
 
   private @Mock CopierFactory copierFactory;
   private @Mock ExtractionService service;
+  private @Mock Copier copier;
 
   private BigQueryCopierFactory factory;
 
@@ -60,6 +66,24 @@ public class BigQueryCopierFactoryTest {
     when(copierFactory.supportsSchemes(anyString(), anyString())).thenReturn(false);
     assertThat(factory.supportsSchemes("gs://", "s3://"), is(false));
     assertNull(factory.getSupportedFactory());
+  }
+
+  @Test
+  public void newInstance() {
+    String eventId = "eventId";
+    Path sourceBaseLocation = new Path("sourceBaseLocation");
+    Path replicaLocation = new Path("replicaLocation");
+    List<Path> sourceSubLocations = Collections.singletonList(new Path("subLocations"));
+    Map<String, Object> copierOptions = new HashMap<>();
+    when(copierFactory.newInstance(eventId, sourceBaseLocation, sourceSubLocations, replicaLocation, copierOptions))
+        .thenReturn(copier);
+    when(copierFactory.supportsSchemes(anyString(), anyString())).thenReturn(true);
+    factory.supportsSchemes("gs://", "s3://");
+    Copier bigQueryCopier = factory
+        .newInstance(eventId, sourceBaseLocation, sourceSubLocations, replicaLocation, copierOptions);
+    bigQueryCopier.copy();
+    verify(service).extract();
+    verify(copier).copy();
   }
 
 }

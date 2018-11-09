@@ -24,9 +24,11 @@ public class ExtractionUri {
   private static final String DEFAULT_BUCKET_PREFIX = "circus-train-bigquery-tmp-";
   // Wildcard key enables sharding of exported data > 1GB - https://cloud.google.com/bigquery/docs/exporting-data
   private static final String SHARD_DATA_POSTFIX = "-*";
-  private static final String DEFAULT_FORMAT = "csv";
+  private static final String DEFAULT_FORMAT = "AVRO";
+  private static final String DEFAULT_EXTENSION = "avro";
 
   private final String dataFormat;
+  private final String dataExtension;
   private final String dataBucket;
   private final String dataKey;
   private final String dataFolder;
@@ -41,18 +43,19 @@ public class ExtractionUri {
   }
 
   public ExtractionUri(String bucket, String folder) {
-    this(bucket, folder, randomUri() + SHARD_DATA_POSTFIX, DEFAULT_FORMAT);
+    this(bucket, folder, randomUri() + SHARD_DATA_POSTFIX, DEFAULT_FORMAT, DEFAULT_EXTENSION);
   }
 
   public ExtractionUri(String bucket, String folder, String fileName) {
-    this(bucket, folder, fileName, DEFAULT_FORMAT);
+    this(bucket, folder, fileName, DEFAULT_FORMAT, DEFAULT_EXTENSION);
   }
 
-  public ExtractionUri(String bucket, String folder, String fileName, String fileFormat) {
+  public ExtractionUri(String bucket, String folder, String fileName, String fileFormat, String fileExtension) {
     dataBucket = bucket;
     dataFolder = folder;
     dataFormat = fileFormat;
-    dataKey = folder + "/" + fileName + "." + fileFormat;
+    dataExtension = fileExtension;
+    dataKey = folder + "/" + fileName + "." + fileExtension;
     dataUri = "gs://" + dataBucket + "/" + dataKey;
   }
 
@@ -70,6 +73,10 @@ public class ExtractionUri {
 
   public String getFormat() {
     return dataFormat;
+  }
+
+  public String getExtension() {
+    return dataExtension;
   }
 
   public String getBucket() {

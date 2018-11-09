@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +37,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 
-import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.ExtractionContainerFactory;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
@@ -63,14 +63,14 @@ public class HivePartitionGeneratorTest {
   private final String tableName = "table";
   private final String partitionKey = "foo";
   private final String filePartialLocation = String.format("gs://%s/%s/", bucket, folder);
-  private String value = "value";
-  private String type = "string";
+  private final String value = "value";
+  private final String type = "string";
   private final FieldSchema fieldSchema = new FieldSchema();
   private final List<FieldValueList> rows = new ArrayList<>();
   private final List<FieldSchema> cols = new ArrayList<>();
 
   @Before
-  public void init() {
+  public void init() throws IOException {
     table.setDbName(databaseName);
     table.setTableName(tableName);
     table.setSd(storageDescriptor);
@@ -92,7 +92,6 @@ public class HivePartitionGeneratorTest {
     fieldSchema.setType(type);
     cols.add(fieldSchema);
     storageDescriptor.setCols(cols);
-
     rows.add(row);
 
     List<Partition> partitions = hivePartitionGenerator.generate(partitionKey, type, rows);
@@ -101,41 +100,7 @@ public class HivePartitionGeneratorTest {
     Partition partition = partitions.get(0);
     assertThat(partition.getDbName(), is(databaseName));
     assertThat(partition.getTableName(), is(tableName));
-    assertThat(partition.getSd().getCols().size(), is(1));
-    assertThat(partition.getSd().getCols().get(0), is(cols.get(0)));
     assertThat(partition.getSd().getLocation(), startsWith(filePartialLocation));
-  }
-
-  @Test
-  public void partitionsForTimestampColumn() {
-    type = "timestamp";
-    value = "1419984005.0";
-    when(fieldValue.getValue()).thenReturn(value);
-    when(fieldValue.getStringValue()).thenReturn(value);
-    fieldSchema.setType(type);
-    cols.add(fieldSchema);
-    storageDescriptor.setCols(cols);
-
-    rows.add(row);
-    List<Partition> partitions = hivePartitionGenerator.generate(partitionKey, type, rows);
-    assertThat(partitions.size(), is(1));
-    Partition partition = partitions.get(0);
-    assertThat(partition.getDbName(), is(databaseName));
-    assertThat(partition.getTableName(), is(tableName));
-    assertThat(partition.getSd().getCols().size(), is(1));
-    assertThat(partition.getSd().getCols().get(0), is(cols.get(0)));
-    assertThat(partition.getSd().getLocation(), startsWith(filePartialLocation));
-  }
-
-  @Test(expected = CircusTrainException.class)
-  public void partitionForWrongValueForTimestamp() {
-    type = "timestamp";
-    fieldSchema.setType(type);
-    cols.add(fieldSchema);
-    storageDescriptor.setCols(cols);
-
-    rows.add(row);
-    hivePartitionGenerator.generate(partitionKey, type, rows);
   }
 
 }

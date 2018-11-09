@@ -15,11 +15,12 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableResult;
 
+import com.hotels.bdp.circustrain.bigquery.extraction.container.DeleteTableAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
@@ -48,11 +49,12 @@ public class BigQueryTableFilterer {
     return bigQueryMetastore.executeIntoDestinationTable(databaseName, tableName, filterQuery);
   }
 
-  public com.google.cloud.bigquery.Table getFilteredTable() {
-    com.google.cloud.bigquery.Table filteredTable = bigQueryMetastore.getTable(databaseName, tableName);
+  public Table getFilteredTable() {
+    Table filteredTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();
-    ExtractionContainer container = new ExtractionContainer(filteredTable, extractionUri, PostExtractionAction.DELETE);
+    ExtractionContainer container = new ExtractionContainer(filteredTable, extractionUri,
+        new DeleteTableAction(filteredTable));
     service.register(container);
     return filteredTable;
   }

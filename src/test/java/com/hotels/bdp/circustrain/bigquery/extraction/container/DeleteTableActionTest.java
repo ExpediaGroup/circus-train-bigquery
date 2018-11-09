@@ -15,8 +15,25 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction.container;
 
-public interface PostExtractionAction {
+import static org.mockito.Mockito.verify;
 
-  public void run();
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import com.google.cloud.bigquery.Table;
+
+@RunWith(MockitoJUnitRunner.class)
+public class DeleteTableActionTest {
+
+  private @Mock Table table;
+
+  @Test
+  public void typical() {
+    DeleteTableAction deleteTableAction = new DeleteTableAction(table);
+    deleteTableAction.run();
+    verify(table).delete();
+  }
 
 }

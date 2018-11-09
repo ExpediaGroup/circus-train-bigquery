@@ -17,6 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.client;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +95,7 @@ import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTableConvert
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdateTableSchemaAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
@@ -150,12 +152,18 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();
-    ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri, PostExtractionAction.RETAIN);
+    PostExtractionAction postExtractionAction = new UpdateTableSchemaAction(databaseName, tableName,
+        cache, extractionService.getStorage(), extractionUri);
+    ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri,
+        Arrays.asList(postExtractionAction));
     extractionService.register(container);
 
-    Table hiveTable = tableServiceFactory.newInstance(new BigQueryToHiveTableConverter().withDatabaseName(databaseName)
-        .withTableName(tableName).withSchema(bigQueryTable.getDefinition().getSchema())
-        .withCols(bigQueryTable.getDefinition().getSchema()).withLocation(extractionUri.getTableLocation()).convert())
+    Table hiveTable = tableServiceFactory
+        .newInstance(new BigQueryToHiveTableConverter()
+            .withDatabaseName(databaseName)
+            .withTableName(tableName)
+            .withLocation(extractionUri.getTableLocation())
+            .convert())
         .getTable();
 
     cache.put(hiveTable);

@@ -56,7 +56,6 @@ import com.google.cloud.storage.StorageException;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DataExtractorTest {
@@ -79,7 +78,7 @@ public class DataExtractorTest {
     initExecutor();
 
     extractor = new DataExtractor(storage);
-    extractionContainer = new ExtractionContainer(table, data, PostExtractionAction.RETAIN);
+    extractionContainer = new ExtractionContainer(table, data);
 
     when(table.getTableId()).thenReturn(tableId);
     when(table.extract(anyString(), anyString())).thenReturn(job);
@@ -112,7 +111,7 @@ public class DataExtractorTest {
     List<ExtractionContainer> extracted = extractor.extract(executorService);
 
     verify(storage).create(any(BucketInfo.class));
-    verify(table).extract(eq("csv"), eq(data.getUri()));
+    verify(table).extract(eq("AVRO"), eq(data.getUri()));
     assertThat(extracted.size(), is(1));
   }
 

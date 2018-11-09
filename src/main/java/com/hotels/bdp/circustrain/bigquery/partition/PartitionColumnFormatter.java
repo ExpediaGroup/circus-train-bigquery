@@ -32,22 +32,10 @@ public class PartitionColumnFormatter {
     List<String> formattedColumns = new ArrayList<>();
     for (FieldSchema col : columns) {
       String name = col.getName().trim();
-      String type = col.getType().toLowerCase().trim();
-
-      if (type.equals("timestamp")) {
-        formattedColumns.add(formatTimestampColumn(name));
-      } else {
-        formattedColumns.add(name);
-      }
+      formattedColumns.add(name);
     }
 
     return joiner.join(formattedColumns);
-  }
-
-  // format the timestamp returned by BigQuery to include the timestamp without timezone
-  // if timestamp contains timezone, Hive converts that value to null
-  private static String formatTimestampColumn(String name) {
-    return "FORMAT_TIMESTAMP(\"%F %H:%M:%E*S\", " + name + ") as " + name;
   }
 
 }

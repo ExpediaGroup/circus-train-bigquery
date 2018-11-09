@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hotels.bdp.circustrain.bigquery.extraction.container;
+package com.hotels.bdp.circustrain.bigquery.util;
 
-public interface PostExtractionAction {
+public class AvroConstants {
+  public static final String SCHEMA_PARAMETER = "avro.schema.literal";
+  public static final String INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat";
+  public static final String OUTPUT_FORMAT = "org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat";
+  public static final String SERIALIZATION_LIB = "org.apache.hadoop.hive.serde2.avro.AvroSerDe";
 
-  public void run();
+  private AvroConstants() {}
 
 }

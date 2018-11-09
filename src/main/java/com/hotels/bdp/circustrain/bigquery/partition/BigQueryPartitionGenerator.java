@@ -18,16 +18,20 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomTableName;
 import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomUri;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.Partition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hotels.bdp.circustrain.bigquery.extraction.container.DeleteTableAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdatePartitionSchemaAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 
@@ -43,7 +47,6 @@ class BigQueryPartitionGenerator {
   private final String partitionValue;
   private final String destinationBucket;
   private final String destinationFolder;
-  private final List<FieldSchema> cols;
 
   BigQueryPartitionGenerator(
       BigQueryMetastore bigQueryMetastore,
@@ -63,24 +66,24 @@ class BigQueryPartitionGenerator {
     this.partitionKey = partitionKey;
     this.destinationBucket = destinationBucket;
     this.destinationFolder = destinationFolder;
-    this.cols = cols;
   }
 
-  ExtractionUri generatePartition() {
+  ExtractionUri generatePartition(Partition partition) {
     final String statement = getQueryStatement();
     final String destinationTableName = randomTableName();
 
-    com.google.cloud.bigquery.Table part = createPartitionInBigQuery(sourceDBName, destinationTableName, statement);
-    ExtractionUri extractionUri = scheduleForExtraction(part);
+    com.google.cloud.bigquery.Table bigQueryPartition = createPartitionInBigQuery(sourceDBName, destinationTableName,
+        statement);
+    ExtractionUri extractionUri = scheduleForExtraction(bigQueryPartition, partition);
     return extractionUri;
 
   }
 
   private String getQueryStatement() {
-    String columnNames = PartitionColumnFormatter.formatColumns(cols);
-    return String
-        .format("select %s from %s.%s where %s = %s", columnNames, sourceDBName, sourceTableName, partitionKey,
-            partitionValue);
+    String query = String
+        .format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey, partitionValue);
+    log.debug("Query statement is: {}", query);
+    return query;
   }
 
   private com.google.cloud.bigquery.Table createPartitionInBigQuery(
@@ -93,9 +96,13 @@ class BigQueryPartitionGenerator {
     return part;
   }
 
-  private ExtractionUri scheduleForExtraction(com.google.cloud.bigquery.Table table) {
+  private ExtractionUri scheduleForExtraction(com.google.cloud.bigquery.Table table, Partition partition) {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
-    ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri, PostExtractionAction.DELETE);
+    PostExtractionAction deleteTableAction = new DeleteTableAction(table);
+    PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition,
+        extractionService.getStorage(), extractionUri);
+    ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri,
+        Arrays.asList(deleteTableAction, updatePartitionSchemaAction));
     extractionService.register(toRegister);
     return extractionUri;
   }
