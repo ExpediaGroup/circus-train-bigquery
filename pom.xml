@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>circus-train-bigquery</artifactId>
-  <version>4.0.0</version>
+  <version>4.0.1-SNAPSHOT</version>
   <name>Bigquery Client</name>
   <inceptionYear>2018</inceptionYear>
 
