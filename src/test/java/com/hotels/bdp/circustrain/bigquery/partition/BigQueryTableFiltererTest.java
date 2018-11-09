@@ -15,14 +15,20 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableResult;
 
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
@@ -31,14 +37,16 @@ import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryTableFiltererTest {
 
+  private @Mock BigQueryMetastore bigQueryMetastore;
+  private @Mock ExtractionService service;
+  private @Mock TableResult tableResult;
+  private @Mock Table table;
+
+  private BigQueryTableFilterer filterer;
+
   private final String databaseName = "db";
   private final String tableName = "tbl";
   private final String filterQuery = "foo < 5";
-
-  private @Mock BigQueryMetastore bigQueryMetastore;
-  private @Mock ExtractionService service;
-
-  private BigQueryTableFilterer filterer;
 
   @Before
   public void init() {
@@ -47,14 +55,16 @@ public class BigQueryTableFiltererTest {
 
   @Test
   public void filterTable() {
-    filterer.filterTable();
-    verify(bigQueryMetastore).executeIntoDestinationTable(databaseName, tableName, filterQuery);
+    when(bigQueryMetastore.executeIntoDestinationTable(databaseName, tableName, filterQuery)).thenReturn(tableResult);
+    TableResult result = filterer.filterTable();
+    assertThat(result, is(tableResult));
   }
 
   @Test
   public void getFilteredTable() {
-    filterer.getFilteredTable();
-    verify(bigQueryMetastore).getTable(databaseName, tableName);
+    when(bigQueryMetastore.getTable(databaseName, tableName)).thenReturn(table);
+    Table result = filterer.getFilteredTable();
+    assertThat(result, is(table));
     verify(service).register(any(ExtractionContainer.class));
   }
 }

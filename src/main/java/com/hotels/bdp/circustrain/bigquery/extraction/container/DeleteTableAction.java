@@ -18,6 +18,7 @@ package com.hotels.bdp.circustrain.bigquery.extraction.container;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.Table;
 
 public class DeleteTableAction implements PostExtractionAction {
@@ -31,8 +32,12 @@ public class DeleteTableAction implements PostExtractionAction {
 
   @Override
   public void run() {
-    table.delete();
-    log.debug("Deleted table '{}'", table.getTableId());
+    try {
+      table.delete();
+      log.debug("Deleted table '{}'", table.getTableId());
+    } catch (BigQueryException e) {
+      log.error("Could not delete BigQuery table '{}': {}", table.getTableId(), e.getMessage());
+    }
   }
 
 }

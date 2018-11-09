@@ -31,13 +31,13 @@ public class PartitionQueryFactory {
   public String newInstance(Table hiveTable, String partitionBy, String partitionFilter) {
     if (isNotBlank(partitionBy) && isNotBlank(partitionFilter)) {
       String query = String
-          .format("select %s from %s.%s where %s group by %s order by %s", partitionBy, hiveTable.getDbName(),
+          .format("select distinct(%s) from %s.%s where %s group by %s order by %s", partitionBy, hiveTable.getDbName(),
               hiveTable.getTableName(), partitionFilter, partitionBy, partitionBy);
       log.debug("Query for partitioning and filtering table: {}", query);
       return query;
     } else if (isNotBlank(partitionBy) && isBlank(partitionFilter)) {
       String query = String
-          .format("select %s from %s.%s group by %s order by %s", partitionBy, hiveTable.getDbName(),
+          .format("select distinct(%s) from %s.%s group by %s order by %s", partitionBy, hiveTable.getDbName(),
               hiveTable.getTableName(), partitionBy, partitionBy);
       log.debug("Query for partitioning table: {}", query);
       return query;

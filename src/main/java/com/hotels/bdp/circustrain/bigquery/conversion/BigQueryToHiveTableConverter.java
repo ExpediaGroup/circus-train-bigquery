@@ -77,11 +77,6 @@ public class BigQueryToHiveTableConverter {
     return this;
   }
 
-  public BigQueryToHiveTableConverter withCols(List<FieldSchema> cols) {
-    table.getSd().setCols(cols);
-    return this;
-  }
-
   public BigQueryToHiveTableConverter withLocation(String location) {
     table.getSd().setLocation(location);
     return this;
