@@ -17,7 +17,6 @@ package com.hotels.bdp.circustrain.bigquery.client;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
@@ -79,7 +78,7 @@ public class BigQueryMetastoreClientTest {
   @Test
   public void getDatabase() throws TException {
     Database database = bigQueryMetastoreClient.getDatabase(databaseName);
-    assertEquals(databaseName, database.getName());
+    assertThat(database.getName(), is(databaseName));
   }
 
   @Test(expected = UnknownDBException.class)
@@ -142,8 +141,8 @@ public class BigQueryMetastoreClientTest {
     when(factory.newInstance(hiveTable)).thenReturn(partitionedTableService);
     when(partitionedTableService.getPartitions()).thenReturn(partitions);
     List<Partition> results = bigQueryMetastoreClient.listPartitions(databaseName, tableName, (short) 10);
-    assertEquals(results.get(0), partition);
-    assertEquals(1, results.size());
+    assertThat(partition, is(results.get(0)));
+    assertThat(results.size(), is(1));
   }
 
   @Test
@@ -151,7 +150,7 @@ public class BigQueryMetastoreClientTest {
     cache.put(hiveTable);
     when(factory.newInstance(hiveTable)).thenReturn(partitionedTableService);
     List<Partition> results = bigQueryMetastoreClient.listPartitions(databaseName, tableName, (short) 5);
-    assertEquals(5, results.size());
+    assertThat(results.size(), is(5));
   }
 
   @Test
@@ -159,7 +158,7 @@ public class BigQueryMetastoreClientTest {
     when(factory.newInstance(any(Table.class))).thenReturn(partitionedTableService);
     assertThat(cache.contains(databaseName, tableName), is(false));
     List<Partition> results = bigQueryMetastoreClient.listPartitions(databaseName, tableName, (short) 10);
-    assertEquals(10, results.size());
+    assertThat(results.size(), is(10));
     assertThat(cache.contains(databaseName, tableName), is(true));
   }
 
@@ -167,7 +166,7 @@ public class BigQueryMetastoreClientTest {
   public void listPartitionsWithoutTableCachedAndPartitionsSizeLimited() throws TException {
     when(factory.newInstance(any(Table.class))).thenReturn(partitionedTableService);
     List<Partition> results = bigQueryMetastoreClient.listPartitions(databaseName, tableName, (short) 5);
-    assertEquals(5, results.size());
+    assertThat(results.size(), is(5));
     assertThat(cache.contains(databaseName, tableName), is(true));
   }
 
@@ -176,14 +175,14 @@ public class BigQueryMetastoreClientTest {
     cache.put(hiveTable);
     when(factory.newInstance(hiveTable)).thenReturn(partitionedTableService);
     List<Partition> results = bigQueryMetastoreClient.listPartitions(databaseName, tableName, (short) -1);
-    assertEquals(10, results.size());
+    assertThat(results.size(), is(10));
   }
 
   @Test
   public void listPartitionsWithoutTableCachedAndPartitionsSizeNegativeReturnsAllPartitions() throws TException {
     when(factory.newInstance(any(Table.class))).thenReturn(partitionedTableService);
     List<Partition> results = bigQueryMetastoreClient.listPartitions(databaseName, tableName, (short) -1);
-    assertEquals(10, results.size());
+    assertThat(results.size(), is(10));
     assertThat(cache.contains(databaseName, tableName), is(true));
   }
 

@@ -16,7 +16,6 @@
 package com.hotels.bdp.circustrain.bigquery.copier;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyString;
@@ -52,13 +51,13 @@ public class BigQueryCopierFactoryTest {
   public void setUp() {
     List<CopierFactory> copierFactories = Collections.singletonList(copierFactory);
     factory = new BigQueryCopierFactory(copierFactories, service);
+    when(copierFactory.supportsSchemes(anyString(), anyString())).thenReturn(true);
   }
 
   @Test
   public void supportsSchemes() {
-    when(copierFactory.supportsSchemes(anyString(), anyString())).thenReturn(true);
     assertThat(factory.supportsSchemes("gs://", "s3://"), is(true));
-    assertEquals(copierFactory, factory.getSupportedFactory());
+    assertThat(factory.getSupportedFactory(), is(copierFactory));
   }
 
   @Test
@@ -77,7 +76,6 @@ public class BigQueryCopierFactoryTest {
     Map<String, Object> copierOptions = new HashMap<>();
     when(copierFactory.newInstance(eventId, sourceBaseLocation, sourceSubLocations, replicaLocation, copierOptions))
         .thenReturn(copier);
-    when(copierFactory.supportsSchemes(anyString(), anyString())).thenReturn(true);
     factory.supportsSchemes("gs://", "s3://");
     Copier bigQueryCopier = factory
         .newInstance(eventId, sourceBaseLocation, sourceSubLocations, replicaLocation, copierOptions);

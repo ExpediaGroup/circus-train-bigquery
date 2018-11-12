@@ -41,11 +41,10 @@ public class PartitioningConfigurationTest {
   private static final String DB_NAME = "db";
   private static final String TABLE_NAME = "table";
 
-  private TableReplications tableReplications = new TableReplications();
-  private Map<String, Object> copierOptions = new HashMap<>();
-  private SourceTable sourceTable = new SourceTable();
-  private Table table = new Table();
-
+  private final TableReplications tableReplications = new TableReplications();
+  private final Map<String, Object> copierOptions = new HashMap<>();
+  private final SourceTable sourceTable = new SourceTable();
+  private final Table table = new Table();
   private PartitioningConfiguration configuration;
 
   @Before
