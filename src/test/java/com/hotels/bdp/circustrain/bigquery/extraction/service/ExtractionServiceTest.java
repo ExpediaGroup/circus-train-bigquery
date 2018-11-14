@@ -15,7 +15,8 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -78,8 +79,8 @@ public class ExtractionServiceTest {
     service.register(container);
     verify(extractor).add(container);
     verify(cleaner).add(container);
-    verify(extractor).add(container);
-    assertEquals(1, registry.size());
+    assertThat(registry.size(), is(1));
+    assertThat(registry.get(table), is(container));
   }
 
   @Test
@@ -97,7 +98,7 @@ public class ExtractionServiceTest {
   @Test
   public void retrieve() {
     service.register(container);
-    assertEquals(container, service.retrieve(table));
+    assertThat(service.retrieve(table), is(container));
   }
 
   @Test

@@ -54,10 +54,10 @@ public class PartitionedTableServiceTest {
   private final String type = "STRING";
   private final String partitionBy = "foo";
   private final Schema schema = Schema.of(Field.of(partitionBy, LegacySQLTypeName.STRING));
-  private PartitionedTableService partitionedTableService;
   private final List<FieldValueList> rows = new ArrayList<>();
   private final List<Partition> partition = Arrays.asList(new Partition());
   private final Table table = new Table();
+  private PartitionedTableService partitionedTableService;
 
   @Before
   public void init() {
@@ -71,7 +71,7 @@ public class PartitionedTableServiceTest {
 
   @Test
   public void getTable() {
-    org.apache.hadoop.hive.metastore.api.Table result = partitionedTableService.getTable();
+    Table result = partitionedTableService.getTable();
     assertThat(result, is(table));
   }
 

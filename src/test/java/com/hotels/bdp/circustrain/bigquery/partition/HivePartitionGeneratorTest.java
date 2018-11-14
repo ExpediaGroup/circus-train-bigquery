@@ -50,39 +50,35 @@ public class HivePartitionGeneratorTest {
   private @Mock ExtractionService service;
   private @Mock ExtractionContainerFactory factory;
   private @Mock ExtractionContainer container;
-  private @Mock ExtractionUri uri;
   private @Mock FieldValue fieldValue;
   private @Mock FieldValueList row;
 
   private HivePartitionGenerator hivePartitionGenerator;
   private final Table table = new Table();
+  private final FieldSchema fieldSchema = new FieldSchema();
+  private final List<FieldSchema> cols = new ArrayList<>();
+  private final List<FieldValueList> rows = new ArrayList<>();
+  private final ExtractionUri extractionUri = new ExtractionUri();
   private final StorageDescriptor storageDescriptor = new StorageDescriptor();
-  private final String bucket = "bucket";
-  private final String folder = "folder";
   private final String databaseName = "database";
   private final String tableName = "table";
   private final String partitionKey = "foo";
-  private final String filePartialLocation = String.format("gs://%s/%s/", bucket, folder);
   private final String value = "value";
   private final String type = "string";
-  private final FieldSchema fieldSchema = new FieldSchema();
-  private final List<FieldValueList> rows = new ArrayList<>();
-  private final List<FieldSchema> cols = new ArrayList<>();
+  private final String bucket = extractionUri.getBucket();
+  private final String folder = extractionUri.getFolder();
+  private final String filePartialLocation = String.format("gs://%s/%s/", bucket, folder);
 
   @Before
   public void init() throws IOException {
     table.setDbName(databaseName);
     table.setTableName(tableName);
     table.setSd(storageDescriptor);
-
     fieldSchema.setName(partitionKey);
 
     hivePartitionGenerator = new HivePartitionGenerator(table, metastore, service, factory);
     when(factory.newInstance()).thenReturn(container);
-    when(container.getExtractionUri()).thenReturn(uri);
-    when(uri.getBucket()).thenReturn(bucket);
-    when(uri.getFolder()).thenReturn(folder);
-
+    when(container.getExtractionUri()).thenReturn(extractionUri);
     when(row.get(partitionKey)).thenReturn(fieldValue);
     when(fieldValue.getValue()).thenReturn(value);
   }
