@@ -16,6 +16,7 @@
 package com.hotels.bdp.circustrain.bigquery.partition;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 
 import java.util.List;
@@ -48,6 +49,6 @@ public class HivePartitionKeyAdderTest {
 
     assertThat(partitionKey.getName(), is(key));
     assertThat(partitionKey.getType(), is("string"));
-    assertThat(result, is(table));
+    assertThat(result, not(table));
   }
 }
