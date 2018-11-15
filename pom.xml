@@ -20,7 +20,7 @@
   </scm>
 
   <properties>
-    <circus-train-version>12.0.0</circus-train-version>
+    <circus-train-version>12.2.0-SNAPSHOT</circus-train-version>
     <google-cloud.version>0.34.0-alpha</google-cloud.version>
     <hadoop.version>2.7.1</hadoop.version>
     <hive.version>2.3.3</hive.version>
