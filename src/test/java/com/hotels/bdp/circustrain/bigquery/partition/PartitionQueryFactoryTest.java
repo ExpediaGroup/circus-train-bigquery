@@ -48,8 +48,7 @@ public class PartitionQueryFactoryTest {
   @Test
   public void configurePartitionByOnly() {
     String expected = String
-        .format("select distinct(%s) from %s.%s group by %s order by %s", partitionKey, databaseName, tableName,
-            partitionKey, partitionKey);
+        .format("select distinct(%s) from %s.%s order by %s", partitionKey, databaseName, tableName, partitionKey);
     String query = new PartitionQueryFactory().newInstance(table, partitionKey, null);
     assertThat(query, is(expected));
   }
@@ -58,8 +57,8 @@ public class PartitionQueryFactoryTest {
   public void configurePartitionByAndPartitionFilter() {
     String partitionFilter = "foo > 5";
     String expected = String
-        .format("select distinct(%s) from %s.%s where %s group by %s order by %s", partitionKey, databaseName,
-            tableName, partitionFilter, partitionKey, partitionKey);
+        .format("select distinct(%s) from %s.%s where %s order by %s", partitionKey, databaseName, tableName,
+            partitionFilter, partitionKey);
     String query = new PartitionQueryFactory().newInstance(table, partitionKey, partitionFilter);
     assertThat(query, is(expected));
   }
