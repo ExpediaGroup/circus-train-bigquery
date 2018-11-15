@@ -3,18 +3,28 @@
 ##  Overview
 This [Circus Train](https://github.com/HotelsDotCom/circus-train) plugin enables the conversion of BigQuery tables to Hive.
 
-# Start using
+## Start using
 You can obtain Circus Train BigQuery from Maven Central:
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.hotels/circus-train-bigquery/badge.svg?subject=com.hotels:circus-train-bigquery)](https://maven-badges.herokuapp.com/maven-central/com.hotels/circus-train-bigquery) [![Build Status](https://travis-ci.org/HotelsDotCom/circus-train-bigquery.svg?branch=master)](https://travis-ci.org/HotelsDotCom/circus-train-bigquery) [![Coverage Status](https://coveralls.io/repos/github/HotelsDotCom/circus-train-bigquery/badge.svg?branch=master)](https://coveralls.io/github/HotelsDotCom/circus-train-bigquery?branch=master) ![GitHub license](https://img.shields.io/github/license/HotelsDotCom/circus-train.svg)
 
+## Installation
+In order to be used by Circus Train the above `circus-train-bigquery` jar file must be added to Circus Train's classpath.  It is highly recommended that the version of this library and the version of Circus Train are identical. The recommended way to make this extension available on the classpath is to store it in a standard location
+and then add this to the `CIRCUS_TRAIN_CLASSPATH` environment variable (e.g. via a startup script):
+
+    export CIRCUS_TRAIN_CLASSPATH=$CIRCUS_TRAIN_CLASSPATH:/opt/circus-train-big-query/lib/*
+
+Another option is to place the jar file in the Circus Train `lib` folder which will then automatically load it but risks interfering with any Circus Train jobs that do not require the extension's functionality.
+
 ## Configuration
-* Add the `circus-train-bigquery` jar to your `CIRCUS_TRAIN_CLASSPATH`, or as a dependency on your Circus Train  project.
+* Add the following to the Circus Train YAML configuration in order to load the BigQuery extension via Circus Train's [extension loading mechanism](https://github.com/HotelsDotCom/circus-train#loading-extensions):
+
+     extension-packages: com.hotels.bdp.circustrain.bigquery
+     
 * Configure Circus Train as you would for a copy job from Google Cloud [Configuration](https://github.com/HotelsDotCom/circus-train/tree/master/circus-train-gcp)
 * Provide the Google Cloud project ID that your BigQuery instance resides in as your `source-catalog` `hive-metastore-uris` parameter using the format `hive-metastore-uris: bigquery://<project-id>`
 * To enable copying to Google Storage provide a path to your Google Credentials in the configuration under the gcp-security parameter.
 * Provide your BigQuery dataset as `source-table` `database-name` and your BigQuery table name as `source-table` `table-name`
-
 
 ## Partition Generation
 Circus Train BigQuery allows you to add partitions for one column to your Hive destination table upon replication from BigQuery to Hive. The partition must be a field present on your source BigQuery table. The user can configure the partition field by setting the `table-replications[n].copier-option : circus-train-bigquery-partition-by` property on a specific table replication within the Circus Train configuration file. The destination data will be repartitioned on the specified field.
@@ -24,6 +34,7 @@ If your destination data is partitioned you can also specify a partition filter 
 ### Examples:
 
 #### Simple Configuration
+    extension-packages: com.hotels.bdp.circustrain.bigquery
     source-catalog:
       name: my-google-source-catalog
       hive-metastore-uris: bigquery://my-gcp-project-id
@@ -44,6 +55,7 @@ If your destination data is partitioned you can also specify a partition filter 
         table-location: s3://mybucket/foo/baz/
 
 #### Configuration with partition generation configured
+    extension-packages: com.hotels.bdp.circustrain.bigquery
     source-catalog:
       ... see above ...
 
@@ -60,6 +72,7 @@ If your destination data is partitioned you can also specify a partition filter 
           circustrain-bigquery-partition-by: date
 
 #### Configuration with partition filter configured
+    extension-packages: com.hotels.bdp.circustrain.bigquery
     source-catalog:
       ... see above ...
 
