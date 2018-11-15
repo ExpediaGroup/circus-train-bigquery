@@ -9,7 +9,7 @@ You can obtain Circus Train BigQuery from Maven Central:
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.hotels/circus-train-bigquery/badge.svg?subject=com.hotels:circus-train-bigquery)](https://maven-badges.herokuapp.com/maven-central/com.hotels/circus-train-bigquery) [![Build Status](https://travis-ci.org/HotelsDotCom/circus-train-bigquery.svg?branch=master)](https://travis-ci.org/HotelsDotCom/circus-train-bigquery) [![Coverage Status](https://coveralls.io/repos/github/HotelsDotCom/circus-train-bigquery/badge.svg?branch=master)](https://coveralls.io/github/HotelsDotCom/circus-train-bigquery?branch=master) ![GitHub license](https://img.shields.io/github/license/HotelsDotCom/circus-train.svg)
 
 ## Installation
-* In order to be used by Circus Train the above `circus-train-bigquery` jar need to be added to Circus Train's classpath.  It is highly recommended that the version of this library and the version of Circus Train are identical. The recommended way to make this extension available on the classpath is to store it in a standard location
+* In order to be used by Circus Train the above `circus-train-bigquery` jar must be added to Circus Train's classpath.  It is highly recommended that the version of this library and the version of Circus Train are identical. The recommended way to make this extension available on the classpath is to store it in a standard location
 and then add this to the `CIRCUS_TRAIN_CLASSPATH` environment variable (e.g. via a startup script):
 
     export CIRCUS_TRAIN_CLASSPATH=$CIRCUS_TRAIN_CLASSPATH:/opt/circus-train-big-query/lib/*
