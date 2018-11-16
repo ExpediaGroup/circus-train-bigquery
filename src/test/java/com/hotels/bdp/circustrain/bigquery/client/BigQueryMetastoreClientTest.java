@@ -68,7 +68,7 @@ public class BigQueryMetastoreClientTest {
     hiveTable.setDbName(databaseName);
     bigQueryMetastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, extractionService, cache, factory);
 
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 10; i++) {
       partitions.add(new Partition());
     }
     when(partitionedTableService.getTable()).thenReturn(hiveTable);
