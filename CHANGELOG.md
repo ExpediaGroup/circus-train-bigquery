@@ -1,4 +1,4 @@
-# [5.0.0] - 2018-11-15
+# [5.0.0] - 2018-11-16
 ### Changed
 * Circus Train version upgraded to 13.0.0 (was 12.0.0). Note that this change is _not_ backwards compatible as this BigQuery extension now needs to be explicitly added to the Circus Train classpath using Circus Train's [standard extension loading mechanism](https://github.com/HotelsDotCom/circus-train#loading-extensions). See [#20](https://github.com/HotelsDotCom/circus-train-bigquery/issues/20).
 
