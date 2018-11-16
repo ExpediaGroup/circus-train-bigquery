@@ -1,6 +1,7 @@
 # TBD
 ### Changed
 * Partition columns are set to type `string`, regardless of the type of the column that is used to partition the table.
+* If an error occurs while deleting an intermediate table during cleanup, this will no longer fail the replication. Instead, it will log the error and continue.
 
 # [5.0.0] - 2018-11-16
 ### Changed
