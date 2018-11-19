@@ -50,6 +50,7 @@ public class SchemaExtractorTest {
   private @Mock Blob blob;
 
   private String expectedSchema;
+  private final SchemaExtractor schemaExtractor = new SchemaExtractor();
 
   @Before
   public void setUp() throws IOException {
@@ -61,13 +62,13 @@ public class SchemaExtractorTest {
 
   @Test
   public void typical() {
-    String schema = SchemaExtractor.getSchemaFromStorage(storage, extractionUri);
+    String schema = schemaExtractor.getSchemaFromStorage(storage, extractionUri);
     assertThat(schema, is(expectedSchema));
   }
 
   @Test(expected = CircusTrainException.class)
   public void getSchemaFromInvalidFile() throws IOException {
     when(blob.getContent()).thenReturn(getTestSchema().getBytes());
-    SchemaExtractor.getSchemaFromStorage(storage, extractionUri);
+    schemaExtractor.getSchemaFromStorage(storage, extractionUri);
   }
 }

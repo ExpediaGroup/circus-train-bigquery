@@ -40,7 +40,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.api.gax.paging.Page;
@@ -62,14 +61,14 @@ public class DataCleanerTest {
   private @Mock Bucket bucket;
   private @Mock Blob blob;
   private @Mock ExecutorService executorService;
-  private @Mock Future future;
-  private @Mock Page pages;
+  private @Mock Future<Void> future;
+  private @Mock Page<Blob> pages;
   private @Mock Storage storage;
   private @Mock Table table;
-  private DataCleaner cleaner;
   private final ExtractionUri extractionUri = new ExtractionUri();
   private final TableId tableId = TableId.of("dataset", "table");
   private ExtractionContainer extractionContainer;
+  private DataCleaner cleaner;
 
   @Before
   public void init() throws ExecutionException, InterruptedException {
@@ -89,10 +88,10 @@ public class DataCleanerTest {
 
   private void initExecutor() throws InterruptedException, ExecutionException {
     when(executorService.submit(any(Callable.class))).thenReturn(future);
-    Mockito.when(executorService.submit(Matchers.argThat(new ArgumentMatcher<Callable>() {
+    when(executorService.submit(Matchers.argThat(new ArgumentMatcher<Callable<Void>>() {
       @Override
       public boolean matches(Object argument) {
-        Callable callable = (Callable) argument;
+        Callable<Void> callable = (Callable) argument;
         try {
           callable.call();
         } catch (Exception e) {

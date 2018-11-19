@@ -15,14 +15,12 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.verify;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +33,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContai
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryPartitionGeneratorTest {
@@ -42,31 +41,32 @@ public class BigQueryPartitionGeneratorTest {
   private @Mock BigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService extractionService;
   private @Mock Partition partition;
+  private @Mock SchemaExtractor schemaExtractor;
+
+  private BigQueryPartitionGenerator generator;
+
   private final String sourceDBName = "db";
   private final String sourceTableName = "tbl";
   private final String partitionKey = "foo";
   private final String partitionValue = "bar";
   private final String destinationBucket = "bucket";
   private final String destinationFolder = "folder";
-  private final List<FieldSchema> cols = new ArrayList<>();
-
-  private BigQueryPartitionGenerator generator;
 
   @Before
   public void init() {
     generator = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName, sourceTableName,
-        partitionKey, partitionValue, destinationBucket, destinationFolder, cols);
+        partitionKey, partitionValue, destinationBucket, destinationFolder, schemaExtractor);
   }
 
   @Test
   public void generatePart() {
     ExtractionUri uri = generator.generatePartition(partition);
-    assertEquals(destinationBucket, uri.getBucket());
-    assertTrue(uri.getFolder().startsWith(destinationFolder));
-    assertTrue(uri.getKey().endsWith(String.format("%s=%s.%s", partitionKey, partitionValue, uri.getExtension())));
+    assertThat(destinationBucket, is(uri.getBucket()));
+    assertThat(uri.getFolder(), startsWith(destinationFolder));
+    assertThat(uri.getKey(), endsWith(String.format("%s=%s.%s", partitionKey, partitionValue, uri.getExtension())));
     ArgumentCaptor<ExtractionContainer> extractionContainerCaptor = ArgumentCaptor.forClass(ExtractionContainer.class);
     verify(extractionService).register(extractionContainerCaptor.capture());
-    assertEquals(extractionContainerCaptor.getValue().getExtractionUri(), uri);
+    assertThat(extractionContainerCaptor.getValue().getExtractionUri(), is(uri));
   }
 
 }

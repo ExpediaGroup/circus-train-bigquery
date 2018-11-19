@@ -99,6 +99,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdateTableSchem
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
 class BigQueryMetastoreClient implements CloseableMetaStoreClient {
@@ -110,16 +111,19 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   private final ExtractionService extractionService;
   private final TableServiceFactory tableServiceFactory;
   private final HiveTableCache cache;
+  private final SchemaExtractor schemaExtractor;
 
   BigQueryMetastoreClient(
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       HiveTableCache cache,
-      TableServiceFactory tableServiceFactory) {
+      TableServiceFactory tableServiceFactory,
+      SchemaExtractor schemaExtractor) {
     this.bigQueryMetastore = bigQueryMetastore;
     this.extractionService = extractionService;
     this.tableServiceFactory = tableServiceFactory;
     this.cache = cache;
+    this.schemaExtractor = schemaExtractor;
   }
 
   @Override
@@ -152,8 +156,8 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
     com.google.cloud.bigquery.Table bigQueryTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();
-    PostExtractionAction postExtractionAction = new UpdateTableSchemaAction(databaseName, tableName,
-        cache, extractionService.getStorage(), extractionUri);
+    PostExtractionAction postExtractionAction = new UpdateTableSchemaAction(databaseName, tableName, cache,
+        extractionService.getStorage(), extractionUri, schemaExtractor);
     ExtractionContainer container = new ExtractionContainer(bigQueryTable, extractionUri,
         Arrays.asList(postExtractionAction));
     extractionService.register(container);

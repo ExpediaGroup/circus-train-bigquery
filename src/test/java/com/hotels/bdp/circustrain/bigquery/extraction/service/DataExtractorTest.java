@@ -66,11 +66,11 @@ public class DataExtractorTest {
   private @Mock Table table;
   private @Mock Job job;
   private @Mock JobStatus jobStatus;
-  private @Mock Future future;
+  private @Mock Future<Void> future;
   private @Mock ExecutorService executorService;
-  private DataExtractor extractor;
   private final ExtractionUri data = new ExtractionUri();
   private final TableId tableId = TableId.of("dataset", "table");
+  private DataExtractor extractor;
   private ExtractionContainer extractionContainer;
 
   @Before
@@ -89,7 +89,7 @@ public class DataExtractorTest {
   private void initExecutor() throws InterruptedException, ExecutionException {
     when(future.get()).thenReturn(null);
     when(executorService.submit((Callable) anyObject())).thenReturn(future);
-    when(executorService.submit(Matchers.argThat(new ArgumentMatcher<Callable>() {
+    when(executorService.submit(Matchers.argThat(new ArgumentMatcher<Callable<Void>>() {
       @Override
       public boolean matches(Object argument) {
         Callable callable = (Callable) argument;

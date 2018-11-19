@@ -15,8 +15,9 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertThat;
 
 import java.util.List;
 
@@ -30,22 +31,24 @@ import com.google.cloud.bigquery.Schema;
 
 public class HivePartitionKeyAdderTest {
 
+  private final Table table = new Table();
+
   @Test
   public void addWithNullSchemaDoesNothing() {
-    Table table = new Table();
-    assertEquals(table, new HivePartitionKeyAdder(table).add("key", null));
+    Table result = new HivePartitionKeyAdder(table).add("key", null);
+    assertThat(result, is(table));
   }
 
   @Test
   public void addPartitionKeys() {
-    Table table = new Table();
     String key = "foo";
     Schema schema = Schema.of(Field.of(key, LegacySQLTypeName.STRING), Field.of("bar", LegacySQLTypeName.BOOLEAN));
     Table result = new HivePartitionKeyAdder(table).add(key, schema);
     List<FieldSchema> partitionKeys = result.getPartitionKeys();
     FieldSchema partitionKey = partitionKeys.get(0);
-    assertEquals(key, partitionKey.getName());
-    assertEquals("string", partitionKey.getType());
-    assertNotEquals(table, result);
+
+    assertThat(partitionKey.getName(), is(key));
+    assertThat(partitionKey.getType(), is("string"));
+    assertThat(result, not(table));
   }
 }

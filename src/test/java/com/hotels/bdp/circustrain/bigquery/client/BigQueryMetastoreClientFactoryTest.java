@@ -25,7 +25,7 @@ import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 
 public class BigQueryMetastoreClientFactoryTest {
 
-  private final BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null);
+  private final BigQueryMetastoreClientFactory factory = new BigQueryMetastoreClientFactory(null, null, null, null);
 
   @Test
   public void acceptsBigQueryUri() {

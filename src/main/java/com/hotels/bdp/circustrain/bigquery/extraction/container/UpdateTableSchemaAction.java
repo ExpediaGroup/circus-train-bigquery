@@ -31,18 +31,21 @@ public class UpdateTableSchemaAction implements PostExtractionAction {
   private final HiveTableCache cache;
   private final Storage storage;
   private final ExtractionUri extractionUri;
+  private final SchemaExtractor schemaExtractor;
 
   public UpdateTableSchemaAction(
       String databaseName,
       String tableName,
       HiveTableCache cache,
       Storage storage,
-      ExtractionUri extractionUri) {
+      ExtractionUri extractionUri,
+      SchemaExtractor schemaExtractor) {
     this.databaseName = databaseName;
     this.tableName = tableName;
     this.cache = cache;
     this.storage = storage;
     this.extractionUri = extractionUri;
+    this.schemaExtractor = schemaExtractor;
   }
 
   @Override
@@ -51,7 +54,7 @@ public class UpdateTableSchemaAction implements PostExtractionAction {
     if (table == null) {
       throw new CircusTrainException("Unable to find pre-cached table: " + databaseName + "." + tableName);
     }
-    String schema = SchemaExtractor.getSchemaFromStorage(storage, extractionUri);
+    String schema = schemaExtractor.getSchemaFromStorage(storage, extractionUri);
     table.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
   }
 

@@ -17,6 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.extraction.container;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
@@ -29,41 +30,38 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.google.api.gax.paging.Page;
-import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.client.HiveTableCache;
 import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
-import com.hotels.bdp.circustrain.bigquery.util.SchemaUtils;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UpdateTableSchemaActionTest {
 
   private @Mock Storage storage;
-  private @Mock Blob blob;
-  private @Mock Page<Blob> blobs;
   private @Mock ExtractionUri extractionUri;
+  private @Mock SchemaExtractor schemaExtractor;
 
   private UpdateTableSchemaAction updateTableSchemaAction;
   private final String databaseName = "database";
   private final String tableName = "table";
   private final HiveTableCache cache = new HiveTableCache();
   private final Table table = new Table();
+  private final String schema = "schema";
 
   @Before
   public void setUp() {
-    updateTableSchemaAction = new UpdateTableSchemaAction(databaseName, tableName, cache, storage,
-        extractionUri);
+    updateTableSchemaAction = new UpdateTableSchemaAction(databaseName, tableName, cache, storage, extractionUri,
+        schemaExtractor);
   }
 
   @Test
   public void typical() throws IOException {
+    when(schemaExtractor.getSchemaFromStorage(storage, extractionUri)).thenReturn(schema);
     setUpTable();
     cache.put(table);
-    SchemaUtils.setUpSchemaMocks(storage, blob, blobs);
-    String schema = SchemaUtils.getTestSchema();
     updateTableSchemaAction.run();
     assertThat(table.getSd().getSerdeInfo().getParameters().get(AvroConstants.SCHEMA_PARAMETER), is(schema));
   }
@@ -78,5 +76,11 @@ public class UpdateTableSchemaActionTest {
     table.setDbName(databaseName);
     table.setSd(new StorageDescriptor());
     table.getSd().setSerdeInfo(new SerDeInfo());
+  }
+
+  @Test(expected = CircusTrainException.class)
+  public void runActionsWithPartitionSchemaUpdateError() {
+    when(schemaExtractor.getSchemaFromStorage(storage, extractionUri)).thenThrow(new CircusTrainException("error"));
+    updateTableSchemaAction.run();
   }
 }

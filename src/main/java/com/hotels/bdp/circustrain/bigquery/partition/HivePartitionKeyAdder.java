@@ -23,10 +23,9 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Schema;
 
-import com.hotels.bdp.circustrain.bigquery.conversion.BigQueryToHiveTypeConverter;
-
 public class HivePartitionKeyAdder {
 
+  private final String FIELD_SCHEMA_TYPE = "string";
   private final Table table;
 
   public HivePartitionKeyAdder(Table table) {
@@ -40,13 +39,13 @@ public class HivePartitionKeyAdder {
 
     Table newTable = new Table(table);
 
-    BigQueryToHiveTypeConverter typeConverter = new BigQueryToHiveTypeConverter();
     for (Field field : filteredTableSchema.getFields()) {
       String fieldName = field.getName().toLowerCase().trim();
       if (partitionKey.equals(fieldName)) {
         FieldSchema fieldSchema = new FieldSchema();
         fieldSchema.setName(fieldName);
-        fieldSchema.setType(typeConverter.convert(field.getType().toString()).toLowerCase());
+        // all partition types are string
+        fieldSchema.setType(FIELD_SCHEMA_TYPE);
         newTable.addToPartitionKeys(fieldSchema);
       }
     }

@@ -15,15 +15,25 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
 public class PartitionQueryFactoryTest {
+
+  private final Table table = new Table();
+  private final String partitionKey = "foo";
+  private final String databaseName = "db";
+  private final String tableName = "tbl";
+
+  @Before
+  public void setUp() {
+    table.setDbName(databaseName);
+    table.setTableName(tableName);
+  }
 
   @Test(expected = IllegalStateException.class)
   public void notConfiguredThrowsException() {
@@ -37,28 +47,19 @@ public class PartitionQueryFactoryTest {
 
   @Test
   public void configurePartitionByOnly() {
-    String partitionKey = "foo";
-    Table table = new Table();
-    String dbName = "db";
-    String tblName = "tbl";
-    table.setDbName(dbName);
-    table.setTableName(tblName);
-    String expected = String.format("select %s from %s.%s group by %s order by %s", partitionKey, dbName, tblName,
-        partitionKey, partitionKey);
-    assertEquals(expected, new PartitionQueryFactory().newInstance(table, partitionKey, null));
+    String expected = String
+        .format("select distinct(%s) from %s.%s order by %s", partitionKey, databaseName, tableName, partitionKey);
+    String query = new PartitionQueryFactory().newInstance(table, partitionKey, null);
+    assertThat(query, is(expected));
   }
 
   @Test
   public void configurePartitionByAndPartitionFilter() {
-    String partitionKey = "foo";
     String partitionFilter = "foo > 5";
-    Table table = new Table();
-    String dbName = "db";
-    String tblName = "tbl";
-    table.setDbName(dbName);
-    table.setTableName(tblName);
-    String expected = String.format("select %s from %s.%s where %s group by %s order by %s", partitionKey, dbName,
-        tblName, partitionFilter, partitionKey, partitionKey);
-    assertEquals(expected, new PartitionQueryFactory().newInstance(table, partitionKey, partitionFilter));
+    String expected = String
+        .format("select distinct(%s) from %s.%s where %s order by %s", partitionKey, databaseName, tableName,
+            partitionFilter, partitionKey);
+    String query = new PartitionQueryFactory().newInstance(table, partitionKey, partitionFilter);
+    assertThat(query, is(expected));
   }
 }
