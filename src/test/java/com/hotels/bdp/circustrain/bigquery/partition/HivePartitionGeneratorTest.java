@@ -42,6 +42,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContai
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HivePartitionGeneratorTest {
@@ -52,6 +53,7 @@ public class HivePartitionGeneratorTest {
   private @Mock ExtractionContainer container;
   private @Mock FieldValue fieldValue;
   private @Mock FieldValueList row;
+  private @Mock SchemaExtractor schemaExtractor;
 
   private HivePartitionGenerator hivePartitionGenerator;
   private final Table table = new Table();
@@ -76,7 +78,7 @@ public class HivePartitionGeneratorTest {
     table.setSd(storageDescriptor);
     fieldSchema.setName(partitionKey);
 
-    hivePartitionGenerator = new HivePartitionGenerator(table, metastore, service, factory);
+    hivePartitionGenerator = new HivePartitionGenerator(table, metastore, service, factory, schemaExtractor);
     when(factory.newInstance()).thenReturn(container);
     when(container.getExtractionUri()).thenReturn(extractionUri);
     when(row.get(partitionKey)).thenReturn(fieldValue);

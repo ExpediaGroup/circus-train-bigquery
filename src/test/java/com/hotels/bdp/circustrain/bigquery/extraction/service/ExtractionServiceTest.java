@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -36,17 +37,13 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.storage.Storage;
 
-import com.hotels.bdp.circustrain.bigquery.client.HiveTableCache;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.DeleteTableAction;
+import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdatePartitionSchemaAction;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdateTableSchemaAction;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ExtractionServiceTest {
@@ -55,9 +52,6 @@ public class ExtractionServiceTest {
   private @Mock DataCleaner cleaner;
   private @Mock Table table;
   private @Mock ExtractionContainer container;
-  private @Mock DeleteTableAction deleteTableAction;
-  private @Mock UpdateTableSchemaAction updateTableSchemaAction;
-  private @Mock UpdatePartitionSchemaAction updatePartitionSchemaAction;
   private @Mock Partition partition;
   private @Mock ExtractionUri extractionUri;
   private @Mock Storage storage;
@@ -103,60 +97,29 @@ public class ExtractionServiceTest {
 
   @Test
   public void runActions() {
-    actions.add(updatePartitionSchemaAction);
-    actions.add(deleteTableAction);
-    actions.add(updateTableSchemaAction);
+    PostExtractionAction action1 = mock(PostExtractionAction.class);
+    PostExtractionAction action2 = mock(PostExtractionAction.class);
+    actions.add(action1);
+    actions.add(action2);
     service.register(container);
     service.extract();
-    verify(deleteTableAction).run();
-    verify(updateTableSchemaAction).run();
-    verify(updatePartitionSchemaAction).run();
+    verify(action1).run();
+    verify(action2).run();
   }
 
   @Test
-  public void runActionsWithTableDeletionError() {
-    DeleteTableAction deleteTableAction = new DeleteTableAction(table);
-    doThrow(BigQueryException.class).when(table).delete();
-    actions.add(updatePartitionSchemaAction);
-    actions.add(deleteTableAction);
-    actions.add(updateTableSchemaAction);
+  public void runActionsWithException() {
+    PostExtractionAction action1 = mock(PostExtractionAction.class);
+    PostExtractionAction action2 = mock(PostExtractionAction.class);
+    doThrow(new CircusTrainException("error")).when(action1).run();
+    actions.add(action1);
+    actions.add(action2);
     service.register(container);
-    service.extract();
-    verify(updatePartitionSchemaAction).run();
-    verify(updateTableSchemaAction).run();
-  }
-
-  @Test
-  public void runActionsWithPartitionSchemaUpdateError() {
-    UpdatePartitionSchemaAction updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition, storage,
-        extractionUri);
-    actions.add(deleteTableAction);
-    actions.add(updatePartitionSchemaAction);
-    actions.add(updateTableSchemaAction);
     try {
-      service.register(container);
       service.extract();
-      fail("NullPointerException did not occur");
-    } catch (Exception e) {
-      verify(deleteTableAction).run();
-      verifyZeroInteractions(updateTableSchemaAction);
-    }
-  }
-
-  @Test
-  public void runActionsWithTableSchemaUpdateError() {
-    UpdateTableSchemaAction updateTableSchemaAction = new UpdateTableSchemaAction("databaseName", "tableName",
-        new HiveTableCache(), storage, extractionUri);
-    actions.add(deleteTableAction);
-    actions.add(updateTableSchemaAction);
-    actions.add(updatePartitionSchemaAction);
-    try {
-      service.register(container);
-      service.extract();
-      fail("NullPointerException did not occur");
-    } catch (Exception e) {
-      verify(deleteTableAction).run();
-      verifyZeroInteractions(updatePartitionSchemaAction);
+      fail("Exception should be thrown");
+    } catch (CircusTrainException e) {
+      verifyZeroInteractions(action2);
     }
   }
 

@@ -41,6 +41,7 @@ import com.hotels.bdp.circustrain.bigquery.partition.PartitionQueryFactory;
 import com.hotels.bdp.circustrain.bigquery.table.service.partitioned.PartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.table.service.unpartitioned.UnpartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TableServiceFactoryTest {
@@ -48,6 +49,7 @@ public class TableServiceFactoryTest {
   private @Mock BigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService service;
   private @Mock PartitioningConfiguration configuration;
+  private @Mock SchemaExtractor schemaExtractor;
 
   private TableServiceFactory tableServiceFactory;
   private final PartitionQueryFactory partitionQueryFactory = new PartitionQueryFactory();
@@ -56,8 +58,8 @@ public class TableServiceFactoryTest {
 
   @Before
   public void setUp() {
-    tableServiceFactory = new TableServiceFactory(bigQueryMetastore, service, map, partitionQueryFactory,
-        configuration);
+    tableServiceFactory = new TableServiceFactory(bigQueryMetastore, service, map, partitionQueryFactory, configuration,
+        schemaExtractor);
     table.setDbName("database");
     table.setTableName("table");
     when(configuration.getPartitionByFor(eq(table))).thenReturn("column");
@@ -75,8 +77,8 @@ public class TableServiceFactoryTest {
     Map<Table, TableService> map = mock(Map.class);
     when(map.containsKey(eq(table))).thenReturn(false).thenReturn(true);
 
-    tableServiceFactory = new TableServiceFactory(bigQueryMetastore, service, map, partitionQueryFactory,
-        configuration);
+    tableServiceFactory = new TableServiceFactory(bigQueryMetastore, service, map, partitionQueryFactory, configuration,
+        schemaExtractor);
     tableServiceFactory.newInstance(table);
     tableServiceFactory.newInstance(table);
     verify(map).put(eq(table), any(TableService.class));

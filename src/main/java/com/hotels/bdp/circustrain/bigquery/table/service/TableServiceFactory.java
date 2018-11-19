@@ -36,6 +36,7 @@ import com.hotels.bdp.circustrain.bigquery.partition.PartitionQueryFactory;
 import com.hotels.bdp.circustrain.bigquery.table.service.partitioned.PartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.table.service.unpartitioned.UnpartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 @Component
 public class TableServiceFactory {
@@ -45,15 +46,17 @@ public class TableServiceFactory {
   private final Map<Table, TableService> cache;
   private final PartitionQueryFactory partitionQueryFactory;
   private final PartitioningConfiguration configuration;
+  private final SchemaExtractor schemaExtractor;
 
   @Autowired
   public TableServiceFactory(
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       PartitionQueryFactory partitionQueryFactory,
-      PartitioningConfiguration configuration) {
-    this(bigQueryMetastore, extractionService, new HashMap<Table, TableService>(), partitionQueryFactory,
-        configuration);
+      PartitioningConfiguration configuration,
+      SchemaExtractor schemaExtractor) {
+    this(bigQueryMetastore, extractionService, new HashMap<Table, TableService>(), partitionQueryFactory, configuration,
+        schemaExtractor);
   }
 
   @VisibleForTesting
@@ -62,12 +65,14 @@ public class TableServiceFactory {
       ExtractionService extractionService,
       Map<Table, TableService> cache,
       PartitionQueryFactory partitionQueryFactory,
-      PartitioningConfiguration configuration) {
+      PartitioningConfiguration configuration,
+      SchemaExtractor schemaExtractor) {
     this.bigQueryMetastore = bigQueryMetastore;
     this.extractionService = extractionService;
     this.cache = cache;
     this.partitionQueryFactory = partitionQueryFactory;
     this.configuration = configuration;
+    this.schemaExtractor = schemaExtractor;
   }
 
   public TableService newInstance(Table hiveTable) {
@@ -88,7 +93,7 @@ public class TableServiceFactory {
           tableName, sqlFilterQuery);
       HivePartitionKeyAdder adder = new HivePartitionKeyAdder(hiveTable);
       HivePartitionGenerator hivePartitionGenerator = new HivePartitionGenerator(hiveTable, bigQueryMetastore,
-          extractionService);
+          extractionService, schemaExtractor);
       tableService = new PartitionedTableService(partitionBy, filterer, adder, hivePartitionGenerator);
     } else {
       tableService = new UnpartitionedTableService(hiveTable);

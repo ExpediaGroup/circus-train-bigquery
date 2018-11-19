@@ -17,6 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.extraction.container;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
@@ -29,37 +30,41 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.google.api.gax.paging.Page;
-import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 
+import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.util.AvroConstants;
-import com.hotels.bdp.circustrain.bigquery.util.SchemaUtils;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UpdatePartitionSchemaActionTest {
 
   private @Mock Storage storage;
-  private @Mock Blob blob;
-  private @Mock Page<Blob> blobs;
   private @Mock ExtractionUri extractionUri;
-  private final Partition partition = new Partition();
+  private @Mock SchemaExtractor schemaExtractor;
+
   private UpdatePartitionSchemaAction updatePartitionSchemaAction;
-  private String schema;
+  private final Partition partition = new Partition();
+  private final String schema = "schema";
 
   @Before
   public void setUp() throws IOException {
     partition.setSd(new StorageDescriptor());
     partition.getSd().setSerdeInfo(new SerDeInfo());
-    SchemaUtils.setUpSchemaMocks(storage, blob, blobs);
-    schema = SchemaUtils.getTestSchema();
+    updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition, storage, extractionUri, schemaExtractor);
   }
 
   @Test
   public void typical() throws IOException {
-    updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition, storage, extractionUri);
+    when(schemaExtractor.getSchemaFromStorage(storage, extractionUri)).thenReturn(schema);
     updatePartitionSchemaAction.run();
     assertThat(partition.getSd().getSerdeInfo().getParameters().get(AvroConstants.SCHEMA_PARAMETER), is(schema));
+  }
+
+  @Test(expected = CircusTrainException.class)
+  public void runActionsWithPartitionSchemaUpdateError() {
+    when(schemaExtractor.getSchemaFromStorage(storage, extractionUri)).thenThrow(new CircusTrainException("error"));
+    updatePartitionSchemaAction.run();
   }
 
 }

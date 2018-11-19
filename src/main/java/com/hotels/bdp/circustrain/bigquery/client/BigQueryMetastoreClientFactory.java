@@ -23,6 +23,7 @@ import com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 import com.hotels.hcommon.hive.metastore.client.api.ConditionalMetaStoreClientFactory;
 import com.hotels.hcommon.hive.metastore.exception.MetaStoreClientException;
@@ -36,9 +37,10 @@ public class BigQueryMetastoreClientFactory implements ConditionalMetaStoreClien
   BigQueryMetastoreClientFactory(
       BigQueryMetastore bigQueryMetastore,
       ExtractionService service,
-      TableServiceFactory tableServiceFactory) {
-    metastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, service, new HiveTableCache(),
-        tableServiceFactory);
+      TableServiceFactory tableServiceFactory,
+      SchemaExtractor schemaExtractor) {
+    metastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, service, new HiveTableCache(), tableServiceFactory,
+        schemaExtractor);
   }
 
   @Override

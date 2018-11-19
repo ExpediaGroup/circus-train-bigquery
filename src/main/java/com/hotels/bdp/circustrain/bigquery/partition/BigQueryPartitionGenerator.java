@@ -34,6 +34,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAc
 import com.hotels.bdp.circustrain.bigquery.extraction.container.UpdatePartitionSchemaAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 class BigQueryPartitionGenerator {
 
@@ -48,6 +49,8 @@ class BigQueryPartitionGenerator {
   private final String destinationBucket;
   private final String destinationFolder;
 
+  private final SchemaExtractor schemaExtractor;
+
   BigQueryPartitionGenerator(
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
@@ -56,7 +59,8 @@ class BigQueryPartitionGenerator {
       String partitionKey,
       String partitionValue,
       String destinationBucket,
-      String destinationFolder) {
+      String destinationFolder,
+      SchemaExtractor schemaExtractor) {
     this.bigQueryMetastore = bigQueryMetastore;
     this.extractionService = extractionService;
     this.partitionValue = partitionValue;
@@ -65,6 +69,7 @@ class BigQueryPartitionGenerator {
     this.partitionKey = partitionKey;
     this.destinationBucket = destinationBucket;
     this.destinationFolder = destinationFolder;
+    this.schemaExtractor = schemaExtractor;
   }
 
   ExtractionUri generatePartition(Partition partition) {
@@ -98,7 +103,7 @@ class BigQueryPartitionGenerator {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
     PostExtractionAction deleteTableAction = new DeleteTableAction(table);
     PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition,
-        extractionService.getStorage(), extractionUri);
+        extractionService.getStorage(), extractionUri, schemaExtractor);
     ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri,
         Arrays.asList(deleteTableAction, updatePartitionSchemaAction));
     extractionService.register(toRegister);

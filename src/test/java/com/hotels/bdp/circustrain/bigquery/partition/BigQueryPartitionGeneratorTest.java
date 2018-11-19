@@ -33,6 +33,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContai
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryPartitionGeneratorTest {
@@ -40,6 +41,7 @@ public class BigQueryPartitionGeneratorTest {
   private @Mock BigQueryMetastore bigQueryMetastore;
   private @Mock ExtractionService extractionService;
   private @Mock Partition partition;
+  private @Mock SchemaExtractor schemaExtractor;
 
   private BigQueryPartitionGenerator generator;
 
@@ -53,7 +55,7 @@ public class BigQueryPartitionGeneratorTest {
   @Before
   public void init() {
     generator = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName, sourceTableName,
-        partitionKey, partitionValue, destinationBucket, destinationFolder);
+        partitionKey, partitionValue, destinationBucket, destinationFolder, schemaExtractor);
   }
 
   @Test

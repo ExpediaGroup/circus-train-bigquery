@@ -42,6 +42,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContai
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 public class HivePartitionGenerator {
 
@@ -52,12 +53,15 @@ public class HivePartitionGenerator {
   private final ExtractionService extractionService;
   private final ExtractionContainerFactory extractionContainerFactory;
 
+  private final SchemaExtractor schemaExtractor;
+
   public HivePartitionGenerator(
       Table sourceTableAsHive,
       BigQueryMetastore bigQueryMetastore,
-      ExtractionService extractionService) {
+      ExtractionService extractionService,
+      SchemaExtractor schemaExtractor) {
     this(sourceTableAsHive, bigQueryMetastore, extractionService,
-        new ExtractionContainerFactory(extractionService, bigQueryMetastore, sourceTableAsHive));
+        new ExtractionContainerFactory(extractionService, bigQueryMetastore, sourceTableAsHive), schemaExtractor);
   }
 
   @VisibleForTesting
@@ -65,11 +69,13 @@ public class HivePartitionGenerator {
       Table sourceTableAsHive,
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
-      ExtractionContainerFactory extractionContainerFactory) {
+      ExtractionContainerFactory extractionContainerFactory,
+      SchemaExtractor schemaExtractor) {
     this.sourceTableAsHive = sourceTableAsHive;
     this.bigQueryMetastore = bigQueryMetastore;
     this.extractionService = extractionService;
     this.extractionContainerFactory = extractionContainerFactory;
+    this.schemaExtractor = schemaExtractor;
   }
 
   public List<Partition> generate(
@@ -169,7 +175,8 @@ public class HivePartitionGenerator {
         String formattedValue = PartitionValueFormatter.formatValue(partitionFieldValue, partitionKeyType);
         Partition partition = new BigQueryToHivePartitionConverter().convert();
         ExtractionUri extractionUri = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName,
-            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder).generatePartition(partition);
+            sourceTableName, partitionKey, formattedValue, tableBucket, tableFolder, schemaExtractor)
+                .generatePartition(partition);
         setPartitionParameters(partition, sourceTableAsHive.getDbName(), sourceTableAsHive.getTableName(),
             extractionUri.getTableLocation(), originalValue);
 

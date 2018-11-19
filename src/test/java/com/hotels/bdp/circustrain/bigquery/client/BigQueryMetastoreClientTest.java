@@ -44,6 +44,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.table.service.TableServiceFactory;
 import com.hotels.bdp.circustrain.bigquery.table.service.partitioned.PartitionedTableService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
+import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BigQueryMetastoreClientTest {
@@ -56,6 +57,7 @@ public class BigQueryMetastoreClientTest {
   private @Mock PartitionedTableService partitionedTableService;
   private @Mock BigQueryMetastore bigQueryMetastore;
   private @Mock com.google.cloud.bigquery.Table table;
+  private @Mock SchemaExtractor schemaExtractor;
 
   private BigQueryMetastoreClient bigQueryMetastoreClient;
   private List<Partition> partitions = new ArrayList<>();
@@ -66,7 +68,8 @@ public class BigQueryMetastoreClientTest {
   public void init() throws IOException {
     hiveTable.setTableName(tableName);
     hiveTable.setDbName(databaseName);
-    bigQueryMetastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, extractionService, cache, factory);
+    bigQueryMetastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, extractionService, cache, factory,
+        schemaExtractor);
 
     for (int i = 0; i < 10; i++) {
       partitions.add(new Partition());
@@ -109,7 +112,8 @@ public class BigQueryMetastoreClientTest {
   @Test
   public void getTable() throws TException, IOException {
     HiveTableCache cache = new HiveTableCache();
-    bigQueryMetastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, extractionService, cache, factory);
+    bigQueryMetastoreClient = new BigQueryMetastoreClient(bigQueryMetastore, extractionService, cache, factory,
+        schemaExtractor);
     when(factory.newInstance(any(Table.class))).thenReturn(partitionedTableService);
 
     // check that the cache has been populated after the first run

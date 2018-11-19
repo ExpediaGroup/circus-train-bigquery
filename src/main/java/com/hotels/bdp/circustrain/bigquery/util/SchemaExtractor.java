@@ -34,9 +34,7 @@ import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 
 public class SchemaExtractor {
 
-  private SchemaExtractor() {}
-
-  public static String getSchemaFromStorage(Storage storage, ExtractionUri extractionUri) {
+  public String getSchemaFromStorage(Storage storage, ExtractionUri extractionUri) {
     Page<Blob> blobs = storage
         .list(extractionUri.getBucket(), BlobListOption.currentDirectory(),
             BlobListOption.prefix(extractionUri.getFolder() + "/"));
@@ -44,7 +42,7 @@ public class SchemaExtractor {
     return getSchemaFromFile(file);
   }
 
-  private static String getSchemaFromFile(Blob file) {
+  private String getSchemaFromFile(Blob file) {
     try (SeekableByteArrayInput input = new SeekableByteArrayInput(file.getContent())) {
       Schema schema = getAvroSchema(input);
       return schema.toString();
@@ -53,7 +51,7 @@ public class SchemaExtractor {
     }
   }
 
-  private static Schema getAvroSchema(SeekableByteArrayInput input) {
+  private Schema getAvroSchema(SeekableByteArrayInput input) {
     DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
     try (DataFileReader<GenericRecord> dataFileReader = new DataFileReader<>(input, datumReader)) {
       return dataFileReader.getSchema();

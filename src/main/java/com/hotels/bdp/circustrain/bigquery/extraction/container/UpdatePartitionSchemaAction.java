@@ -27,16 +27,22 @@ public class UpdatePartitionSchemaAction implements PostExtractionAction {
   private final Partition partition;
   private final Storage storage;
   private final ExtractionUri extractionUri;
+  private final SchemaExtractor schemaExtractor;
 
-  public UpdatePartitionSchemaAction(Partition partition, Storage storage, ExtractionUri extractionUri) {
+  public UpdatePartitionSchemaAction(
+      Partition partition,
+      Storage storage,
+      ExtractionUri extractionUri,
+      SchemaExtractor schemaExtractor) {
     this.partition = partition;
     this.storage = storage;
     this.extractionUri = extractionUri;
+    this.schemaExtractor = schemaExtractor;
   }
 
   @Override
   public void run() {
-    String schema = SchemaExtractor.getSchemaFromStorage(storage, extractionUri);
+    String schema = schemaExtractor.getSchemaFromStorage(storage, extractionUri);
     partition.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
   }
 
