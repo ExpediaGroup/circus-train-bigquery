@@ -23,6 +23,7 @@ import org.apache.avro.file.SeekableByteArrayInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
+import org.springframework.stereotype.Component;
 
 import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
@@ -32,6 +33,7 @@ import com.google.cloud.storage.Storage.BlobListOption;
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 
+@Component
 public class SchemaExtractor {
 
   public String getSchemaFromStorage(Storage storage, ExtractionUri extractionUri) {
