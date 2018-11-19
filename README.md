@@ -19,7 +19,9 @@ Another option is to place the jar file in the Circus Train `lib` folder which w
 ## Configuration
 * Add the following to the Circus Train YAML configuration in order to load the BigQuery extension via Circus Train's [extension loading mechanism](https://github.com/HotelsDotCom/circus-train#loading-extensions):
 
+```
      extension-packages: com.hotels.bdp.circustrain.bigquery
+```
      
 * Configure Circus Train as you would for a copy job from Google Cloud [Configuration](https://github.com/HotelsDotCom/circus-train/tree/master/circus-train-gcp)
 * Provide the Google Cloud project ID that your BigQuery instance resides in as your `source-catalog` `hive-metastore-uris` parameter using the format `hive-metastore-uris: bigquery://<project-id>`
