@@ -39,8 +39,7 @@ public class SchemaUtils {
 
   private static DataFolder dataFolder = new RootDataFolder();
 
-  private SchemaUtils() {
-  }
+  private SchemaUtils() {}
 
   public static String getTestSchema() throws IOException {
     File file = dataFolder.getFile("usa_names_schema.avsc");
@@ -49,16 +48,16 @@ public class SchemaUtils {
   }
 
   public static ReadChannel getTestData() throws IOException {
-    RandomAccessFile file = new RandomAccessFile(dataFolder.getFile("usa_names.avro"), "r");
-    return new StubReadChannel(file.getChannel());
-
+    return getChannelFromFile("usa_names.avro");
   }
 
   public static ReadChannel getInvalidTestData() throws IOException {
-    try (RandomAccessFile file =
-        new RandomAccessFile(dataFolder.getFile("usa_names_schema.avsc"), "r")) {
-      return new StubReadChannel(file.getChannel());
-    }
+    return getChannelFromFile("invalid_avro.avro");
+  }
+
+  private static ReadChannel getChannelFromFile(String fileName) throws IOException {
+    RandomAccessFile file = new RandomAccessFile(dataFolder.getFile(fileName), "r");
+    return new StubReadChannel(file.getChannel());
   }
 
   public static void setUpSchemaMocks(Storage storage, Blob blob, Page<Blob> blobs)
