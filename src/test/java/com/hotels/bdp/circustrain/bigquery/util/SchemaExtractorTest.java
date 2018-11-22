@@ -21,6 +21,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import static com.hotels.bdp.circustrain.bigquery.util.SchemaUtils.getInvalidTestData;
 import static com.hotels.bdp.circustrain.bigquery.util.SchemaUtils.getTestData;
 import static com.hotels.bdp.circustrain.bigquery.util.SchemaUtils.getTestSchema;
 
@@ -56,7 +57,7 @@ public class SchemaExtractorTest {
   public void setUp() throws IOException {
     when(storage.list(anyString(), any(BlobListOption.class), any(BlobListOption.class))).thenReturn(blobs);
     when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));
-    when(blob.getContent()).thenReturn(getTestData());
+    when(blob.reader()).thenReturn(getTestData());
     expectedSchema = getTestSchema();
   }
 
@@ -68,7 +69,7 @@ public class SchemaExtractorTest {
 
   @Test(expected = CircusTrainException.class)
   public void getSchemaFromInvalidFile() throws IOException {
-    when(blob.getContent()).thenReturn(getTestSchema().getBytes());
+    when(blob.reader()).thenReturn(getInvalidTestData());
     schemaExtractor.getSchemaFromStorage(storage, extractionUri);
   }
 }

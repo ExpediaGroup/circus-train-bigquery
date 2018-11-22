@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -28,6 +29,7 @@ import fm.last.commons.test.file.DataFolder;
 import fm.last.commons.test.file.RootDataFolder;
 
 import com.google.api.gax.paging.Page;
+import com.google.cloud.ReadChannel;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.Storage.BlobListOption;
@@ -45,17 +47,25 @@ public class SchemaUtils {
     return content;
   }
 
-  public static byte[] getTestData() throws IOException {
-    File file = dataFolder.getFile("usa_names.avro");
-    byte[] content = Files.asByteSource(file).read();
-    return content;
+  public static ReadChannel getTestData() throws IOException {
+    return getChannelFromFile("usa_names.avro");
   }
 
-  public static void setUpSchemaMocks(Storage storage, Blob blob, Page<Blob> blobs) throws IOException {
-    byte[] content = SchemaUtils.getTestData();
-    when(storage.list(anyString(), any(BlobListOption.class), any(BlobListOption.class))).thenReturn(blobs);
+  public static ReadChannel getInvalidTestData() throws IOException {
+    return getChannelFromFile("invalid_avro.avro");
+  }
+
+  private static ReadChannel getChannelFromFile(String fileName) throws IOException {
+    RandomAccessFile file = new RandomAccessFile(dataFolder.getFile(fileName), "r");
+    return new StubReadChannel(file.getChannel());
+  }
+
+  public static void setUpSchemaMocks(Storage storage, Blob blob, Page<Blob> blobs)
+      throws IOException {
+    when(storage.list(anyString(), any(BlobListOption.class), any(BlobListOption.class)))
+    .thenReturn(blobs);
     when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));
-    when(blob.getContent()).thenReturn(content);
+    when(blob.reader()).thenReturn(getTestData());
   }
 
 }

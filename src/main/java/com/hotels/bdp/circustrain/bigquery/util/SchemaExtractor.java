@@ -16,10 +16,12 @@
 package com.hotels.bdp.circustrain.bigquery.util;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 
 import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileReader;
-import org.apache.avro.file.SeekableByteArrayInput;
+import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
@@ -40,25 +42,26 @@ public class SchemaExtractor {
     Page<Blob> blobs = storage
         .list(extractionUri.getBucket(), BlobListOption.currentDirectory(),
             BlobListOption.prefix(extractionUri.getFolder() + "/"));
-    Blob file = blobs.iterateAll().iterator().next();
-    return getSchemaFromFile(file);
+    Blob blob = blobs.iterateAll().iterator().next();
+    return extractSchemaFromFile(blob);
   }
 
-  private String getSchemaFromFile(Blob file) {
-    try (SeekableByteArrayInput input = new SeekableByteArrayInput(file.getContent())) {
-      Schema schema = getAvroSchema(input);
+  private String extractSchemaFromFile(Blob blob) {
+    try (ReadableByteChannel reader = blob.reader();
+      InputStream input = Channels.newInputStream(reader)) {
+      Schema schema = extractAvroSchema(input);
       return schema.toString();
     } catch (IOException e) {
-      throw new CircusTrainException("Error reading from file", e);
+      throw new CircusTrainException("Error extracting schema from blob", e);
     }
   }
 
-  private Schema getAvroSchema(SeekableByteArrayInput input) {
+  private Schema extractAvroSchema(InputStream input) {
     DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
-    try (DataFileReader<GenericRecord> dataFileReader = new DataFileReader<>(input, datumReader)) {
+    try (DataFileStream<GenericRecord> dataFileReader = new DataFileStream<>(input, datumReader)) {
       return dataFileReader.getSchema();
     } catch (IOException e) {
-      throw new CircusTrainException("Error getting schema from file", e);
+      throw new CircusTrainException("Error extracting schema from inputstream", e);
     }
   }
 }
