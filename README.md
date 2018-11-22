@@ -97,6 +97,13 @@ The BigQuery plugin works by extracting the BigQuery table data into Google Stor
 listeners to convert the BigQuery metadata into a Hive table object. The data is then replicated from source to replica using 
 the metadata from this mocked Hive table.
 
+# Contact
+
+## Mailing List
+If you would like to ask any questions about or discuss Circus Train BigQuery please join the main Circus Train mailing list at 
+
+  [https://groups.google.com/forum/#!forum/circus-train-user](https://groups.google.com/forum/#!forum/circus-train-user)
+
 # Legal
 This project is available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
