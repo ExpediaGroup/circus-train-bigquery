@@ -1,3 +1,8 @@
+# [TBD] - TBD
+### Fixed
+* Read schema from Avro file using a stream instead of entire file to avoid OOM. See [#26](https://github.com/HotelsDotCom/circus-train-bigquery/issues/26).
+
+
 # [5.0.1] - 2018-11-19
 ### Changed
 * Partition columns are set to type `string`, regardless of the type of the column that is used to partition the table.
