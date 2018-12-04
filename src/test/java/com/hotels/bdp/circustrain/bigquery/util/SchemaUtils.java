@@ -60,10 +60,8 @@ public class SchemaUtils {
     return new StubReadChannel(file.getChannel());
   }
 
-  public static void setUpSchemaMocks(Storage storage, Blob blob, Page<Blob> blobs)
-      throws IOException {
-    when(storage.list(anyString(), any(BlobListOption.class), any(BlobListOption.class)))
-    .thenReturn(blobs);
+  public static void setUpSchemaMocks(Storage storage, Blob blob, Page<Blob> blobs) throws IOException {
+    when(storage.list(anyString(), any(BlobListOption.class), any(BlobListOption.class))).thenReturn(blobs);
     when(blobs.iterateAll()).thenReturn(Arrays.asList(blob));
     when(blob.reader()).thenReturn(getTestData());
   }

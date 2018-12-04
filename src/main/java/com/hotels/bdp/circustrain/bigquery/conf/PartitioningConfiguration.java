@@ -28,14 +28,17 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
+import com.hotels.bdp.circustrain.api.Modules;
 import com.hotels.bdp.circustrain.api.conf.SourceTable;
 import com.hotels.bdp.circustrain.api.conf.TableReplication;
 import com.hotels.bdp.circustrain.api.conf.TableReplications;
 import com.hotels.bdp.circustrain.bigquery.util.TableNameFactory;
 
+@Profile({ Modules.REPLICATION })
 @Component
 public class PartitioningConfiguration {
 
@@ -48,8 +51,9 @@ public class PartitioningConfiguration {
     Map<String, Map<String, Object>> replicationConfigMap = new HashMap<>();
     for (TableReplication tableReplication : tableReplications.getTableReplications()) {
       SourceTable sourceTable = tableReplication.getSourceTable();
-      String key = TableNameFactory.newInstance(sourceTable.getDatabaseName().trim().toLowerCase(),
-          sourceTable.getTableName().trim().toLowerCase());
+      String key = TableNameFactory
+          .newInstance(sourceTable.getDatabaseName().trim().toLowerCase(),
+              sourceTable.getTableName().trim().toLowerCase());
       if (replicationConfigMap.containsKey(key)) {
         throw new CircusTrainException(
             "Partitioning cannot be carried out when there are duplicate source tables with partitioning configured");

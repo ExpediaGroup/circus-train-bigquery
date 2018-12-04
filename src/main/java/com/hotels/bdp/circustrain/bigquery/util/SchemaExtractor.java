@@ -25,6 +25,7 @@ import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import com.google.api.gax.paging.Page;
@@ -33,8 +34,10 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.Storage.BlobListOption;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
+import com.hotels.bdp.circustrain.api.Modules;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 
+@Profile({ Modules.REPLICATION })
 @Component
 public class SchemaExtractor {
 
@@ -47,8 +50,7 @@ public class SchemaExtractor {
   }
 
   private String extractSchemaFromFile(Blob blob) {
-    try (ReadableByteChannel reader = blob.reader();
-      InputStream input = Channels.newInputStream(reader)) {
+    try (ReadableByteChannel reader = blob.reader(); InputStream input = Channels.newInputStream(reader)) {
       Schema schema = extractAvroSchema(input);
       return schema.toString();
     } catch (IOException e) {

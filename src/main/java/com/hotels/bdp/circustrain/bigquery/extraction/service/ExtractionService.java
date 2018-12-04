@@ -20,15 +20,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.storage.Storage;
 import com.google.common.annotations.VisibleForTesting;
 
+import com.hotels.bdp.circustrain.api.Modules;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
+@Profile({ Modules.REPLICATION })
 @Component
 public class ExtractionService {
 
