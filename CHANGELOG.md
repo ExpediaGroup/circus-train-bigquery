@@ -1,3 +1,7 @@
+# [5.0.3] - 2018-12-05
+### Fixed
+* Add Spring annotations to all the components that do not need to load during the housekeeping module. See [#27](https://github.com/HotelsDotCom/circus-train-bigquery/issues/28).
+
 # [5.0.2] - 2018-11-22
 ### Fixed
 * Read schema from Avro file using a stream instead of entire file to avoid OOM. See [#26](https://github.com/HotelsDotCom/circus-train-bigquery/issues/26).
