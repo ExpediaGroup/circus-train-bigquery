@@ -22,10 +22,12 @@ import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import com.hotels.bdp.circustrain.api.Modules;
 import com.hotels.bdp.circustrain.bigquery.api.TableService;
 import com.hotels.bdp.circustrain.bigquery.conf.PartitioningConfiguration;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
@@ -38,6 +40,7 @@ import com.hotels.bdp.circustrain.bigquery.table.service.unpartitioned.Unpartiti
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
+@Profile({ Modules.REPLICATION })
 @Component
 public class TableServiceFactory {
 

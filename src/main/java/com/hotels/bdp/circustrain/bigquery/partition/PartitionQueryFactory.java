@@ -21,8 +21,12 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import com.hotels.bdp.circustrain.api.Modules;
+
+@Profile({ Modules.REPLICATION })
 @Component
 public class PartitionQueryFactory {
 

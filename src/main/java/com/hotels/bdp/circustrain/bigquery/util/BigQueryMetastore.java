@@ -21,6 +21,7 @@ import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.thrift.TException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import com.google.cloud.bigquery.BigQuery;
@@ -33,7 +34,9 @@ import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
+import com.hotels.bdp.circustrain.api.Modules;
 
+@Profile({ Modules.REPLICATION })
 @Component
 public class BigQueryMetastore {
 
@@ -89,7 +92,11 @@ public class BigQueryMetastore {
   }
 
   private QueryJobConfiguration configureFilterJob(String databaseName, String tableName, String partitionFilter) {
-    return QueryJobConfiguration.newBuilder(partitionFilter).setDestinationTable(TableId.of(databaseName, tableName))
-        .setUseLegacySql(false).setAllowLargeResults(true).build();
+    return QueryJobConfiguration
+        .newBuilder(partitionFilter)
+        .setDestinationTable(TableId.of(databaseName, tableName))
+        .setUseLegacySql(false)
+        .setAllowLargeResults(true)
+        .build();
   }
 }
