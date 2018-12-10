@@ -15,7 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.util;
 
-public final class AvroConstants {
+public class AvroConstants {
   public static final String SCHEMA_PARAMETER = "avro.schema.literal";
   public static final String INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat";
   public static final String OUTPUT_FORMAT = "org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat";

@@ -136,7 +136,7 @@ public class HivePartitionGenerator {
     return tasks;
   }
 
-  private final class GeneratePartitionTask implements Callable<Optional<Partition>> {
+  private class GeneratePartitionTask implements Callable<Optional<Partition>> {
 
     private final String sourceDBName;
     private final String sourceTableName;

@@ -18,7 +18,7 @@ package com.hotels.bdp.circustrain.bigquery.util;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 
-public final class TableNameFactory {
+public class TableNameFactory {
 
   private TableNameFactory() {}
 
