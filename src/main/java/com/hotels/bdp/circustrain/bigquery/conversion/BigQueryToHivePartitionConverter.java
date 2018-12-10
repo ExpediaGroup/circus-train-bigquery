@@ -69,7 +69,8 @@ public class BigQueryToHivePartitionConverter {
 
   // Work around for issue: https://issues.apache.org/jira/browse/HIVE-18767
   // Delete this code once the fix
-  // (https://github.com/apache/hive/commit/2fe5186a337141b6fd80b40abbc8bc4226bee962#diff-2a1b7c6ec7a77f1ca9ad84225d192e36)
+  // (https://github.com/apache/hive/commit/2fe5186a337141b6fd80b40abbc8bc4226bee962#
+  // diff-2a1b7c6ec7a77f1ca9ad84225d192e36)
   // has been released in Hive 2.3.x
   private void mockStats() {
     for (String key : StatsSetupConst.fastStats) {
