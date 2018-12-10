@@ -25,7 +25,7 @@ import com.google.cloud.bigquery.Schema;
 
 public class HivePartitionKeyAdder {
 
-  private final String FIELD_SCHEMA_TYPE = "string";
+  private final String fieldSchemaType = "string";
   private final Table table;
 
   public HivePartitionKeyAdder(Table table) {
@@ -45,7 +45,7 @@ public class HivePartitionKeyAdder {
         FieldSchema fieldSchema = new FieldSchema();
         fieldSchema.setName(fieldName);
         // all partition types are string
-        fieldSchema.setType(FIELD_SCHEMA_TYPE);
+        fieldSchema.setType(fieldSchemaType);
         newTable.addToPartitionKeys(fieldSchema);
       }
     }

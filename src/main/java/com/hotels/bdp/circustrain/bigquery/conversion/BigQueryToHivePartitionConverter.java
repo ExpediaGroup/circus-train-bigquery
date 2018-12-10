@@ -44,8 +44,8 @@ public class BigQueryToHivePartitionConverter {
     StorageDescriptor sd = new StorageDescriptor();
     sd.setLocation("");
     sd.setNumBuckets(-1);
-    sd.setBucketCols(Collections.<String> emptyList());
-    sd.setSortCols(Collections.<Order> emptyList());
+    sd.setBucketCols(Collections.<String>emptyList());
+    sd.setSortCols(Collections.<Order>emptyList());
     sd.setInputFormat(AvroConstants.INPUT_FORMAT);
     sd.setOutputFormat(AvroConstants.OUTPUT_FORMAT);
     sd.setCompressed(false);
@@ -55,9 +55,9 @@ public class BigQueryToHivePartitionConverter {
     SerDeInfo serDeInfo = new SerDeInfo();
     serDeInfo.setSerializationLib(AvroConstants.SERIALIZATION_LIB);
     SkewedInfo si = new SkewedInfo();
-    si.setSkewedColNames(Collections.<String> emptyList());
-    si.setSkewedColValueLocationMaps(Collections.<List<String>, String> emptyMap());
-    si.setSkewedColValues(Collections.<List<String>> emptyList());
+    si.setSkewedColNames(Collections.<String>emptyList());
+    si.setSkewedColValueLocationMaps(Collections.<List<String>, String>emptyMap());
+    si.setSkewedColValues(Collections.<List<String>>emptyList());
     sd.setSkewedInfo(new SkewedInfo());
     sd.setSerdeInfo(serDeInfo);
     partition.setSd(sd);

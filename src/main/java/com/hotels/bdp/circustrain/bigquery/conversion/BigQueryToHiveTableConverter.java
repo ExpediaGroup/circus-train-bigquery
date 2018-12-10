@@ -17,7 +17,9 @@ package com.hotels.bdp.circustrain.bigquery.conversion;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
@@ -38,14 +40,14 @@ public class BigQueryToHiveTableConverter {
     table.setOwner("");
     table.setLastAccessTime(0);
     table.setRetention(0);
-    table.setParameters(Collections.<String, String> emptyMap());
-    table.setPartitionKeys(Collections.<FieldSchema> emptyList());
+    table.setParameters(Collections.<String, String>emptyMap());
+    table.setPartitionKeys(Collections.<FieldSchema>emptyList());
     StorageDescriptor sd = new StorageDescriptor();
     sd.setLocation("");
     sd.setNumBuckets(-1);
-    sd.setParameters(Collections.<String, String> emptyMap());
-    sd.setBucketCols(Collections.<String> emptyList());
-    sd.setSortCols(Collections.<Order> emptyList());
+    sd.setParameters(Collections.<String, String>emptyMap());
+    sd.setBucketCols(Collections.<String>emptyList());
+    sd.setSortCols(Collections.<Order>emptyList());
     sd.setCols(new ArrayList<FieldSchema>());
     sd.setInputFormat(AvroConstants.INPUT_FORMAT);
     sd.setOutputFormat(AvroConstants.OUTPUT_FORMAT);
@@ -55,15 +57,17 @@ public class BigQueryToHiveTableConverter {
     SerDeInfo serDeInfo = new SerDeInfo();
     serDeInfo.setSerializationLib(AvroConstants.SERIALIZATION_LIB);
     SkewedInfo si = new SkewedInfo();
-    si.setSkewedColNames(Collections.<String> emptyList());
-    si.setSkewedColValueLocationMaps(Collections.<List<String>, String> emptyMap());
-    si.setSkewedColValues(Collections.<List<String>> emptyList());
+    si.setSkewedColNames(Collections.<String>emptyList());
+    si.setSkewedColValueLocationMaps(Collections.<List<String>, String>emptyMap());
+    si.setSkewedColValues(Collections.<List<String>>emptyList());
     sd.setSkewedInfo(new SkewedInfo());
     sd.setSerdeInfo(serDeInfo);
     table.setSd(sd);
+    Map<String, String> map = new HashMap<>();
   }
 
   public Table convert() {
+
     return new Table(table);
   }
 

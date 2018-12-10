@@ -130,7 +130,7 @@ public class DataExtractor {
     }
   }
 
-  private class ExtractionTask implements Callable<ExtractionContainer> {
+  private final class ExtractionTask implements Callable<ExtractionContainer> {
 
     private final ExtractionContainer container;
 

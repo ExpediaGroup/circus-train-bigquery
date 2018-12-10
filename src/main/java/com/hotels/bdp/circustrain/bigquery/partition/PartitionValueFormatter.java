@@ -17,7 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 
 import com.google.cloud.bigquery.FieldValue;
 
-class PartitionValueFormatter {
+final class PartitionValueFormatter {
 
   private PartitionValueFormatter() {}
 
