@@ -1,3 +1,8 @@
+# TBD
+### Changed
+* Upgraded `google-cloud-bom` to 0.73.0-alpha (was 0.34.0-alpha).
+* Shade and relocate all `com.google` packages (to fix Guava version issue).
+
 # [5.0.3] - 2018-12-05
 ### Fixed
 * Add Spring annotations to all the components that do not need to load during the housekeeping module. See [#28](https://github.com/HotelsDotCom/circus-train-bigquery/issues/28).
