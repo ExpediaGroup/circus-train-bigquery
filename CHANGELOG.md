@@ -1,3 +1,7 @@
+## TBD
+### Changed
+* Upgraded `hotels-oss-parent` pom to 2.3.3 (was 2.0.6). See [#23](https://github.com/HotelsDotCom/circus-train-bigquery/issues/23).
+
 # [5.0.3] - 2018-12-05
 ### Fixed
 * Add Spring annotations to all the components that do not need to load during the housekeeping module. See [#28](https://github.com/HotelsDotCom/circus-train-bigquery/issues/28).
