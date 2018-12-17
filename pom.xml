@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>circus-train-bigquery</artifactId>
-  <version>5.0.4-SNAPSHOT</version>
+  <version>5.0.4</version>
   <name>Bigquery Client</name>
   <inceptionYear>2018</inceptionYear>
 
@@ -16,7 +16,7 @@
     <connection>scm:git:git@github.com:HotelsDotCom/circus-train-bigquery.git</connection>
     <developerConnection>scm:git:git@github.com:HotelsDotCom/circus-train-bigquery.git</developerConnection>
     <url>https://github.com/HotelsDotCom/circus-train-bigquery</url>
-    <tag>HEAD</tag>
+    <tag>circus-train-bigquery-5.0.4</tag>
   </scm>
 
   <properties>
