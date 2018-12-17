@@ -105,7 +105,7 @@ import com.hotels.hcommon.hive.metastore.client.api.CloseableMetaStoreClient;
 class BigQueryMetastoreClient implements CloseableMetaStoreClient {
 
   private static final Logger log = LoggerFactory.getLogger(BigQueryMetastoreClient.class);
-  private static final String ERROR_MESSAGE = "Cannot execute {} on Big Query";
+  private static final String ERROR_MESSAGE = "Cannot execute %s on Big Query";
 
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;

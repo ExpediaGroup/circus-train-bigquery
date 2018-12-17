@@ -17,9 +17,7 @@ package com.hotels.bdp.circustrain.bigquery.conversion;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
@@ -63,7 +61,6 @@ public class BigQueryToHiveTableConverter {
     sd.setSkewedInfo(new SkewedInfo());
     sd.setSerdeInfo(serDeInfo);
     table.setSd(sd);
-    Map<String, String> map = new HashMap<>();
   }
 
   public Table convert() {

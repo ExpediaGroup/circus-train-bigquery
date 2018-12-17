@@ -25,7 +25,7 @@ import com.google.cloud.bigquery.Schema;
 
 public class HivePartitionKeyAdder {
 
-  private final String fieldSchemaType = "string";
+  private final static String fieldSchemaType = "string";
   private final Table table;
 
   public HivePartitionKeyAdder(Table table) {
