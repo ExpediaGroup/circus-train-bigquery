@@ -17,6 +17,8 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 
 import static jodd.util.StringUtil.isBlank;
 
+import java.util.Locale;
+
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 
@@ -40,7 +42,7 @@ public class HivePartitionKeyAdder {
     Table newTable = new Table(table);
 
     for (Field field : filteredTableSchema.getFields()) {
-      String fieldName = field.getName().toLowerCase().trim();
+      String fieldName = field.getName().toLowerCase(Locale.ROOT).trim();
       if (partitionKey.equals(fieldName)) {
         FieldSchema fieldSchema = new FieldSchema();
         fieldSchema.setName(fieldName);

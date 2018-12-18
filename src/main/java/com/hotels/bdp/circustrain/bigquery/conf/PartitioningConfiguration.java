@@ -22,6 +22,7 @@ import static com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants.P
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -52,8 +53,8 @@ public class PartitioningConfiguration {
     for (TableReplication tableReplication : tableReplications.getTableReplications()) {
       SourceTable sourceTable = tableReplication.getSourceTable();
       String key = TableNameFactory
-          .newInstance(sourceTable.getDatabaseName().trim().toLowerCase(),
-              sourceTable.getTableName().trim().toLowerCase());
+          .newInstance(sourceTable.getDatabaseName().trim().toLowerCase(Locale.ROOT),
+              sourceTable.getTableName().trim().toLowerCase(Locale.ROOT));
       if (replicationConfig.containsKey(key)) {
         throw new CircusTrainException(
             "Partitioning cannot be carried out when there are duplicate source tables with partitioning configured");
