@@ -1,3 +1,8 @@
+# TBD
+### Changed
+* Upgraded `google-cloud-bom` to 0.73.0-alpha (was 0.34.0-alpha).
+* Shade and relocate all `com.google` packages (to fix Guava version issue).
+
 # [5.0.4] - 2018-12-17
 ### Changed
 * Upgraded `hotels-oss-parent` pom to 2.3.3 (was 2.0.6). See [#23](https://github.com/HotelsDotCom/circus-train-bigquery/issues/23).
