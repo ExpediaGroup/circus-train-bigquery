@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Expedia Inc.
+ * Copyright (C) 2018-2019 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import com.google.cloud.bigquery.Schema;
 
 public class HivePartitionKeyAdder {
 
-  private final static String fieldSchemaType = "string";
+  private final static String FIELD_SCHEMA_TYPE = "string";
   private final Table table;
 
   public HivePartitionKeyAdder(Table table) {
@@ -47,7 +47,7 @@ public class HivePartitionKeyAdder {
         FieldSchema fieldSchema = new FieldSchema();
         fieldSchema.setName(fieldName);
         // all partition types are string
-        fieldSchema.setType(fieldSchemaType);
+        fieldSchema.setType(FIELD_SCHEMA_TYPE);
         newTable.addToPartitionKeys(fieldSchema);
       }
     }
