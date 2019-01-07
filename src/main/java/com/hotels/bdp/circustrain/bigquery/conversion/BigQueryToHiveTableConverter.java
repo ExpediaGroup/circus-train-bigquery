@@ -64,7 +64,6 @@ public class BigQueryToHiveTableConverter {
   }
 
   public Table convert() {
-
     return new Table(table);
   }
 
