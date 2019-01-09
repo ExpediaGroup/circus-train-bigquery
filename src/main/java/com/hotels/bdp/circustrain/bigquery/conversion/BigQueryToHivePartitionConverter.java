@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Expedia Inc.
+ * Copyright (C) 2018-2019 Expedia Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,8 +44,8 @@ public class BigQueryToHivePartitionConverter {
     StorageDescriptor sd = new StorageDescriptor();
     sd.setLocation("");
     sd.setNumBuckets(-1);
-    sd.setBucketCols(Collections.<String> emptyList());
-    sd.setSortCols(Collections.<Order> emptyList());
+    sd.setBucketCols(Collections.<String>emptyList());
+    sd.setSortCols(Collections.<Order>emptyList());
     sd.setInputFormat(AvroConstants.INPUT_FORMAT);
     sd.setOutputFormat(AvroConstants.OUTPUT_FORMAT);
     sd.setCompressed(false);
@@ -55,9 +55,9 @@ public class BigQueryToHivePartitionConverter {
     SerDeInfo serDeInfo = new SerDeInfo();
     serDeInfo.setSerializationLib(AvroConstants.SERIALIZATION_LIB);
     SkewedInfo si = new SkewedInfo();
-    si.setSkewedColNames(Collections.<String> emptyList());
-    si.setSkewedColValueLocationMaps(Collections.<List<String>, String> emptyMap());
-    si.setSkewedColValues(Collections.<List<String>> emptyList());
+    si.setSkewedColNames(Collections.<String>emptyList());
+    si.setSkewedColValueLocationMaps(Collections.<List<String>, String>emptyMap());
+    si.setSkewedColValues(Collections.<List<String>>emptyList());
     sd.setSkewedInfo(new SkewedInfo());
     sd.setSerdeInfo(serDeInfo);
     partition.setSd(sd);
@@ -69,7 +69,7 @@ public class BigQueryToHivePartitionConverter {
 
   // Work around for issue: https://issues.apache.org/jira/browse/HIVE-18767
   // Delete this code once the fix
-  // (https://github.com/apache/hive/commit/2fe5186a337141b6fd80b40abbc8bc4226bee962#diff-2a1b7c6ec7a77f1ca9ad84225d192e36)
+  // github.com/apache/hive/commit/2fe5186a337141b6fd80b40abbc8bc4226bee962#diff-2a1b7c6ec7a77f1ca9ad84225d192e36
   // has been released in Hive 2.3.x
   private void mockStats() {
     for (String key : StatsSetupConst.fastStats) {

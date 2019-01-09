@@ -80,8 +80,8 @@ public class BigQueryCopierFactory implements CopierFactory {
       List<Path> sourceSubLocations,
       Path replicaLocation,
       Map<String, Object> copierOptions) {
-    Copier copier = supportedFactory.newInstance(eventId, sourceBaseLocation, sourceSubLocations, replicaLocation,
-        copierOptions);
+    Copier copier = supportedFactory
+        .newInstance(eventId, sourceBaseLocation, sourceSubLocations, replicaLocation, copierOptions);
     Copier bigQueryCopier = new BigQueryCopier(copier, service);
     log.info("Created copier which delegates to the copier produced by {}", supportedFactory.getClass().getName());
     return bigQueryCopier;
@@ -93,6 +93,6 @@ public class BigQueryCopierFactory implements CopierFactory {
       Path sourceBaseLocation,
       Path replicaLocation,
       Map<String, Object> copierOptions) {
-    return newInstance(eventId, sourceBaseLocation, Collections.<Path> emptyList(), replicaLocation, copierOptions);
+    return newInstance(eventId, sourceBaseLocation, Collections.<Path>emptyList(), replicaLocation, copierOptions);
   }
 }

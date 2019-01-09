@@ -22,6 +22,7 @@ import static com.hotels.bdp.circustrain.bigquery.CircusTrainBigQueryConstants.P
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -48,21 +49,21 @@ public class PartitioningConfiguration {
 
   @Autowired
   PartitioningConfiguration(TableReplications tableReplications) {
-    Map<String, Map<String, Object>> replicationConfigMap = new HashMap<>();
+    Map<String, Map<String, Object>> replicationConfig = new HashMap<>();
     for (TableReplication tableReplication : tableReplications.getTableReplications()) {
       SourceTable sourceTable = tableReplication.getSourceTable();
       String key = TableNameFactory
-          .newInstance(sourceTable.getDatabaseName().trim().toLowerCase(),
-              sourceTable.getTableName().trim().toLowerCase());
-      if (replicationConfigMap.containsKey(key)) {
+          .newInstance(sourceTable.getDatabaseName().trim().toLowerCase(Locale.ROOT),
+              sourceTable.getTableName().trim().toLowerCase(Locale.ROOT));
+      if (replicationConfig.containsKey(key)) {
         throw new CircusTrainException(
             "Partitioning cannot be carried out when there are duplicate source tables with partitioning configured");
       }
       log.debug("Loading BigQuery partitioning configuration for table {}", key);
       Map<String, Object> copierOptions = tableReplication.getCopierOptions();
-      replicationConfigMap.put(key, copierOptions);
+      replicationConfig.put(key, copierOptions);
     }
-    this.replicationConfigMap = Collections.unmodifiableMap(replicationConfigMap);
+    replicationConfigMap = Collections.unmodifiableMap(replicationConfig);
   }
 
   public String getPartitionFilterFor(Table table) {

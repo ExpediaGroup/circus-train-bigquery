@@ -16,6 +16,7 @@
 package com.hotels.bdp.circustrain.bigquery.table.service.partitioned;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -63,7 +64,8 @@ public class PartitionedTableService implements TableService {
 
   @Override
   public Table getTable() {
-    return adder.add(Objects.requireNonNull(partitionedBy).toLowerCase(), filteredTable.getDefinition().getSchema());
+    return adder
+        .add(Objects.requireNonNull(partitionedBy).toLowerCase(Locale.ROOT), filteredTable.getDefinition().getSchema());
   }
 
   @Override

@@ -15,6 +15,7 @@
  */
 package com.hotels.bdp.circustrain.bigquery.util;
 
+import java.util.Locale;
 import java.util.UUID;
 
 public final class RandomStringGenerationUtils {
@@ -26,7 +27,7 @@ public final class RandomStringGenerationUtils {
   }
 
   public static String randomUri() {
-    return UUID.randomUUID().toString().toLowerCase();
+    return UUID.randomUUID().toString().toLowerCase(Locale.ROOT);
   }
 
 }

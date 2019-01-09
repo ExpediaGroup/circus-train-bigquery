@@ -15,13 +15,17 @@
  */
 package com.hotels.bdp.circustrain.bigquery.util;
 
+import java.util.Locale;
+
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 
 public class TableNameFactory {
 
+  private TableNameFactory() {}
+
   public static String newInstance(String databaseName, String tableName) {
-    return databaseName.trim().toLowerCase() + "." + tableName.trim().toLowerCase();
+    return databaseName.trim().toLowerCase(Locale.ROOT) + "." + tableName.trim().toLowerCase(Locale.ROOT);
   }
 
   public static String newInstance(Table table) {

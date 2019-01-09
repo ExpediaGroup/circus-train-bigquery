@@ -15,6 +15,8 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import java.util.Locale;
+
 import com.google.cloud.bigquery.FieldValue;
 
 class PartitionValueFormatter {
@@ -22,7 +24,7 @@ class PartitionValueFormatter {
   private PartitionValueFormatter() {}
 
   static String formatValue(FieldValue partitionFieldValue, String partitionKeyType) {
-    partitionKeyType = partitionKeyType.toLowerCase();
+    partitionKeyType = partitionKeyType.toLowerCase(Locale.ROOT);
 
     switch (partitionKeyType) {
     case "string":
