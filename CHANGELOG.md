@@ -1,4 +1,4 @@
-# [TBD]
+# [5.1.0] - 2019-05-09
 ### Changed
 * Refactored project to remove checkstyle and findbugs warnings, which does not impact functionality.
 * Upgraded `circus-train-version` to 14.0.1 (was 13.0.0).
