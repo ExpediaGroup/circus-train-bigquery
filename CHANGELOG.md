@@ -1,7 +1,8 @@
 # [TBD]
 ### Changed
 * Refactored project to remove checkstyle and findbugs warnings, which does not impact functionality.
-* Upgraded `hotels-oss-parent` to 2.3.5 (was 2.3.3).
+* Upgraded `circus-train-version` to 14.0.1 (was 13.0.0).
+* Upgraded `hotels-oss-parent` to 4.0.1 (was 2.3.3).
 * Upgraded `google-cloud-bom` to 0.73.0-alpha (was 0.34.0-alpha).
 * Shade and relocate all `com.google` packages (to fix Guava version issue).
 
