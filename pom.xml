@@ -168,6 +168,10 @@
           <artifactId>guava</artifactId>
           <groupId>com.google.guava</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>org.pentaho</artifactId>
+          <groupId>pentaho-aggdesigner-algorithm</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
 

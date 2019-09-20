@@ -1,6 +1,7 @@
 # [5.1.1] - TBD
 ### Changed
 * Updated `hotels-oss-parent` to 4.2.0 (was 4.0.1).
+* Excluded `org.pentaho.pentaho-aggdesigner-algorithm` dependency as it's not available in Maven Central.
 
 # [5.1.0] - 2019-05-09
 ### Changed
