@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.hotels</groupId>
     <artifactId>hotels-oss-parent</artifactId>
-    <version>4.0.1</version>
+    <version>4.2.0</version>
   </parent>
 
   <artifactId>circus-train-bigquery</artifactId>
@@ -13,8 +13,8 @@
   <inceptionYear>2018</inceptionYear>
 
   <scm>
-    <connection>scm:git:git@github.com:HotelsDotCom/circus-train-bigquery.git</connection>
-    <developerConnection>scm:git:git@github.com:HotelsDotCom/circus-train-bigquery.git</developerConnection>
+    <connection>scm:git:https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/HotelsDotCom/circus-train-bigquery.git</connection>
+    <developerConnection>scm:git:https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/HotelsDotCom/circus-train-bigquery.git</developerConnection>
     <url>https://github.com/HotelsDotCom/circus-train-bigquery</url>
     <tag>HEAD</tag>
   </scm>
@@ -167,6 +167,10 @@
         <exclusion>
           <artifactId>guava</artifactId>
           <groupId>com.google.guava</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>org.pentaho</artifactId>
+          <groupId>pentaho-aggdesigner-algorithm</groupId>
         </exclusion>
       </exclusions>
     </dependency>
