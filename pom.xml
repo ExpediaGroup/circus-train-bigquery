@@ -109,8 +109,8 @@
       <scope>provided</scope>
       <exclusions>
         <exclusion>
-          <artifactId>guava</artifactId>
           <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -125,8 +125,8 @@
           <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
-          <artifactId>guava</artifactId>
           <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -145,8 +145,8 @@
           <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
-          <artifactId>guava</artifactId>
           <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -165,12 +165,12 @@
           <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
-          <artifactId>guava</artifactId>
           <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
         </exclusion>
         <exclusion>
-          <artifactId>org.pentaho</artifactId>
-          <groupId>pentaho-aggdesigner-algorithm</groupId>
+          <groupId>org.pentaho</groupId>
+          <artifactId>pentaho-aggdesigner-algorithm</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
