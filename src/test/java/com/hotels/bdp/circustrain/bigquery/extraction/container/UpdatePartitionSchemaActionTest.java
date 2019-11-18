@@ -46,7 +46,7 @@ public class UpdatePartitionSchemaActionTest {
 
   private UpdatePartitionSchemaAction updatePartitionSchemaAction;
   private final Partition partition = new Partition();
-  private final Table sourceTableAsHive = new Table();
+  private final Table sourceHiveTable = new Table();
   private final String schema = "schema";
 
   @Before
@@ -54,11 +54,11 @@ public class UpdatePartitionSchemaActionTest {
     partition.setSd(new StorageDescriptor());
     partition.getSd().setSerdeInfo(new SerDeInfo());
 
-    sourceTableAsHive.setSd(new StorageDescriptor());
-    sourceTableAsHive.getSd().setSerdeInfo(new SerDeInfo());
+    sourceHiveTable.setSd(new StorageDescriptor());
+    sourceHiveTable.getSd().setSerdeInfo(new SerDeInfo());
 
     updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition, storage, extractionUri, schemaExtractor,
-        sourceTableAsHive);
+        sourceHiveTable);
   }
 
   @Test
@@ -66,7 +66,7 @@ public class UpdatePartitionSchemaActionTest {
     when(schemaExtractor.getSchemaFromStorage(storage, extractionUri)).thenReturn(schema);
     updatePartitionSchemaAction.run();
     assertThat(partition.getSd().getSerdeInfo().getParameters().get(AvroConstants.SCHEMA_PARAMETER), is(schema));
-    assertThat(sourceTableAsHive.getSd().getSerdeInfo().getParameters().get(AvroConstants.SCHEMA_PARAMETER),
+    assertThat(sourceHiveTable.getSd().getSerdeInfo().getParameters().get(AvroConstants.SCHEMA_PARAMETER),
         is(schema));
   }
 

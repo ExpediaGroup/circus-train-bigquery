@@ -42,9 +42,7 @@ class BigQueryPartitionGenerator {
 
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
-  
-  private final org.apache.hadoop.hive.metastore.api.Table sourceTableAsHive;
-  
+  private final org.apache.hadoop.hive.metastore.api.Table sourceHiveTable;
   private final String sourceDBName;
   private final String sourceTableName;
   private final String partitionKey;
@@ -57,7 +55,7 @@ class BigQueryPartitionGenerator {
   BigQueryPartitionGenerator(
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
-      org.apache.hadoop.hive.metastore.api.Table sourceTableAsHive,
+      org.apache.hadoop.hive.metastore.api.Table sourceHiveTable,
       String partitionKey,
       String partitionValue,
       String destinationBucket,
@@ -65,9 +63,9 @@ class BigQueryPartitionGenerator {
       SchemaExtractor schemaExtractor) {
     this.bigQueryMetastore = bigQueryMetastore;
     this.extractionService = extractionService;
-    this.sourceTableAsHive = sourceTableAsHive;
-    this.sourceDBName = sourceTableAsHive.getDbName();
-    this.sourceTableName = sourceTableAsHive.getTableName();
+    this.sourceHiveTable = sourceHiveTable;
+    this.sourceDBName = sourceHiveTable.getDbName();
+    this.sourceTableName = sourceHiveTable.getTableName();
     this.partitionKey = partitionKey;
     this.partitionValue = partitionValue;
     this.destinationBucket = destinationBucket;
@@ -80,7 +78,7 @@ class BigQueryPartitionGenerator {
     final String destinationTableName = randomTableName();
 
     Table bigQueryPartition = createPartitionInBigQuery(sourceDBName, destinationTableName, statement);
-    ExtractionUri extractionUri = scheduleForExtraction(bigQueryPartition, partition, sourceTableAsHive);
+    ExtractionUri extractionUri = scheduleForExtraction(bigQueryPartition, sourceHiveTable, partition);
     return extractionUri;
   }
 
@@ -103,16 +101,16 @@ class BigQueryPartitionGenerator {
   }
 
   private ExtractionUri scheduleForExtraction(
-      Table table,
-      Partition partition,
-      org.apache.hadoop.hive.metastore.api.Table sourceTableAsHive) {
+      Table bigQueryTable,
+      org.apache.hadoop.hive.metastore.api.Table hiveTable,
+      Partition hivePartition) {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
-    PostExtractionAction deleteTableAction = new DeleteTableAction(table);
+    PostExtractionAction deleteTableAction = new DeleteTableAction(bigQueryTable);
 
-    PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition,
-        extractionService.getStorage(), extractionUri, schemaExtractor, sourceTableAsHive);
+    PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaAction(hivePartition,
+        extractionService.getStorage(), extractionUri, schemaExtractor, hiveTable);
 
-    ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri,
+    ExtractionContainer toRegister = new ExtractionContainer(bigQueryTable, extractionUri,
         Arrays.asList(deleteTableAction, updatePartitionSchemaAction));
     extractionService.register(toRegister);
     return extractionUri;

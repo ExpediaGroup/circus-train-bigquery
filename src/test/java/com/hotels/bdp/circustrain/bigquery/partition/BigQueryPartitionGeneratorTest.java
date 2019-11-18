@@ -44,7 +44,7 @@ public class BigQueryPartitionGeneratorTest {
   private @Mock ExtractionService extractionService;
   private @Mock Partition partition;
   private @Mock SchemaExtractor schemaExtractor;
-  private @Mock Table sourceTableAsHive;
+  private @Mock Table sourceHiveTable;
 
   private BigQueryPartitionGenerator generator;
 
@@ -58,11 +58,11 @@ public class BigQueryPartitionGeneratorTest {
 
   @Before
   public void init() {
-    generator = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceTableAsHive,
+    generator = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceHiveTable,
         partitionKey, partitionValue, destinationBucket, destinationFolder, schemaExtractor);
 
-    when(sourceTableAsHive.getDbName()).thenReturn(sourceDBName);
-    when(sourceTableAsHive.getTableName()).thenReturn(sourceTableName);
+    when(sourceHiveTable.getDbName()).thenReturn(sourceDBName);
+    when(sourceHiveTable.getTableName()).thenReturn(sourceTableName);
   }
 
   @Test
