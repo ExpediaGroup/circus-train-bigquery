@@ -57,8 +57,8 @@ public class UpdatePartitionSchemaActionTest {
     sourceHiveTable.setSd(new StorageDescriptor());
     sourceHiveTable.getSd().setSerdeInfo(new SerDeInfo());
 
-    updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition, storage, extractionUri, schemaExtractor,
-        sourceHiveTable);
+    updatePartitionSchemaAction = new UpdatePartitionSchemaAction(sourceHiveTable, partition, storage, extractionUri,
+        schemaExtractor);
   }
 
   @Test

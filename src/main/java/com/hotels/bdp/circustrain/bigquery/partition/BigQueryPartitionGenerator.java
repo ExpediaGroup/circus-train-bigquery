@@ -107,8 +107,8 @@ class BigQueryPartitionGenerator {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
     PostExtractionAction deleteTableAction = new DeleteTableAction(bigQueryTable);
 
-    PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaAction(hivePartition,
-        extractionService.getStorage(), extractionUri, schemaExtractor, hiveTable);
+    PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaAction(hiveTable, hivePartition,
+        extractionService.getStorage(), extractionUri, schemaExtractor);
 
     ExtractionContainer toRegister = new ExtractionContainer(bigQueryTable, extractionUri,
         Arrays.asList(deleteTableAction, updatePartitionSchemaAction));
