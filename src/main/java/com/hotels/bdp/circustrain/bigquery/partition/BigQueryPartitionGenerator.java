@@ -42,6 +42,9 @@ class BigQueryPartitionGenerator {
 
   private final BigQueryMetastore bigQueryMetastore;
   private final ExtractionService extractionService;
+  
+  private final org.apache.hadoop.hive.metastore.api.Table sourceTableAsHive;
+  
   private final String sourceDBName;
   private final String sourceTableName;
   private final String partitionKey;
@@ -54,8 +57,9 @@ class BigQueryPartitionGenerator {
   BigQueryPartitionGenerator(
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
-      String sourceDBName,
-      String sourceTableName,
+      org.apache.hadoop.hive.metastore.api.Table sourceTableAsHive,
+      // String sourceDBName,
+      // String sourceTableName,
       String partitionKey,
       String partitionValue,
       String destinationBucket,
@@ -63,10 +67,11 @@ class BigQueryPartitionGenerator {
       SchemaExtractor schemaExtractor) {
     this.bigQueryMetastore = bigQueryMetastore;
     this.extractionService = extractionService;
-    this.partitionValue = partitionValue;
-    this.sourceDBName = sourceDBName;
-    this.sourceTableName = sourceTableName;
+    this.sourceTableAsHive = sourceTableAsHive;
+    this.sourceDBName = sourceTableAsHive.getDbName();
+    this.sourceTableName = sourceTableAsHive.getTableName();
     this.partitionKey = partitionKey;
+    this.partitionValue = partitionValue;
     this.destinationBucket = destinationBucket;
     this.destinationFolder = destinationFolder;
     this.schemaExtractor = schemaExtractor;
@@ -77,15 +82,15 @@ class BigQueryPartitionGenerator {
     final String destinationTableName = randomTableName();
 
     Table bigQueryPartition = createPartitionInBigQuery(sourceDBName, destinationTableName, statement);
-    ExtractionUri extractionUri = scheduleForExtraction(bigQueryPartition, partition);
+    ExtractionUri extractionUri = scheduleForExtraction(bigQueryPartition, partition, sourceTableAsHive);
     return extractionUri;
-
   }
 
   private String getQueryStatement() {
     String query = String
-        .format("select * from %s.%s where %s = %s", sourceDBName, sourceTableName, partitionKey, partitionValue);
-    log.debug("Query statement is: {}", query);
+        .format("select * except (%s) from %s.%s where %s = %s", partitionKey, sourceDBName, sourceTableName,
+            partitionKey, partitionValue);
+    log.info("Query statement is: {}", query);
     return query;
   }
 
@@ -99,11 +104,16 @@ class BigQueryPartitionGenerator {
     return part;
   }
 
-  private ExtractionUri scheduleForExtraction(Table table, Partition partition) {
+  private ExtractionUri scheduleForExtraction(
+      Table table,
+      Partition partition,
+      org.apache.hadoop.hive.metastore.api.Table sourceTableAsHive) {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
     PostExtractionAction deleteTableAction = new DeleteTableAction(table);
+
     PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition,
-        extractionService.getStorage(), extractionUri, schemaExtractor);
+        extractionService.getStorage(), extractionUri, schemaExtractor, sourceTableAsHive);
+
     ExtractionContainer toRegister = new ExtractionContainer(table, extractionUri,
         Arrays.asList(deleteTableAction, updatePartitionSchemaAction));
     extractionService.register(toRegister);
