@@ -15,13 +15,24 @@
  */
 package com.hotels.bdp.circustrain.bigquery.partition;
 
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
 import com.hotels.bdp.circustrain.bigquery.util.BigQueryMetastore;
 import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
@@ -33,6 +44,7 @@ public class BigQueryPartitionGeneratorTest {
   private @Mock ExtractionService extractionService;
   private @Mock Partition partition;
   private @Mock SchemaExtractor schemaExtractor;
+  private @Mock Table sourceTableAsHive;
 
   private BigQueryPartitionGenerator generator;
 
@@ -43,23 +55,25 @@ public class BigQueryPartitionGeneratorTest {
   private final String destinationBucket = "bucket";
   private final String destinationFolder = "folder";
 
+
   @Before
   public void init() {
-    generator = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, null,
-        // sourceDBName, sourceTableName,
+    generator = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceTableAsHive,
         partitionKey, partitionValue, destinationBucket, destinationFolder, schemaExtractor);
+
+    when(sourceTableAsHive.getDbName()).thenReturn(sourceDBName);
+    when(sourceTableAsHive.getTableName()).thenReturn(sourceTableName);
   }
 
   @Test
   public void generatePart() {
-    // ExtractionUri uri = generator.generatePartition(partition);
-    // assertThat(destinationBucket, is(uri.getBucket()));
-    // assertThat(uri.getFolder(), startsWith(destinationFolder));
-    // assertThat(uri.getKey(), endsWith(String.format("%s=%s.%s", partitionKey, partitionValue, uri.getExtension())));
-    // ArgumentCaptor<ExtractionContainer> extractionContainerCaptor =
-    // ArgumentCaptor.forClass(ExtractionContainer.class);
-    // verify(extractionService).register(extractionContainerCaptor.capture());
-    // assertThat(extractionContainerCaptor.getValue().getExtractionUri(), is(uri));
+    ExtractionUri uri = generator.generatePartition(partition);
+    assertThat(destinationBucket, is(uri.getBucket()));
+    assertThat(uri.getFolder(), startsWith(destinationFolder));
+    assertThat(uri.getKey(), endsWith(String.format("%s=%s.%s", partitionKey, partitionValue, uri.getExtension())));
+    ArgumentCaptor<ExtractionContainer> extractionContainerCaptor = ArgumentCaptor.forClass(ExtractionContainer.class);
+    verify(extractionService).register(extractionContainerCaptor.capture());
+    assertThat(extractionContainerCaptor.getValue().getExtractionUri(), is(uri));
   }
 
 }

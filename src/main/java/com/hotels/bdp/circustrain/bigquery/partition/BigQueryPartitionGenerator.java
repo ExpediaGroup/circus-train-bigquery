@@ -58,8 +58,6 @@ class BigQueryPartitionGenerator {
       BigQueryMetastore bigQueryMetastore,
       ExtractionService extractionService,
       org.apache.hadoop.hive.metastore.api.Table sourceTableAsHive,
-      // String sourceDBName,
-      // String sourceTableName,
       String partitionKey,
       String partitionValue,
       String destinationBucket,
