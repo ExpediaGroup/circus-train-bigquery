@@ -25,30 +25,30 @@ import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 public class UpdatePartitionSchemaAction implements PostExtractionAction {
 
+  private final Table table;
   private final Partition partition;
   private final Storage storage;
   private final ExtractionUri extractionUri;
   private final SchemaExtractor schemaExtractor;
-  private final Table sourceTableAsHive;
 
   public UpdatePartitionSchemaAction(
+      Table table,
       Partition partition,
       Storage storage,
       ExtractionUri extractionUri,
-      SchemaExtractor schemaExtractor,
-      Table sourceTableAsHive) {
+      SchemaExtractor schemaExtractor) {
+    this.table = table;
     this.partition = partition;
     this.storage = storage;
     this.extractionUri = extractionUri;
     this.schemaExtractor = schemaExtractor;
-    this.sourceTableAsHive = sourceTableAsHive;
   }
 
   @Override
   public void run() {
     String schema = schemaExtractor.getSchemaFromStorage(storage, extractionUri);
     partition.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
-    sourceTableAsHive.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
+    table.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
   }
 
 }
