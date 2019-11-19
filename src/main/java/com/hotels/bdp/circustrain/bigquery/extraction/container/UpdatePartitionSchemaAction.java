@@ -16,6 +16,7 @@
 package com.hotels.bdp.circustrain.bigquery.extraction.container;
 
 import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.google.cloud.storage.Storage;
 
@@ -24,16 +25,19 @@ import com.hotels.bdp.circustrain.bigquery.util.SchemaExtractor;
 
 public class UpdatePartitionSchemaAction implements PostExtractionAction {
 
+  private final Table table;
   private final Partition partition;
   private final Storage storage;
   private final ExtractionUri extractionUri;
   private final SchemaExtractor schemaExtractor;
 
   public UpdatePartitionSchemaAction(
+      Table table,
       Partition partition,
       Storage storage,
       ExtractionUri extractionUri,
       SchemaExtractor schemaExtractor) {
+    this.table = table;
     this.partition = partition;
     this.storage = storage;
     this.extractionUri = extractionUri;
@@ -44,6 +48,7 @@ public class UpdatePartitionSchemaAction implements PostExtractionAction {
   public void run() {
     String schema = schemaExtractor.getSchemaFromStorage(storage, extractionUri);
     partition.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
+    table.getSd().getSerdeInfo().putToParameters(AvroConstants.SCHEMA_PARAMETER, schema);
   }
 
 }

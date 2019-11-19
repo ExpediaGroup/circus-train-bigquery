@@ -20,8 +20,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,6 +44,7 @@ public class BigQueryPartitionGeneratorTest {
   private @Mock ExtractionService extractionService;
   private @Mock Partition partition;
   private @Mock SchemaExtractor schemaExtractor;
+  private @Mock Table sourceHiveTable;
 
   private BigQueryPartitionGenerator generator;
 
@@ -52,10 +55,14 @@ public class BigQueryPartitionGeneratorTest {
   private final String destinationBucket = "bucket";
   private final String destinationFolder = "folder";
 
+
   @Before
   public void init() {
-    generator = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceDBName, sourceTableName,
+    generator = new BigQueryPartitionGenerator(bigQueryMetastore, extractionService, sourceHiveTable,
         partitionKey, partitionValue, destinationBucket, destinationFolder, schemaExtractor);
+
+    when(sourceHiveTable.getDbName()).thenReturn(sourceDBName);
+    when(sourceHiveTable.getTableName()).thenReturn(sourceTableName);
   }
 
   @Test

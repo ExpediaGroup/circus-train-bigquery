@@ -1,3 +1,7 @@
+# [5.2.0] - TBD
+### Fixed
+* Removed duplicated partition column from the schema. See [#37](https://github.com/HotelsDotCom/circus-train-bigquery/issues/37).
+
 # [5.1.1] - 2019-09-23
 ### Changed
 * Updated `hotels-oss-parent` to 4.2.0 (was 4.0.1).

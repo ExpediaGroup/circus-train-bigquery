@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,13 +46,19 @@ public class UpdatePartitionSchemaActionTest {
 
   private UpdatePartitionSchemaAction updatePartitionSchemaAction;
   private final Partition partition = new Partition();
+  private final Table sourceHiveTable = new Table();
   private final String schema = "schema";
 
   @Before
   public void setUp() throws IOException {
     partition.setSd(new StorageDescriptor());
     partition.getSd().setSerdeInfo(new SerDeInfo());
-    updatePartitionSchemaAction = new UpdatePartitionSchemaAction(partition, storage, extractionUri, schemaExtractor);
+
+    sourceHiveTable.setSd(new StorageDescriptor());
+    sourceHiveTable.getSd().setSerdeInfo(new SerDeInfo());
+
+    updatePartitionSchemaAction = new UpdatePartitionSchemaAction(sourceHiveTable, partition, storage, extractionUri,
+        schemaExtractor);
   }
 
   @Test
@@ -59,6 +66,8 @@ public class UpdatePartitionSchemaActionTest {
     when(schemaExtractor.getSchemaFromStorage(storage, extractionUri)).thenReturn(schema);
     updatePartitionSchemaAction.run();
     assertThat(partition.getSd().getSerdeInfo().getParameters().get(AvroConstants.SCHEMA_PARAMETER), is(schema));
+    assertThat(sourceHiveTable.getSd().getSerdeInfo().getParameters().get(AvroConstants.SCHEMA_PARAMETER),
+        is(schema));
   }
 
   @Test(expected = CircusTrainException.class)
