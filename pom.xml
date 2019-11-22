@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -21,20 +22,20 @@
 
   <properties>
     <jdk.version>1.7</jdk.version>
-    <circus-train-version>14.0.1</circus-train-version>
-    <google-cloud.version>0.73.0-alpha</google-cloud.version>
+    <circus-train-version>15.0.0</circus-train-version>
+    <google-cloud.version>2.9.0</google-cloud.version>
     <hadoop.version>2.7.1</hadoop.version>
     <hive.version>2.3.3</hive.version>
     <shade.prefix>${project.groupId}.circustrain.bigquery.shaded</shade.prefix>
     <spring-platform.version>2.0.8.RELEASE</spring-platform.version>
-    <lastcommons-test.version>5.2.1</lastcommons-test.version>
+    <lastcommons-test.version>7.0.2</lastcommons-test.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-bom</artifactId>
+        <artifactId>libraries-bom</artifactId>
         <version>${google-cloud.version}</version>
         <type>pom</type>
         <scope>import</scope>
