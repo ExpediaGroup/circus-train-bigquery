@@ -3,7 +3,7 @@
 * Removed duplicated partition column from the schema. See [#37](https://github.com/HotelsDotCom/circus-train-bigquery/issues/37).
 
 ### Changed
-* Updated `com.google.cloud` to use the artifact ID `libraries-bom` with `google-cloud.version` as 2.9.0 (was `google-cloud-bom` with version 0.73.0-alpha).
+* Using `libraries-bom` instead of `google-cloud-bom`.
 * Updated `circus-train-version` to 15.0.0 (was 14.0.1).
 * Updated `lastcommons-test.version` to 7.0.2 (was 5.2.1).
 
