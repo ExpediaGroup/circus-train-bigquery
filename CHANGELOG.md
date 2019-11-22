@@ -2,6 +2,11 @@
 ### Fixed
 * Removed duplicated partition column from the schema. See [#37](https://github.com/HotelsDotCom/circus-train-bigquery/issues/37).
 
+### Changed
+* Using `libraries-bom` instead of `google-cloud-bom`.
+* Updated `circus-train-version` to 15.0.0 (was 14.0.1).
+* Updated `lastcommons-test.version` to 7.0.2 (was 5.2.1).
+
 # [5.1.1] - 2019-09-23
 ### Changed
 * Updated `hotels-oss-parent` to 4.2.0 (was 4.0.1).
