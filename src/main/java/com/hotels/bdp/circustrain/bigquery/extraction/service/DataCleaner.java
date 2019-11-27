@@ -79,7 +79,6 @@ public class DataCleaner {
 
   private void deleteTable(ExtractionContainer container) {
     List<PostExtractionAction> actions = container.getPostExtractionActions();
-
     for (PostExtractionAction action : actions) {
       if (action instanceof DeleteTableAction) {
         action.run();

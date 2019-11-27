@@ -41,8 +41,6 @@ public class DeleteTableAction implements PostExtractionAction {
       } catch (BigQueryException e) {
         log.error("Could not delete BigQuery table '{}'", table.getTableId(), e);
       }
-    } else {
-      log.debug("BigQuery table already deleted '{}'", table.getTableId());
     }
   }
 
