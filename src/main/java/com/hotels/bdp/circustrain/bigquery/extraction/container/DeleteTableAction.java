@@ -25,6 +25,7 @@ public class DeleteTableAction implements PostExtractionAction {
   private static final Logger log = LoggerFactory.getLogger(DeleteTableAction.class);
 
   private final Table table;
+  private boolean deleted = false;
 
   public DeleteTableAction(Table table) {
     this.table = table;
@@ -32,11 +33,16 @@ public class DeleteTableAction implements PostExtractionAction {
 
   @Override
   public void run() {
-    try {
-      table.delete();
-      log.debug("Deleted table '{}'", table.getTableId());
-    } catch (BigQueryException e) {
-      log.error("Could not delete BigQuery table '{}'", table.getTableId(), e);
+    if (!deleted) {
+      try {
+        table.delete();
+        deleted = true;
+        log.debug("Deleted table '{}'", table.getTableId());
+      } catch (BigQueryException e) {
+        log.error("Could not delete BigQuery table '{}'", table.getTableId(), e);
+      }
+    } else {
+      log.debug("BigQuery table already deleted '{}'", table.getTableId());
     }
   }
 

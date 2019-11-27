@@ -86,7 +86,7 @@ class BigQueryPartitionGenerator {
     String query = String
         .format("select * except (%s) from %s.%s where %s = %s", partitionKey, sourceDBName, sourceTableName,
             partitionKey, partitionValue);
-    log.info("Query statement is: {}", query);
+    log.debug("Query statement is: {}", query);
     return query;
   }
 

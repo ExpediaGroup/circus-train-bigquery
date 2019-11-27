@@ -35,7 +35,9 @@ import com.google.cloud.storage.StorageException;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.RuntimeConfiguration;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.DeleteTableAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
+import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
 public class DataCleaner {
 
@@ -68,10 +70,21 @@ public class DataCleaner {
     List<ExtractionContainer> deleted = new ArrayList<>(cleanupQueue);
     while (!cleanupQueue.isEmpty()) {
       ExtractionContainer container = cleanupQueue.poll();
-      log.info("Cleaning data at location {}", container.getExtractionUri());
+      log.debug("Cleaning data at location {}", container.getExtractionUri());
       deleteBucketAndContents(executorService, container);
+      deleteTable(container);
     }
     return deleted;
+  }
+
+  private void deleteTable(ExtractionContainer container) {
+    List<PostExtractionAction> actions = container.getPostExtractionActions();
+
+    for (PostExtractionAction action : actions) {
+      if (action instanceof DeleteTableAction) {
+        action.run();
+      }
+    }
   }
 
   private void deleteBucketAndContents(ExecutorService executorService, ExtractionContainer container) {
@@ -128,7 +141,7 @@ public class DataCleaner {
       Bucket bucket = storage.get(container.getExtractionUri().getBucket());
       boolean suceeded = bucket.delete();
       if (suceeded) {
-        log.info("Deleted bucket {}", container.getExtractionUri().getBucket());
+        log.debug("Deleted bucket {}", container.getExtractionUri().getBucket());
       } else {
         log.warn("Could not delete bucket {}", container.getExtractionUri().getBucket());
       }

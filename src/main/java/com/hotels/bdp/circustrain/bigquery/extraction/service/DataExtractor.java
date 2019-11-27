@@ -144,7 +144,7 @@ public class DataExtractor {
     }
 
     private ExtractionContainer extract() {
-      log.info("Extracting table data to {}", container.getExtractionUri());
+      log.debug("Extracting table data to {}", container.getExtractionUri());
       Table table = container.getTable();
       ExtractionUri extractionUri = container.getExtractionUri();
       createBucket(extractionUri);
