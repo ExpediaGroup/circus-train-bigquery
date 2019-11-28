@@ -1,4 +1,4 @@
-# [5.2.0] - TBD
+# [5.2.0] - 2019-11-28
 ### Fixed
 * Removed duplicated partition column from the schema. See [#37](https://github.com/HotelsDotCom/circus-train-bigquery/issues/37).
 * Temporary BigQuery tables are cleaned up even if replication fails. 
