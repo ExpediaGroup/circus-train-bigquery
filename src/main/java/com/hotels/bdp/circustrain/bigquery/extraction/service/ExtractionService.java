@@ -62,13 +62,13 @@ public class ExtractionService {
   public void extract() {
     List<ExtractionContainer> extracted = extractor.extract();
     for (ExtractionContainer container : extracted) {
-      runActions(container);
+      runAction(container);
     }
   }
 
-  private void runActions(ExtractionContainer extractionContainer) {
-    List<PostExtractionAction> actions = extractionContainer.getPostExtractionActions();
-    for (PostExtractionAction action : actions) {
+  private void runAction(ExtractionContainer extractionContainer) {
+    PostExtractionAction action = extractionContainer.getPostExtractionAction();
+    if (action != null) {
       action.run();
     }
   }

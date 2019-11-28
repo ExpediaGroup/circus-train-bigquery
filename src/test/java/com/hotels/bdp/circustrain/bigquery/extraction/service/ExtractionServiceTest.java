@@ -17,17 +17,12 @@ package com.hotels.bdp.circustrain.bigquery.extraction.service;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -40,7 +35,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.storage.Storage;
 
-import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
@@ -58,11 +52,11 @@ public class ExtractionServiceTest {
 
   private ExtractionService service;
   private final Map<Table, ExtractionContainer> registry = new HashMap<>();
-  private final List<PostExtractionAction> actions = new ArrayList<>();
+  private final PostExtractionAction action = mock(PostExtractionAction.class);
 
   @Before
   public void init() {
-    when(container.getPostExtractionActions()).thenReturn(actions);
+    when(container.getPostExtractionAction()).thenReturn(action);
     when(extractor.extract()).thenReturn(Arrays.asList(container));
     when(container.getTable()).thenReturn(table);
     service = new ExtractionService(extractor, cleaner, registry);
@@ -97,30 +91,9 @@ public class ExtractionServiceTest {
 
   @Test
   public void runActions() {
-    PostExtractionAction action1 = mock(PostExtractionAction.class);
-    PostExtractionAction action2 = mock(PostExtractionAction.class);
-    actions.add(action1);
-    actions.add(action2);
     service.register(container);
     service.extract();
-    verify(action1).run();
-    verify(action2).run();
-  }
-
-  @Test
-  public void runActionsWithException() {
-    PostExtractionAction action1 = mock(PostExtractionAction.class);
-    PostExtractionAction action2 = mock(PostExtractionAction.class);
-    doThrow(new CircusTrainException("error")).when(action1).run();
-    actions.add(action1);
-    actions.add(action2);
-    service.register(container);
-    try {
-      service.extract();
-      fail("Exception should be thrown");
-    } catch (CircusTrainException e) {
-      verifyZeroInteractions(action2);
-    }
+    verify(action).run();
   }
 
 }

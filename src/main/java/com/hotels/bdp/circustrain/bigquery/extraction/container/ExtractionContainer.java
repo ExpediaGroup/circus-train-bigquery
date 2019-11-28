@@ -15,33 +15,29 @@
  */
 package com.hotels.bdp.circustrain.bigquery.extraction.container;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import com.google.cloud.bigquery.Table;
 
 public class ExtractionContainer {
 
   private final Table table;
+  private boolean temporaryTable;
   private final ExtractionUri extractionUri;
-  private List<PostExtractionAction> postExtractionActions = Collections.emptyList();
+  private PostExtractionAction postExtractionAction;
 
   public ExtractionContainer(
       Table table,
+      boolean temporaryTable,
       ExtractionUri extractionUri,
-      List<PostExtractionAction> postExtractionActions) {
+      PostExtractionAction postExtractionAction) {
     this.table = table;
+    this.temporaryTable = temporaryTable;
     this.extractionUri = extractionUri;
-    this.postExtractionActions = Collections.unmodifiableList(postExtractionActions);
+    this.postExtractionAction = postExtractionAction;
   }
 
-  public ExtractionContainer(Table table, ExtractionUri extractionUri, PostExtractionAction postExtractionAction) {
-    this(table, extractionUri, Arrays.asList(postExtractionAction));
-  }
-
-  public ExtractionContainer(Table table, ExtractionUri extractionUri) {
+  public ExtractionContainer(Table table, boolean temporaryTable, ExtractionUri extractionUri) {
     this.table = table;
+    this.temporaryTable = temporaryTable;
     this.extractionUri = extractionUri;
   }
 
@@ -49,12 +45,19 @@ public class ExtractionContainer {
     return table;
   }
 
+  public Table getTemporaryTable() {
+    if (temporaryTable) {
+      return table;
+    }
+    return null;
+  }
+
   public ExtractionUri getExtractionUri() {
     return extractionUri;
   }
 
-  public List<PostExtractionAction> getPostExtractionActions() {
-    return postExtractionActions;
+  public PostExtractionAction getPostExtractionAction() {
+    return postExtractionAction;
   }
 
 }

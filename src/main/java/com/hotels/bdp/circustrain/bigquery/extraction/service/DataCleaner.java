@@ -28,6 +28,8 @@ import java.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.bigquery.Table;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
@@ -35,24 +37,17 @@ import com.google.cloud.storage.StorageException;
 
 import com.hotels.bdp.circustrain.api.CircusTrainException;
 import com.hotels.bdp.circustrain.bigquery.RuntimeConfiguration;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.DeleteTableAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
-import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
 
 public class DataCleaner {
 
   private static final Logger log = LoggerFactory.getLogger(DataCleaner.class);
 
   private final Storage storage;
-  private final Queue<ExtractionContainer> cleanupQueue;
+  private final Queue<ExtractionContainer> cleanupQueue = new LinkedList<ExtractionContainer>();
 
   DataCleaner(Storage storage) {
-    this(storage, new LinkedList<ExtractionContainer>());
-  }
-
-  private DataCleaner(Storage storage, Queue<ExtractionContainer> cleanupQueue) {
     this.storage = storage;
-    this.cleanupQueue = cleanupQueue;
   }
 
   public void add(ExtractionContainer container) {
@@ -78,10 +73,17 @@ public class DataCleaner {
   }
 
   private void deleteTable(ExtractionContainer container) {
-    List<PostExtractionAction> actions = container.getPostExtractionActions();
-    for (PostExtractionAction action : actions) {
-      if (action instanceof DeleteTableAction) {
-        action.run();
+    Table table = container.getTemporaryTable();
+    if (table != null) {
+      try {
+        boolean deleted = table.delete();
+        String m = "Deleted BigQuery table '{}'";
+        if (!deleted) {
+          m = "Could not delete BigQuery table. Table not found: '{}'";
+        }
+        log.debug(m, table.getTableId());
+      } catch (BigQueryException e) {
+        log.error("Could not delete BigQuery table '{}'", table.getTableId(), e);
       }
     }
   }

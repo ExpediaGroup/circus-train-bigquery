@@ -18,7 +18,6 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableResult;
 
-import com.hotels.bdp.circustrain.bigquery.extraction.container.DeleteTableAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.service.ExtractionService;
@@ -53,8 +52,8 @@ public class BigQueryTableFilterer {
     Table filteredTable = bigQueryMetastore.getTable(databaseName, tableName);
 
     ExtractionUri extractionUri = new ExtractionUri();
-    ExtractionContainer container = new ExtractionContainer(filteredTable, extractionUri,
-        new DeleteTableAction(filteredTable));
+    boolean isTemporaryTable = true;
+    ExtractionContainer container = new ExtractionContainer(filteredTable, isTemporaryTable, extractionUri);
     service.register(container);
     return filteredTable;
   }

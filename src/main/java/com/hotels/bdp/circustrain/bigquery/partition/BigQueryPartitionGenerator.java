@@ -18,8 +18,6 @@ package com.hotels.bdp.circustrain.bigquery.partition;
 import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomTableName;
 import static com.hotels.bdp.circustrain.bigquery.util.RandomStringGenerationUtils.randomUri;
 
-import java.util.Arrays;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.slf4j.Logger;
@@ -27,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.cloud.bigquery.Table;
 
-import com.hotels.bdp.circustrain.bigquery.extraction.container.DeleteTableAction;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionContainer;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.ExtractionUri;
 import com.hotels.bdp.circustrain.bigquery.extraction.container.PostExtractionAction;
@@ -105,11 +102,11 @@ class BigQueryPartitionGenerator {
       org.apache.hadoop.hive.metastore.api.Table hiveTable,
       Partition hivePartition) {
     ExtractionUri extractionUri = new ExtractionUri(destinationBucket, generateFolderName(), generateFileName());
-    PostExtractionAction deleteTableAction = new DeleteTableAction(bigQueryTable);
     PostExtractionAction updatePartitionSchemaAction = new UpdatePartitionSchemaAction(hiveTable, hivePartition,
         extractionService.getStorage(), extractionUri, schemaExtractor);
-    ExtractionContainer toRegister = new ExtractionContainer(bigQueryTable, extractionUri,
-        Arrays.asList(deleteTableAction, updatePartitionSchemaAction));
+    boolean isTemporaryTable = true;
+    ExtractionContainer toRegister = new ExtractionContainer(bigQueryTable, isTemporaryTable, extractionUri,
+        updatePartitionSchemaAction);
     extractionService.register(toRegister);
     return extractionUri;
   }
