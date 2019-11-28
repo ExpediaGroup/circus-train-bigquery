@@ -35,9 +35,9 @@ public class DeleteTableAction implements PostExtractionAction {
     try {
       boolean deleted = table.delete();
       if (deleted) {
-        log.debug("Deleted table '{}'", table.getTableId());
+        log.debug("Deleted BigQuery table '{}'", table.getTableId());
       } else {
-        log.debug("Table not found: '{}'", table.getTableId());
+        log.debug("Could not delete BigQuery table. Table not found: '{}'", table.getTableId());
       }
     } catch (BigQueryException e) {
       log.error("Could not delete BigQuery table '{}'", table.getTableId(), e);
