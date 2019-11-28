@@ -73,15 +73,15 @@ public class DataCleaner {
   }
 
   private void deleteTable(ExtractionContainer container) {
-    Table table = container.getTemporaryTable();
-    if (table != null) {
+    if (container.hasTemporaryTable()) {
+      Table table = container.getTable();
       try {
         boolean deleted = table.delete();
-        String m = "Deleted BigQuery table '{}'";
+        String message = "Deleted BigQuery table '{}'";
         if (!deleted) {
-          m = "Could not delete BigQuery table. Table not found: '{}'";
+          message = "Could not delete BigQuery table. Table not found: '{}'";
         }
-        log.debug(m, table.getTableId());
+        log.debug(message, table.getTableId());
       } catch (BigQueryException e) {
         log.error("Could not delete BigQuery table '{}'", table.getTableId(), e);
       }

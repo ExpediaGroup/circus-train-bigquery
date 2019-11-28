@@ -1,6 +1,7 @@
 # [5.2.0] - TBD
 ### Fixed
 * Removed duplicated partition column from the schema. See [#37](https://github.com/HotelsDotCom/circus-train-bigquery/issues/37).
+* Temporary BigQuery tables are cleaned up even if replication fails. 
 
 ### Changed
 * Using `libraries-bom` instead of `google-cloud-bom`.

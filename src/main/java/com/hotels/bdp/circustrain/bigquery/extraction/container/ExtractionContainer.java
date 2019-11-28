@@ -45,11 +45,8 @@ public class ExtractionContainer {
     return table;
   }
 
-  public Table getTemporaryTable() {
-    if (temporaryTable) {
-      return table;
-    }
-    return null;
+  public boolean hasTemporaryTable() {
+    return temporaryTable;
   }
 
   public ExtractionUri getExtractionUri() {
