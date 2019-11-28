@@ -28,6 +28,8 @@ import java.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.bigquery.Table;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
@@ -42,15 +44,10 @@ public class DataCleaner {
   private static final Logger log = LoggerFactory.getLogger(DataCleaner.class);
 
   private final Storage storage;
-  private final Queue<ExtractionContainer> cleanupQueue;
+  private final Queue<ExtractionContainer> cleanupQueue = new LinkedList<ExtractionContainer>();
 
   DataCleaner(Storage storage) {
-    this(storage, new LinkedList<ExtractionContainer>());
-  }
-
-  private DataCleaner(Storage storage, Queue<ExtractionContainer> cleanupQueue) {
     this.storage = storage;
-    this.cleanupQueue = cleanupQueue;
   }
 
   public void add(ExtractionContainer container) {
@@ -68,10 +65,27 @@ public class DataCleaner {
     List<ExtractionContainer> deleted = new ArrayList<>(cleanupQueue);
     while (!cleanupQueue.isEmpty()) {
       ExtractionContainer container = cleanupQueue.poll();
-      log.info("Cleaning data at location {}", container.getExtractionUri());
+      log.debug("Cleaning data at location {}", container.getExtractionUri());
       deleteBucketAndContents(executorService, container);
+      deleteTable(container);
     }
     return deleted;
+  }
+
+  private void deleteTable(ExtractionContainer container) {
+    if (container.hasTemporaryTable()) {
+      Table table = container.getTable();
+      try {
+        boolean deleted = table.delete();
+        String message = "Deleted BigQuery table '{}'";
+        if (!deleted) {
+          message = "Could not delete BigQuery table. Table not found: '{}'";
+        }
+        log.debug(message, table.getTableId());
+      } catch (BigQueryException e) {
+        log.error("Could not delete BigQuery table '{}'", table.getTableId(), e);
+      }
+    }
   }
 
   private void deleteBucketAndContents(ExecutorService executorService, ExtractionContainer container) {
@@ -128,7 +142,7 @@ public class DataCleaner {
       Bucket bucket = storage.get(container.getExtractionUri().getBucket());
       boolean suceeded = bucket.delete();
       if (suceeded) {
-        log.info("Deleted bucket {}", container.getExtractionUri().getBucket());
+        log.debug("Deleted bucket {}", container.getExtractionUri().getBucket());
       } else {
         log.warn("Could not delete bucket {}", container.getExtractionUri().getBucket());
       }

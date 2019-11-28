@@ -78,7 +78,7 @@ public class DataExtractorTest {
     initExecutor();
 
     extractor = new DataExtractor(storage);
-    extractionContainer = new ExtractionContainer(table, data);
+    extractionContainer = new ExtractionContainer(table, false, data);
 
     when(table.getTableId()).thenReturn(tableId);
     when(table.extract(anyString(), anyString())).thenReturn(job);

@@ -177,7 +177,7 @@ public class HivePartitionGenerator {
         setPartitionParameters(partition, sourceHiveTable.getDbName(), sourceHiveTable.getTableName(),
             extractionUri.getTableLocation(), originalValue);
 
-        log.info("Generated partition {}={}", partitionKey, originalValue);
+        log.debug("Generated partition {}={}", partitionKey, originalValue);
         return Optional.of(partition);
       }
       return Optional.absent();

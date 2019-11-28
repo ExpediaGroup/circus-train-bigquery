@@ -75,7 +75,7 @@ public class DataCleanerTest {
     initExecutor();
 
     cleaner = new DataCleaner(storage);
-    extractionContainer = new ExtractionContainer(table, extractionUri);
+    extractionContainer = new ExtractionContainer(table, false, extractionUri);
 
     when(table.getTableId()).thenReturn(tableId);
     when(future.get()).thenReturn(null);
@@ -217,4 +217,22 @@ public class DataCleanerTest {
     verify(storage, times(0)).delete(any(BlobId.class));
     assertThat(cleaned.get(0), is(extractionContainer));
   }
+
+  @Test
+  public void noCleanupOfTable() {
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup();
+    verify(table, times(0)).delete();
+    assertThat(cleaned.get(0), is(extractionContainer));
+  }
+
+  @Test
+  public void cleanupTempTable() {
+    extractionContainer = new ExtractionContainer(table, true, extractionUri);
+    cleaner.add(extractionContainer);
+    List<ExtractionContainer> cleaned = cleaner.cleanup();
+    verify(table, times(1)).delete();
+    assertThat(cleaned.get(0), is(extractionContainer));
+  }
+
 }
