@@ -3,7 +3,7 @@
 * Minimum supported Java version is now 8 (was 7).
 * Updated `circus-train-version` to 16.0.0 (was 15.0.0).
 * Updated `hotels-oss-parent` version to 5.0.0 (was 4.2.0).
-* Updated `hive` version to 2.3.5 (was 2.3.3).
+* Updated `hive` version to 2.3.7 (was 2.3.3).
 * Updated Google Cloud `libraries-bom` to 4.1.1 (was 2.9.0).
 * Updated `maven-shade-plugin` to 3.2.2 (was 3.2.1)
 
