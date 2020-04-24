@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018-2019 Expedia, Inc.
+ * Copyright (C) 2018-2020 Expedia, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,6 +67,8 @@ import org.apache.hadoop.hive.metastore.api.NotificationEventResponse;
 import org.apache.hadoop.hive.metastore.api.OpenTxnsResponse;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.PartitionEventType;
+import org.apache.hadoop.hive.metastore.api.PartitionValuesRequest;
+import org.apache.hadoop.hive.metastore.api.PartitionValuesResponse;
 import org.apache.hadoop.hive.metastore.api.PrimaryKeysRequest;
 import org.apache.hadoop.hive.metastore.api.PrincipalPrivilegeSet;
 import org.apache.hadoop.hive.metastore.api.PrincipalType;
@@ -401,6 +403,12 @@ class BigQueryMetastoreClient implements CloseableMetaStoreClient {
   public List<String> listPartitionNames(String s, String s1, List<String> list, short i)
     throws MetaException, TException, NoSuchObjectException {
     throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listPartitionNames"));
+  }
+
+  @Override
+  public PartitionValuesResponse listPartitionValues(PartitionValuesRequest partitionValuesRequest)
+    throws MetaException, TException, NoSuchObjectException {
+    throw new UnsupportedOperationException(String.format(ERROR_MESSAGE, "listPartitionValues"));
   }
 
   @Override
