@@ -106,7 +106,7 @@ If you would like to ask any questions about or discuss Circus Train BigQuery pl
   [https://groups.google.com/forum/#!forum/circus-train-user](https://groups.google.com/forum/#!forum/circus-train-user)
 
 # Credits
-The Circus Train Big Query logo is licensed under the [Creative Commons Attribution-Share Alike 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) International license. It includes an adaption of the [Google BigQuery logo](https://commons.wikimedia.org/wiki/File:Google-BigQuery-Logo.svg) that is similarly licensed under the [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) International license. The Circus Train logo uses the [Ewert font](http://www.1001fonts.com/ewert-font.html) by [Johan Kallas](http://www.1001fonts.com/users/kallasjohan/) under the [SIL Open Font License (OFL)](http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL). 
+The Circus Train BigQuery logo is licensed under the [Creative Commons Attribution-Share Alike 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) International license. It includes an adaption of the [Google BigQuery logo](https://commons.wikimedia.org/wiki/File:Google-BigQuery-Logo.svg) that is similarly licensed under the [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) International license. The Circus Train logo uses the [Ewert font](http://www.1001fonts.com/ewert-font.html) by [Johan Kallas](http://www.1001fonts.com/users/kallasjohan/) under the [SIL Open Font License (OFL)](http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL). 
 
 # Legal
 This project is available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).

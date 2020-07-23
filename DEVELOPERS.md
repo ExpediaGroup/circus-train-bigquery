@@ -1,36 +1,36 @@
 ![Circus Train BigQuery.](circus-train-bigquery.png "Moving data from Google BigQuery to Hive.")
 
 ## Overview 
-Circus Train Big Query is an extension of Circus Train which allows tables in Google Big Query to be replicated.
+Circus Train BigQuery is an extension of Circus Train which allows tables in Google BigQuery to be replicated.
 
-This file contains a collection of notes put together by developers who have worked on Big Query to provide some explanation to the code. This file is not completely exhaustive of all the inner workings of the project, so do feel free to add more information or detail. 
+This file contains a collection of notes put together by developers who have worked on BigQuery to provide some explanation to the code. This file is not completely exhaustive of all the inner workings of the project, so do feel free to add more information or detail. 
 
 
 ## README.md
 
-First and foremost, its worth having a read through the Circus Train [README.md](https://github.com/HotelsDotCom/circus-train) file and the Big Query Circus Train [README.md](https://github.com/HotelsDotCom/circus-train-bigquery/blob/master/README.md). These are pretty extensive guides containing a lot of info on the projects, including how to run each of them and the different configurations which can be used. 
+First and foremost, its worth having a read through the Circus Train [README.md](https://github.com/HotelsDotCom/circus-train) file and the Circus Train BigQuery [README.md](https://github.com/HotelsDotCom/circus-train-bigquery/blob/master/README.md). These are pretty extensive guides containing a lot of info on the projects, including how to run each of them and the different configurations which can be used. 
 
-It may also be useful to have a read through of the DEVELOPERS.md file for Circus Train. 
+It may also be useful to read through the DEVELOPERS.md file for Circus Train. 
 
 
 ## Basic description
-The copying of the data is carried out by Circus Train copiers, while the Big Query code handles the extraction of data into Google Cloud Storage, (GCS) and handles applying partition filters (if any).
+Circus Train BigQuery handles applying any partition filters to the data in the Google BigQuery table and extracts it as Avro into Google Cloud Storage, (GCS). Circus Train listeners are used to convert the Google BigQuery metadata into a Hive table object. The data is then replicated from source to target using the metadata from this mocked Hive table.
 
 If the table is **partitioned**:
 
 * A temporary table is created by applying a partition filter to the source table. 
 * The data from this temporary table is copied over to GCS. 
-* CircusTrain then uses this GCS location to perform the replication to Hive.
+* Circus Train then uses this GCS location to perform the replication to Hive.
 
 
 If the table is **unpartitioned**:
 
 * The data from the source table is copied over to GCS.
-* This GCS location is used by CircusTrain to perform the replication. 
+* This GCS location is used by Circus Train to perform the replication. 
 
 
 ## Class Explanations
-As mentioned, Big Query is an extension of Circus Train so processing will begin in the Circus Train code. Control is then given to Big Query which will set up the table to be replicated, and Circus Train will perform the actual replication. 
+As mentioned, BigQuery is an extension of Circus Train so processing will begin in the Circus Train code. Control is given to BigQuery which will set up the table to be replicated, and then Circus Train will perform the actual replication. 
 
 
 ### Key
@@ -64,7 +64,7 @@ As mentioned, Big Query is an extension of Circus Train so processing will begin
 
 **BigQueryMetastoreClientFactory**
 
-* Checks the given uri is acceptable for Big Query.
+* Checks the given uri is acceptable for BigQuery.
 * Returns a new instance of the `BigQueryMetastoreClient`.
 
 
@@ -72,12 +72,12 @@ As mentioned, Big Query is an extension of Circus Train so processing will begin
 
 * Registers a container with the `ExtractionService`.
 * Container has an `UpdateTableSchemaAction` to be executed by the `ExtractionService`.
-* Returns a hive table - based on the Big Query table. Creates the cached table object.
+* Returns a hive table - based on the BigQuery table. Creates the cached table object.
 
 
 **BigQueryMetastore**
 
-* Executes the partition filter query and adds the results to a temporary table in Big Query.
+* Executes the partition filter query and adds the results to a temporary table in BigQuery.
 
 
 **TableServiceFactory**
@@ -134,7 +134,7 @@ As mentioned, Big Query is an extension of Circus Train so processing will begin
 **BigQueryCopier**
 
 * Runs extract on `ExtractionService`.
-* Delegates to the CircusTrain copier, e.g. `S3MapReduce`, which performs the copy using the location of the data in GCS. 
+* Delegates to the Circus Train copier, e.g. `S3MapReduce`, which performs the copy using the location of the data in GCS. 
 
 
 **ExtractionService**
@@ -157,12 +157,12 @@ As mentioned, Big Query is an extension of Circus Train so processing will begin
 * The `ExtractionContainer` object is passed to `ExtractionService` via the `register(_)` method.
 
 
-The copying of the data is then carried out by CircusTrain copiers.
+The copying of the data is then carried out by Circus Train copiers.
 
 # Contact
 
 ## Mailing List
-If you would like to ask any questions about or discuss Circus Train or Circus Train Big Query please join our mailing list at 
+If you would like to ask any questions about or discuss Circus Train or Circus Train BigQuery please join our mailing list at 
 
   [https://groups.google.com/forum/#!forum/circus-train-user](https://groups.google.com/forum/#!forum/circus-train-user)
   
