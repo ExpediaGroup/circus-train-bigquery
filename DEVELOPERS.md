@@ -8,14 +8,14 @@ This document contains a collection of notes put together by developers who have
 
 ## README.md
 
-First and foremost, its worth having a read through the Circus Train [README.md](https://github.com/HotelsDotCom/circus-train/blob/master/README.md) file and the Circus Train BigQuery [README.md](https://github.com/HotelsDotCom/circus-train-bigquery/blob/master/README.md). These are pretty extensive guides containing a lot of info on the projects, including how to run each of them and the different configurations which can be used. 
+First and foremost, it's worth having a read through the Circus Train [README.md](https://github.com/HotelsDotCom/circus-train/blob/master/README.md) file and the Circus Train BigQuery [README.md](https://github.com/HotelsDotCom/circus-train-bigquery/blob/master/README.md). These are pretty extensive guides containing a lot of info on the projects, including how to run each of them and the different configurations which can be used. 
 
 It may also be useful to read through the [DEVELOPERS.md](https://github.com/HotelsDotCom/circus-train/blob/master/DEVELOPERS.md) file for Circus Train. 
 
 
 ## Basic description
 
-At a high level, CTBQ uses the Replication and Copier integration points provided by CT to replicate data out of BigQuery and into Hive. It first runs a query to extract the data out of BQ into a temporary BQ table (applying any necessary partition filters) and then uses Google's BigQuery and Storage APIs to create a Job which extracts that data out of this temporary table onto Google Cloud Storage, GCS, as Avro files. A Hive table object (i.e. not a real Hive table) is then put "on top" of this data and Circus train is instructed to replicate the data from this GCS source to the target as normal.
+At a high level, CTBQ uses the Replication and S3-MapReduce Copier integration points provided by CT to replicate data out of BigQuery and into Hive. It first runs a query to extract the data out of BQ into a temporary BQ table (applying any necessary partition filters) and then uses Google's BigQuery and Storage APIs to create a Job which extracts that data out of this temporary table onto Google Cloud Storage (GCS) as Avro files. A Hive table object (i.e. not a real Hive table) is then put "on top" of this data and Circus Train is instructed to replicate the data from this GCS source to the target as normal.
 
 
 ### Partitioned Tables
