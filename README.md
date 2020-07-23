@@ -1,3 +1,4 @@
+![Circus Train BigQuery.](circus-train-bigquery.png "Moving data from Google BigQuery to Hive.")
 # Circus Train BigQuery To Hive Replication
 
 ##  Overview

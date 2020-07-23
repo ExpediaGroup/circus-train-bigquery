@@ -1,41 +1,41 @@
-# Circus Train Big Query
+![Circus Train BigQuery.](circus-train-bigquery.png "Moving data from Google BigQuery to Hive.")
 
 ## Overview 
-Big Query is an extension of Circus Train which allows tables in Google Big Query to be replicated.
+Circus Train Big Query is an extension of Circus Train which allows tables in Google Big Query to be replicated.
 
 This file contains a collection of notes put together by developers who have worked on Big Query to provide some explanation to the code. This file is not completely exhaustive of all the inner workings of the project, so do feel free to add more information or detail. 
 
 
 ## README.md
 
-First and foremost, its worth having a read through the Circus Train [README.md](https://github.com/HotelsDotCom/circus-train) file and the Big Query Circus Train [README.md](https://github.com/HotelsDotCom/circus-train-bigquery/blob/master/README.md). These are pretty extensive guides containing a lot of info on the projects, including how to run each of them and all the different configurations which can be used. 
+First and foremost, its worth having a read through the Circus Train [README.md](https://github.com/HotelsDotCom/circus-train) file and the Big Query Circus Train [README.md](https://github.com/HotelsDotCom/circus-train-bigquery/blob/master/README.md). These are pretty extensive guides containing a lot of info on the projects, including how to run each of them and the different configurations which can be used. 
 
 It may also be useful to have a read through of the DEVELOPERS.md file for Circus Train. 
 
 
 ## Basic description
-The copying of the data is carried out by CircusTrain copiers, while the BigQuery code handles the extraction of data into GCS and handles applying partition filters (if any).
+The copying of the data is carried out by Circus Train copiers, while the Big Query code handles the extraction of data into Google Cloud Storage, (GCS) and handles applying partition filters (if any).
 
 If the table is **partitioned**:
 
 * A temporary table is created by applying a partition filter to the source table. 
-* The data from this temporary table is copied over to google cloud storage (GCS). 
+* The data from this temporary table is copied over to GCS. 
 * CircusTrain then uses this GCS location to perform the replication to Hive.
 
 
 If the table is **unpartitioned**:
 
-* The data from the source table is copied over to google cloud storage (GCS).
+* The data from the source table is copied over to GCS.
 * This GCS location is used by CircusTrain to perform the replication. 
 
 
 ## Class Explanations
-As mentioned, Big Query is an extension of Circus Train so processing will begin in the Circus Train code. Control is then given to Big Query which will set up the table to replicate, and Circus Train will perform the actual replication. 
+As mentioned, Big Query is an extension of Circus Train so processing will begin in the Circus Train code. Control is then given to Big Query which will set up the table to be replicated, and Circus Train will perform the actual replication. 
 
 
 ### Key
 
-**<name>** - Title for the class being described
+**name** - Title for the class being described
 
 (CT) - Indicates that the class is a part of the Circus Train code 
 
@@ -48,7 +48,7 @@ As mentioned, Big Query is an extension of Circus Train so processing will begin
 
 **Locomotive** (CT)
 
-* Creates a new `Replication` (CT) object using the `ReplicationFactory` (CT) and calls replicate on it.
+* Creates a new `Replication` (CT) object using the `ReplicationFactory` (CT) and calls `replicate` on it.
 
 **ReplicationFactor** (CT)
 
@@ -58,32 +58,32 @@ As mentioned, Big Query is an extension of Circus Train so processing will begin
 **Replication** (CT)
 
 * Either `PartitionedTableReplication` (CT) or `UnpartitionedTableReplication` (CT).
-* Uses the `BigQueryCopierFactory` to generate the `BigQueryCopier`, then calls copy to copy over the table data. 
+* Uses the `BigQueryCopierFactory` to generate the `BigQueryCopier`, then calls `copy` to copy over the table data. 
 * After that will update the metadata of the table. 
 
 
 **BigQueryMetastoreClientFactory**
 
-* Checks the given uri is acceptable for BigQuery.
-* Returns a new instance of the `BigQueryMetastoreClient`
+* Checks the given uri is acceptable for Big Query.
+* Returns a new instance of the `BigQueryMetastoreClient`.
 
 
 **BigQueryMetastoreClient**
 
-* Registers container with the `ExtractionService`.
+* Registers a container with the `ExtractionService`.
 * Container has an `UpdateTableSchemaAction` to be executed by the `ExtractionService`.
-* Returns hive table - based on BigQuery table. Creates the cache object.
+* Returns a hive table - based on the Big Query table. Creates the cached table object.
 
 
 **BigQueryMetastore**
 
-* Executes the partition filter query and adds the results to a temporary table in BigQuery.
+* Executes the partition filter query and adds the results to a temporary table in Big Query.
 
 
 **TableServiceFactory**
 
 * Will create either a `PartitionedTableService` or an `UnpartitionedTableService`, based on whether the hive table being replicated is partitioned or not.
-* Create inside `BigQueryMetastoreClient`.
+* Created inside `BigQueryMetastoreClient`.
 
 
 **UnpartitionedTableService**
@@ -158,3 +158,19 @@ As mentioned, Big Query is an extension of Circus Train so processing will begin
 
 
 The copying of the data is then carried out by CircusTrain copiers.
+
+# Contact
+
+## Mailing List
+If you would like to ask any questions about or discuss Circus Train or Circus Train Big Query please join our mailing list at 
+
+  [https://groups.google.com/forum/#!forum/circus-train-user](https://groups.google.com/forum/#!forum/circus-train-user)
+  
+# Credits
+
+The “Circus Train BigQuery” logo is licensed under the [Creative Commons Attribution-Share Alike 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) International license. It includes an adaption of the [Google BigQuery logo](https://commons.wikimedia.org/wiki/File:Google-BigQuery-Logo.svg) that is similarly licensed under the [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en) International license. The Circus Train logo uses the [Ewert font](http://www.1001fonts.com/ewert-font.html) by [Johan Kallas](http://www.1001fonts.com/users/kallasjohan/) under the [SIL Open Font License (OFL)](http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL). 
+
+# Legal
+This project is available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
+
+Copyright 2016-2020 Expedia, Inc.
