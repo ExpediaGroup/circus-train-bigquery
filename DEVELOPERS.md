@@ -3,7 +3,7 @@
 ## Overview 
 Circus Train BigQuery is an extension of Circus Train which allows tables in Google BigQuery to be replicated.
 
-This file contains a collection of notes put together by developers who have worked on BigQuery to provide some explanation to the code. This file is not completely exhaustive of all the inner workings of the project, so do feel free to add more information or detail. 
+This document contains a collection of notes put together by developers who have worked on the project to provide some explanations of the code and how it works. This is not completely exhaustive of all the inner workings of the project, so do feel free to add more information or detail. 
 
 
 ## README.md
@@ -16,16 +16,16 @@ It may also be useful to read through the DEVELOPERS.md file for Circus Train.
 ## Basic description
 Circus Train BigQuery handles applying any partition filters to the data in the Google BigQuery table and extracts it as Avro into Google Cloud Storage, (GCS). Circus Train listeners are used to convert the Google BigQuery metadata into a Hive table object. The data is then replicated from source to target using the metadata from this mocked Hive table.
 
-If the table is **partitioned**:
+### Partitioned Tables
 
 * A temporary table is created by applying a partition filter to the source table. 
-* The data from this temporary table is copied over to GCS. 
+* The data from this temporary table extracted to GCS. 
 * Circus Train then uses this GCS location to perform the replication to Hive.
 
 
-If the table is **unpartitioned**:
+### Unpartitioned Tables
 
-* The data from the source table is copied over to GCS.
+* The data from the entire source table is extracted to GCS.
 * This GCS location is used by Circus Train to perform the replication. 
 
 
@@ -50,7 +50,7 @@ As mentioned, BigQuery is an extension of Circus Train so processing will begin 
 
 * Creates a new `Replication` (CT) object using the `ReplicationFactory` (CT) and calls `replicate` on it.
 
-**ReplicationFactor** (CT)
+**ReplicationFactory* (CT)
 
 * Returns a `Replication` (CT) object, the type depends on whether the source table is partitioned or not.
 * Creates a `Source` (CT) object which refers back to `HiveEndpoint` (CT) which then calls `getTable` on the `BigQueryMetastoreClient` object.  
@@ -64,7 +64,7 @@ As mentioned, BigQuery is an extension of Circus Train so processing will begin 
 
 **BigQueryMetastoreClientFactory**
 
-* Checks the given uri is acceptable for BigQuery.
+* Checks the given URI is acceptable for BigQuery.
 * Returns a new instance of the `BigQueryMetastoreClient`.
 
 
@@ -72,7 +72,7 @@ As mentioned, BigQuery is an extension of Circus Train so processing will begin 
 
 * Registers a container with the `ExtractionService`.
 * Container has an `UpdateTableSchemaAction` to be executed by the `ExtractionService`.
-* Returns a hive table - based on the BigQuery table. Creates the cached table object.
+* Returns a Hive table - based on the BigQuery table. Creates the cached table object.
 
 
 **BigQueryMetastore**
@@ -82,7 +82,7 @@ As mentioned, BigQuery is an extension of Circus Train so processing will begin 
 
 **TableServiceFactory**
 
-* Will create either a `PartitionedTableService` or an `UnpartitionedTableService`, based on whether the hive table being replicated is partitioned or not.
+* Will create either a `PartitionedTableService` or an `UnpartitionedTableService`, based on whether the Hive table being replicated is partitioned or not.
 * Created inside `BigQueryMetastoreClient`.
 
 
@@ -128,7 +128,7 @@ As mentioned, BigQuery is an extension of Circus Train so processing will begin 
 
 **BigQueryCopierFactory**
 
-* Creates the `BigQueryCopier`
+* Creates the `BigQueryCopier`.
 
 
 **BigQueryCopier**
