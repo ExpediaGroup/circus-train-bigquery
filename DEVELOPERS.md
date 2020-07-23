@@ -1,20 +1,22 @@
 ![Circus Train BigQuery.](circus-train-bigquery.png "Moving data from Google BigQuery to Hive.")
 
 ## Overview 
-Circus Train BigQuery is an extension of Circus Train which allows tables in Google BigQuery to be replicated.
+Circus Train BigQuery is an extension of Circus Train which allows tables in Google BigQuery to be replicated to Hive.
 
 This document contains a collection of notes put together by developers who have worked on the project to provide some explanations of the code and how it works. This is not completely exhaustive of all the inner workings of the project, so do feel free to add more information or detail. 
 
 
 ## README.md
 
-First and foremost, its worth having a read through the Circus Train [README.md](https://github.com/HotelsDotCom/circus-train) file and the Circus Train BigQuery [README.md](https://github.com/HotelsDotCom/circus-train-bigquery/blob/master/README.md). These are pretty extensive guides containing a lot of info on the projects, including how to run each of them and the different configurations which can be used. 
+First and foremost, its worth having a read through the Circus Train [README.md](https://github.com/HotelsDotCom/circus-train/blob/master/README.md) file and the Circus Train BigQuery [README.md](https://github.com/HotelsDotCom/circus-train-bigquery/blob/master/README.md). These are pretty extensive guides containing a lot of info on the projects, including how to run each of them and the different configurations which can be used. 
 
-It may also be useful to read through the DEVELOPERS.md file for Circus Train. 
+It may also be useful to read through the [DEVELOPERS.md](https://github.com/HotelsDotCom/circus-train/blob/master/DEVELOPERS.md) file for Circus Train. 
 
 
 ## Basic description
-Circus Train BigQuery handles applying any partition filters to the data in the Google BigQuery table and extracts it as Avro into Google Cloud Storage, (GCS). Circus Train listeners are used to convert the Google BigQuery metadata into a Hive table object. The data is then replicated from source to target using the metadata from this mocked Hive table.
+
+At a high level, CTBQ uses the Replication and Copier integration points provided by CT to replicate data out of BigQuery and into Hive. It first runs a query to extract the data out of BQ into a temporary BQ table (applying any necessary partition filters) and then uses Google's BigQuery and Storage APIs to create a Job which extracts that data out of this temporary table onto Google Cloud Storage, GCS, as Avro files. A Hive table object (i.e. not a real Hive table) is then put "on top" of this data and Circus train is instructed to replicate the data from this GCS source to the target as normal.
+
 
 ### Partitioned Tables
 
@@ -77,7 +79,7 @@ As mentioned, BigQuery is an extension of Circus Train so processing will begin 
 
 **BigQueryMetastore**
 
-* Executes the partition filter query and adds the results to a temporary table in BigQuery.
+* Configures and runs a Query Job in GBQ which will execute the partition filter query on the source table, loads the result to a temporary GBQ table.
 
 
 **TableServiceFactory**
