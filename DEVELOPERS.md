@@ -8,9 +8,9 @@ This document contains a collection of notes put together by developers who have
 
 ## README.md
 
-First and foremost, it's worth having a read through the Circus Train [README.md](https://github.com/HotelsDotCom/circus-train/blob/master/README.md) file and the Circus Train BigQuery [README.md](https://github.com/HotelsDotCom/circus-train-bigquery/blob/master/README.md). These are pretty extensive guides containing a lot of info on the projects, including how to run each of them and the different configurations which can be used. 
+First and foremost, it's worth having a read through the Circus Train [README.md](https://github.com/HotelsDotCom/circus-train/blob/main/README.md) file and the Circus Train BigQuery [README.md](https://github.com/HotelsDotCom/circus-train-bigquery/blob/main/README.md). These are pretty extensive guides containing a lot of info on the projects, including how to run each of them and the different configurations which can be used. 
 
-It may also be useful to read through the [DEVELOPERS.md](https://github.com/HotelsDotCom/circus-train/blob/master/DEVELOPERS.md) file for Circus Train. 
+It may also be useful to read through the [DEVELOPERS.md](https://github.com/HotelsDotCom/circus-train/blob/main/DEVELOPERS.md) file for Circus Train. 
 
 
 ## Basic description

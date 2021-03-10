@@ -7,7 +7,7 @@ This [Circus Train](https://github.com/HotelsDotCom/circus-train) plugin enables
 ## Start using
 You can obtain Circus Train BigQuery from Maven Central:
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.hotels/circus-train-bigquery/badge.svg?subject=com.hotels:circus-train-bigquery)](https://maven-badges.herokuapp.com/maven-central/com.hotels/circus-train-bigquery) [![Build Status](https://travis-ci.org/HotelsDotCom/circus-train-bigquery.svg?branch=master)](https://travis-ci.org/HotelsDotCom/circus-train-bigquery) ![build](https://github.com/HotelsDotCom/circus-train/workflows/build/badge.svg?event=push) [![Coverage Status](https://coveralls.io/repos/github/HotelsDotCom/circus-train-bigquery/badge.svg?branch=master)](https://coveralls.io/github/HotelsDotCom/circus-train-bigquery?branch=master) ![GitHub license](https://img.shields.io/github/license/HotelsDotCom/circus-train.svg)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.hotels/circus-train-bigquery/badge.svg?subject=com.hotels:circus-train-bigquery)](https://maven-badges.herokuapp.com/maven-central/com.hotels/circus-train-bigquery) [![Build Status](https://travis-ci.org/HotelsDotCom/circus-train-bigquery.svg?branch=main)](https://travis-ci.org/HotelsDotCom/circus-train-bigquery) ![build](https://github.com/HotelsDotCom/circus-train/workflows/build/badge.svg?event=push) [![Coverage Status](https://coveralls.io/repos/github/HotelsDotCom/circus-train-bigquery/badge.svg?branch=main)](https://coveralls.io/github/HotelsDotCom/circus-train-bigquery?branch=main) ![GitHub license](https://img.shields.io/github/license/HotelsDotCom/circus-train.svg)
 
 ## Installation
 In order to be used by Circus Train the above `circus-train-bigquery` jar file must be added to Circus Train's classpath.  It is highly recommended that the version of this library and the version of Circus Train are identical. The recommended way to make this extension available on the classpath is to store it in a standard location
@@ -24,7 +24,7 @@ Another option is to place the jar file in the Circus Train `lib` folder which w
      extension-packages: com.hotels.bdp.circustrain.bigquery
 ```
      
-* Configure Circus Train as you would for a copy job from Google Cloud [Configuration](https://github.com/HotelsDotCom/circus-train/tree/master/circus-train-gcp)
+* Configure Circus Train as you would for a copy job from Google Cloud [Configuration](https://github.com/HotelsDotCom/circus-train/tree/main/circus-train-gcp)
 * Provide the Google Cloud project ID that your BigQuery instance resides in as your `source-catalog` `hive-metastore-uris` parameter using the format `hive-metastore-uris: bigquery://<project-id>`
 * To enable copying to Google Storage provide a path to your Google Credentials in the configuration under the gcp-security parameter.
 * Provide your BigQuery dataset as `source-table` `database-name` and your BigQuery table name as `source-table` `table-name`
