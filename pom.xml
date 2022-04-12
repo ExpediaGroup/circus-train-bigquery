@@ -24,7 +24,7 @@
     <jdk.version>1.8</jdk.version>
     <circus-train-version>16.0.0</circus-train-version>
     <google-cloud.version>4.1.1</google-cloud.version>
-    <hadoop.version>2.7.1</hadoop.version>
+    <hadoop.version>3.2.3</hadoop.version>
     <hive.version>2.3.7</hive.version>
     <shade.prefix>${project.groupId}.circustrain.bigquery.shaded</shade.prefix>
     <spring-platform.version>2.0.8.RELEASE</spring-platform.version>
